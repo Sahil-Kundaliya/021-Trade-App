@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.zerotwoonetrade.assignment.app.zero_two_one_trade_assignment"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
