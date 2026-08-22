@@ -47,7 +47,8 @@ class DashboardContent extends StatelessWidget {
                     onSubcategorySelected: (subcategory) => context
                         .read<MarketBloc>()
                         .add(MarketSubcategoryChanged(subcategory)),
-                    onItemTap: (_) => navigator?.openFund(),
+                    onItemTap: (instrument) =>
+                        navigator?.openFund(fundId: instrument.id),
                   ),
                 },
               ),

@@ -1,12 +1,11 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../funds/data/mock_fund_data.dart';
-import '../../../funds/presentation/widgets/collateral_section.dart';
-import '../../../funds/presentation/widgets/fund_balance_card.dart';
-import '../../../funds/presentation/widgets/fund_summary_section.dart';
-import '../../../funds/presentation/widgets/margin_breakdown_section.dart';
-import '../../../funds/presentation/widgets/recent_fund_activity.dart';
+import '../../../fund_details/presentation/bloc/fund_details_bloc.dart';
+import '../../../fund_details/presentation/bloc/fund_details_event.dart';
+import '../../../fund_details/presentation/bloc/fund_details_state.dart';
+import '../../../fund_details/presentation/widgets/fund_sections.dart';
 
 class FundContent extends StatelessWidget {
   const FundContent({
@@ -17,7 +16,6 @@ class FundContent extends StatelessWidget {
     this.showDragHandle = false,
     super.key,
   });
-
   final VoidCallback onBuy;
   final VoidCallback onSell;
   final ScrollController? scrollController;
@@ -25,102 +23,63 @@ class FundContent extends StatelessWidget {
   final bool showDragHandle;
 
   @override
-  Widget build(BuildContext context) {
-    return ListView(
-      controller: scrollController,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1080),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (showDragHandle) ...[
-                  Center(
-                    child: Container(
-                      width: AppSizes.buttonHeightSm,
-                      height: AppRadius.xs,
-                      decoration: BoxDecoration(
-                        color: context.appColors.border,
-                        borderRadius: AppRadius.pillBorderRadius,
-                      ),
-                    ),
+  Widget build(BuildContext context) =>
+      BlocConsumer<FundDetailsBloc, FundDetailsState>(
+        listenWhen: (previous, current) =>
+            previous.messageVersion != current.messageVersion &&
+            current.message != null,
+        listener: (context, state) => ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(state.message!))),
+        builder: (context, state) => ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          children: [
+            if (showDragHandle) ...[
+              Center(
+                child: Container(
+                  width: AppSizes.buttonHeightSm,
+                  height: AppRadius.xs,
+                  decoration: BoxDecoration(
+                    color: context.appColors.border,
+                    borderRadius: AppRadius.pillBorderRadius,
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                ],
-                AppSectionHeader(
-                  title: 'Funds',
-                  trailing: onClose == null
-                      ? IconButton(
-                          tooltip: 'More fund options',
-                          onPressed: _noOp,
-                          icon: const Icon(Icons.more_vert),
-                        )
-                      : IconButton(
-                          tooltip: 'Close funds',
-                          onPressed: onClose,
-                          icon: const Icon(Icons.close),
-                        ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-                FundBalanceCard(
-                  summary: mockFundSummary,
-                  onBuy: onBuy,
-                  onSell: onSell,
-                  onAddFunds: _noOp,
-                  onWithdraw: _noOp,
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+            if (onClose != null)
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  tooltip: 'Close fund details',
+                  onPressed: onClose,
+                  icon: const Icon(Icons.close),
                 ),
-                const SizedBox(height: AppSpacing.xxl),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    if (constraints.maxWidth < 760) {
-                      return const Column(
-                        children: [
-                          FundSummarySection(summary: mockFundSummary),
-                          SizedBox(height: AppSpacing.xxl),
-                          CollateralSection(collateral: mockCollateralSummary),
-                          SizedBox(height: AppSpacing.xxl),
-                          MarginBreakdownSection(margin: mockMarginBreakdown),
-                        ],
-                      );
-                    }
-
-                    return const Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: FundSummarySection(summary: mockFundSummary),
-                        ),
-                        SizedBox(width: AppSpacing.xxl),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              CollateralSection(
-                                collateral: mockCollateralSummary,
-                              ),
-                              SizedBox(height: AppSpacing.xxl),
-                              MarginBreakdownSection(
-                                margin: mockMarginBreakdown,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+              ),
+            switch (state.status) {
+              FundDetailsStatus.initial ||
+              FundDetailsStatus.loading => const SizedBox(
+                height: 360,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              FundDetailsStatus.error => AppEmptyState(
+                title: 'Unable to load fund details',
+                description: state.errorMessage ?? 'Please try again.',
+                action: AppButton(
+                  label: 'Retry',
+                  onPressed: () => context.read<FundDetailsBloc>().add(
+                    const FundDetailsRetryRequested(),
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.xxl),
-                const RecentFundActivity(activities: mockFundActivities),
-                const SizedBox(height: AppSpacing.lg),
-              ],
-            ),
-          ),
+              ),
+              FundDetailsStatus.loaded => FundLoadedSections(
+                state: state,
+                onBuy: onBuy,
+                onSell: onSell,
+              ),
+            },
+          ],
         ),
-      ],
-    );
-  }
-
-  static void _noOp() {}
+      );
 }

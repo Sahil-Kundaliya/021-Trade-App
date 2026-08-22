@@ -23,10 +23,11 @@ final class AppNavigatorImpl implements AppNavigator {
   void goToProfile() => _openTab(const ProfileRoute());
 
   @override
-  Future<void> openOrders() => _router.push<void>(const OrdersRoute());
+  Future<void> openOrders({String? fundId, TradeSide? side}) =>
+      _router.push<void>(const OrdersRoute());
 
   @override
-  Future<void> openFund() async {
+  Future<void> openFund({required String fundId}) async {
     final context = _router.navigatorKey.currentContext;
     if (context == null) return;
 
@@ -37,7 +38,7 @@ final class AppNavigatorImpl implements AppNavigator {
       isDismissible: true,
       enableDrag: true,
       backgroundColor: context.appColors.surface.withValues(alpha: 0),
-      builder: (_) => FundSheet(navigator: this),
+      builder: (_) => FundSheet(fundId: fundId, navigator: this),
     );
   }
 

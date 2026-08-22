@@ -1,3 +1,5 @@
+enum TradeSide { buy, sell }
+
 abstract interface class AppNavigator {
   void goToDashboard();
 
@@ -7,9 +9,9 @@ abstract interface class AppNavigator {
 
   void goToProfile();
 
-  Future<void> openOrders();
+  Future<void> openOrders({String? fundId, TradeSide? side});
 
-  Future<void> openFund();
+  Future<void> openFund({required String fundId});
 
   Future<void> pop();
 }

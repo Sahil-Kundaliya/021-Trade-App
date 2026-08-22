@@ -1,3 +1,10 @@
 export 'src/root/presentation/pages/fund_page.dart';
 export 'src/root/presentation/widgets/fund_content.dart';
 export 'src/root/presentation/widgets/fund_sheet.dart';
+export 'src/fund_details/domain/entities/available_watchlist.dart';
+export 'src/fund_details/domain/entities/fund_details.dart';
+export 'src/fund_details/domain/repositories/fund_repository.dart';
+export 'src/fund_details/domain/repositories/fund_watchlist_repository.dart';
+export 'src/fund_details/presentation/bloc/fund_details_bloc.dart';
+export 'src/fund_details/presentation/bloc/fund_details_event.dart';
+export 'src/fund_details/presentation/bloc/fund_details_state.dart';

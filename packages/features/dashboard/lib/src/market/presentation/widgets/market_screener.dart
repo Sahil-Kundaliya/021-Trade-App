@@ -65,6 +65,7 @@ class MarketScreener extends StatelessWidget {
   MarketDisplayItem _toDisplayItem(MarketInstrument instrument) {
     final expiry = instrument.expiryDate;
     return MarketDisplayItem(
+      id: instrument.id,
       symbol: instrument.category == MarketCategory.options
           ? instrument.underlyingSymbol ?? instrument.symbol
           : instrument.symbol,

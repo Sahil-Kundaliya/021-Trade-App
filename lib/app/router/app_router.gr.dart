@@ -27,22 +27,6 @@ class DashboardRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [FundRoutePage]
-class FundRoute extends PageRouteInfo<void> {
-  const FundRoute({List<PageRouteInfo>? children})
-    : super(FundRoute.name, initialChildren: children);
-
-  static const String name = 'FundRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      return const FundRoutePage();
-    },
-  );
-}
-
-/// generated route for
 /// [MainShellPage]
 class MainShellRoute extends PageRouteInfo<void> {
   const MainShellRoute({List<PageRouteInfo>? children})

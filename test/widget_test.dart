@@ -58,11 +58,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(OrdersPage), findsNothing);
 
-    app.navigator.openFund();
+    app.navigator.openFund(fundId: 'RELIANCE_EQ');
     await tester.pumpAndSettle();
     expect(find.byType(FundSheet), findsOneWidget);
-    expect(find.text('Buy'), findsOneWidget);
-    expect(find.text('Sell'), findsOneWidget);
+    expect(find.text('BUY'), findsOneWidget);
+    expect(find.text('SELL'), findsOneWidget);
 
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
@@ -81,7 +81,7 @@ void main() {
       await tester.tap(entryPoint);
       await tester.pumpAndSettle();
       expect(find.byType(FundSheet), findsOneWidget);
-      await tester.tap(find.byTooltip('Close funds'));
+      await tester.tap(find.byTooltip('Close fund details'));
       await tester.pumpAndSettle();
       expect(find.byType(FundSheet), findsNothing);
     }
@@ -117,7 +117,51 @@ void main() {
       expect(find.text('Dashboard'), findsExactly(2));
     }
 
-    await verifyQuickTrade('Buy');
-    await verifyQuickTrade('Sell');
+    await verifyQuickTrade('BUY');
+    await verifyQuickTrade('SELL');
+  });
+
+  testWidgets('future and option IDs render their own dynamic fund details', (
+    tester,
+  ) async {
+    final app = TradingApp();
+    await tester.pumpWidget(app);
+    await tester.pumpAndSettle();
+
+    app.navigator.openFund(fundId: 'TCS_FUT_20260825');
+    await tester.pumpAndSettle();
+    expect(find.text('TCS AUG FUT'), findsOneWidget);
+    expect(find.text('Future'), findsOneWidget);
+    expect(find.text('Expiry'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    app.navigator.openFund(fundId: 'SBIN_OPT_1050_CE_20260825');
+    await tester.pumpAndSettle();
+    expect(find.text('SBIN 1050 CE'), findsOneWidget);
+    expect(find.text('Options'), findsWidgets);
+    expect(find.text('Strike'), findsOneWidget);
+    expect(find.text('Implied Volatility'), findsOneWidget);
+    await tester.ensureVisible(find.text('PRICE HISTORY'));
+    await tester.pumpAndSettle();
+    expect(find.text('1M'), findsOneWidget);
+    expect(find.text('3M'), findsOneWidget);
+  });
+
+  testWidgets('fund sheet adds its current fund to persisted Default', (
+    tester,
+  ) async {
+    final app = TradingApp();
+    await tester.pumpWidget(app);
+    await tester.pumpAndSettle();
+
+    app.navigator.openFund(fundId: 'AXISBANK_EQ');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Add to Watchlist'));
+    await tester.pumpAndSettle();
+    expect(find.text('Default'), findsOneWidget);
+    await tester.tap(find.text('Add'));
+    await tester.pumpAndSettle();
+    expect(find.text('Added to Default'), findsOneWidget);
   });
 }

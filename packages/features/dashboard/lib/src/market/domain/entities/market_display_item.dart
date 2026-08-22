@@ -1,5 +1,6 @@
 class MarketDisplayItem {
   const MarketDisplayItem({
+    required this.id,
     required this.symbol,
     required this.title,
     required this.ltp,
@@ -11,6 +12,7 @@ class MarketDisplayItem {
     this.volume,
   });
 
+  final String id;
   final String symbol;
   final String title;
   final String ltp;

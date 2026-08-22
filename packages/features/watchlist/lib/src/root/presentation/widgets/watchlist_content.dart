@@ -57,7 +57,7 @@ class WatchlistContent extends StatelessWidget {
                     onSelected: (watchlistId) => context
                         .read<WatchlistBloc>()
                         .add(WatchlistSelected(watchlistId: watchlistId)),
-                    onStockTap: (_) => navigator?.openFund(),
+                    onStockTap: (fund) => navigator?.openFund(fundId: fund.id),
                   ),
                 },
               ),

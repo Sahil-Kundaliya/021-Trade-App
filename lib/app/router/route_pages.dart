@@ -1,6 +1,5 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:dashboard/dashboard.dart';
-import 'package:fund/fund.dart';
 import 'package:orders/orders.dart';
 import 'package:portfolio/portfolio.dart';
 import 'package:profile/profile.dart';
@@ -49,13 +48,4 @@ class OrdersRoutePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const OrdersPage();
-}
-
-@RoutePage(name: 'FundRoute')
-class FundRoutePage extends StatelessWidget {
-  const FundRoutePage({super.key});
-
-  @override
-  Widget build(BuildContext context) =>
-      FundPage(navigator: AppNavigationScope.of(context));
 }

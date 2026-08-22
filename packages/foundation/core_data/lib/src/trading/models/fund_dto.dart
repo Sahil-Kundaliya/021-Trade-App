@@ -1,6 +1,9 @@
 import '../parsing/json_value_reader.dart';
 import 'market_depth_dto.dart';
 import 'price_history_point_dto.dart';
+import 'fund_activity_dto.dart';
+import 'fund_collateral_dto.dart';
+import 'fund_margin_dto.dart';
 
 class FundDto {
   const FundDto({
@@ -31,6 +34,9 @@ class FundDto {
     required this.marketDepth,
     required this.oneMonthPriceHistory,
     required this.threeMonthPriceHistory,
+    required this.marginDetails,
+    required this.collateralDetails,
+    required this.recentActivity,
   });
 
   factory FundDto.fromJson(Map<String, dynamic> json) {
@@ -95,6 +101,24 @@ class FundDto {
       ),
       oneMonthPriceHistory: historyPoints('oneMonth'),
       threeMonthPriceHistory: historyPoints('threeMonths'),
+      marginDetails: FundMarginDto.fromJson(
+        JsonValueReader.object(json, 'marginDetails'),
+      ),
+      collateralDetails: FundCollateralDto.fromJson(
+        JsonValueReader.object(json, 'collateralDetails'),
+      ),
+      recentActivity: JsonValueReader.list(json, 'recentActivity')
+          .asMap()
+          .entries
+          .map(
+            (entry) => FundActivityDto.fromJson(
+              JsonValueReader.listObject(
+                entry.value,
+                'recentActivity[${entry.key}]',
+              ),
+            ),
+          )
+          .toList(growable: false),
     );
   }
 
@@ -125,4 +149,7 @@ class FundDto {
   final MarketDepthDto marketDepth;
   final List<PriceHistoryPointDto> oneMonthPriceHistory;
   final List<PriceHistoryPointDto> threeMonthPriceHistory;
+  final FundMarginDto marginDetails;
+  final FundCollateralDto collateralDetails;
+  final List<FundActivityDto> recentActivity;
 }

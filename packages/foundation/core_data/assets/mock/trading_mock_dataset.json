@@ -237,7 +237,36 @@
             "value": 1316.0
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": 0.0,
+        "intraday": 10528.0,
+        "overnight": null,
+        "span": null,
+        "exposure": null
+      },
+      "collateralDetails": {
+        "isEligible": true,
+        "haircutPercent": 12.5,
+        "eligibleValue": 52640.0,
+        "postHaircutValue": 46060.0
+      },
+      "recentActivity": [
+        {
+          "id": "RELIANCE_EQ_activity_1",
+          "type": "buy",
+          "title": "Bought 10 shares",
+          "description": "Executed at 1316.00",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "RELIANCE_EQ_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Reliance Industries",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "TCS_EQ",
@@ -452,7 +481,36 @@
             "value": 2302.0
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": 0.0,
+        "intraday": 18416.0,
+        "overnight": null,
+        "span": null,
+        "exposure": null
+      },
+      "collateralDetails": {
+        "isEligible": true,
+        "haircutPercent": 12.5,
+        "eligibleValue": 92080.0,
+        "postHaircutValue": 80570.0
+      },
+      "recentActivity": [
+        {
+          "id": "TCS_EQ_activity_1",
+          "type": "buy",
+          "title": "Bought 10 shares",
+          "description": "Executed at 2302.00",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "TCS_EQ_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Tata Consultancy Services",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "INFY_EQ",
@@ -666,7 +724,36 @@
             "value": 1121.0
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": 0.0,
+        "intraday": 8968.0,
+        "overnight": null,
+        "span": null,
+        "exposure": null
+      },
+      "collateralDetails": {
+        "isEligible": true,
+        "haircutPercent": 12.5,
+        "eligibleValue": 44840.0,
+        "postHaircutValue": 39235.0
+      },
+      "recentActivity": [
+        {
+          "id": "INFY_EQ_activity_1",
+          "type": "buy",
+          "title": "Bought 10 shares",
+          "description": "Executed at 1121.00",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "INFY_EQ_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Infosys",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "HDFCBANK_EQ",
@@ -881,7 +968,36 @@
             "value": 726.95
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": 0.0,
+        "intraday": 5815.6,
+        "overnight": null,
+        "span": null,
+        "exposure": null
+      },
+      "collateralDetails": {
+        "isEligible": true,
+        "haircutPercent": 12.5,
+        "eligibleValue": 29078.0,
+        "postHaircutValue": 25443.25
+      },
+      "recentActivity": [
+        {
+          "id": "HDFCBANK_EQ_activity_1",
+          "type": "buy",
+          "title": "Bought 10 shares",
+          "description": "Executed at 726.95",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "HDFCBANK_EQ_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "HDFC Bank",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "ICICIBANK_EQ",
@@ -1096,7 +1212,36 @@
             "value": 1420.0
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": 0.0,
+        "intraday": 11360.0,
+        "overnight": null,
+        "span": null,
+        "exposure": null
+      },
+      "collateralDetails": {
+        "isEligible": true,
+        "haircutPercent": 12.5,
+        "eligibleValue": 56800.0,
+        "postHaircutValue": 49700.0
+      },
+      "recentActivity": [
+        {
+          "id": "ICICIBANK_EQ_activity_1",
+          "type": "buy",
+          "title": "Bought 10 shares",
+          "description": "Executed at 1420.00",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "ICICIBANK_EQ_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "ICICI Bank",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "SBIN_EQ",
@@ -1310,7 +1455,36 @@
             "value": 1048.7
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": 0.0,
+        "intraday": 8389.6,
+        "overnight": null,
+        "span": null,
+        "exposure": null
+      },
+      "collateralDetails": {
+        "isEligible": true,
+        "haircutPercent": 12.5,
+        "eligibleValue": 41948.0,
+        "postHaircutValue": 36704.5
+      },
+      "recentActivity": [
+        {
+          "id": "SBIN_EQ_activity_1",
+          "type": "buy",
+          "title": "Bought 10 shares",
+          "description": "Executed at 1048.70",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "SBIN_EQ_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "State Bank of India",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "ITC_EQ",
@@ -1525,7 +1699,36 @@
             "value": 269.4
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": 0.0,
+        "intraday": 2155.2000000000003,
+        "overnight": null,
+        "span": null,
+        "exposure": null
+      },
+      "collateralDetails": {
+        "isEligible": true,
+        "haircutPercent": 12.5,
+        "eligibleValue": 10776.0,
+        "postHaircutValue": 9429.0
+      },
+      "recentActivity": [
+        {
+          "id": "ITC_EQ_activity_1",
+          "type": "buy",
+          "title": "Bought 10 shares",
+          "description": "Executed at 269.40",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "ITC_EQ_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "ITC",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "LT_EQ",
@@ -1740,7 +1943,36 @@
             "value": 4093.0
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": 0.0,
+        "intraday": 32744.0,
+        "overnight": null,
+        "span": null,
+        "exposure": null
+      },
+      "collateralDetails": {
+        "isEligible": true,
+        "haircutPercent": 12.5,
+        "eligibleValue": 163720.0,
+        "postHaircutValue": 143255.0
+      },
+      "recentActivity": [
+        {
+          "id": "LT_EQ_activity_1",
+          "type": "buy",
+          "title": "Bought 10 shares",
+          "description": "Executed at 4093.00",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "LT_EQ_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Larsen & Toubro",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "BHARTIARTL_EQ",
@@ -1955,7 +2187,36 @@
             "value": 1946.0
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": 0.0,
+        "intraday": 15568.0,
+        "overnight": null,
+        "span": null,
+        "exposure": null
+      },
+      "collateralDetails": {
+        "isEligible": true,
+        "haircutPercent": 12.5,
+        "eligibleValue": 77840.0,
+        "postHaircutValue": 68110.0
+      },
+      "recentActivity": [
+        {
+          "id": "BHARTIARTL_EQ_activity_1",
+          "type": "buy",
+          "title": "Bought 10 shares",
+          "description": "Executed at 1946.00",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "BHARTIARTL_EQ_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Bharti Airtel",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "AXISBANK_EQ",
@@ -2169,7 +2430,36 @@
             "value": 1243.1
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": 0.0,
+        "intraday": 9944.800000000001,
+        "overnight": null,
+        "span": null,
+        "exposure": null
+      },
+      "collateralDetails": {
+        "isEligible": true,
+        "haircutPercent": 12.5,
+        "eligibleValue": 49724.0,
+        "postHaircutValue": 43508.5
+      },
+      "recentActivity": [
+        {
+          "id": "AXISBANK_EQ_activity_1",
+          "type": "buy",
+          "title": "Bought 10 shares",
+          "description": "Executed at 1243.10",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "AXISBANK_EQ_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Axis Bank",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "RELIANCE_FUT_20260825",
@@ -2384,7 +2674,36 @@
             "value": 1318.5
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 98887.5,
+        "overnight": 250515.0,
+        "span": 164812.5,
+        "exposure": 85702.5
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 131850.0,
+        "postHaircutValue": 105480.0
+      },
+      "recentActivity": [
+        {
+          "id": "RELIANCE_FUT_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 1318.50",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "RELIANCE_FUT_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Reliance Industries",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "TCS_FUT_20260825",
@@ -2599,7 +2918,36 @@
             "value": 2311.2
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 78002.99999999999,
+        "overnight": 197607.59999999998,
+        "span": 130004.99999999999,
+        "exposure": 67602.59999999999
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 104004.0,
+        "postHaircutValue": 83203.20000000001
+      },
+      "recentActivity": [
+        {
+          "id": "TCS_FUT_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 2311.20",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "TCS_FUT_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Tata Consultancy Services",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "INFY_FUT_20260825",
@@ -2814,7 +3162,36 @@
             "value": 1123.4
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 67404.0,
+        "overnight": 170756.80000000002,
+        "span": 112340.00000000001,
+        "exposure": 58416.80000000001
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 89872.00000000001,
+        "postHaircutValue": 71897.60000000002
+      },
+      "recentActivity": [
+        {
+          "id": "INFY_FUT_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 1123.40",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "INFY_FUT_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Infosys",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "HDFCBANK_FUT_20260825",
@@ -3030,7 +3407,36 @@
             "value": 728.1
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 120136.5,
+        "overnight": 304345.8,
+        "span": 200227.5,
+        "exposure": 104118.3
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 160182.0,
+        "postHaircutValue": 128145.6
+      },
+      "recentActivity": [
+        {
+          "id": "HDFCBANK_FUT_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 728.10",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "HDFCBANK_FUT_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "HDFC Bank",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "ICICIBANK_FUT_20260825",
@@ -3245,7 +3651,36 @@
             "value": 1422.4
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 149352.0,
+        "overnight": 378358.4,
+        "span": 248920.00000000003,
+        "exposure": 129438.40000000002
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 199136.00000000003,
+        "postHaircutValue": 159308.80000000005
+      },
+      "recentActivity": [
+        {
+          "id": "ICICIBANK_FUT_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 1422.40",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "ICICIBANK_FUT_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "ICICI Bank",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "SBIN_FUT_20260825",
@@ -3460,7 +3895,36 @@
             "value": 1050.0
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 118125.0,
+        "overnight": 299250.0,
+        "span": 196875.0,
+        "exposure": 102375.0
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 157500.0,
+        "postHaircutValue": 126000.0
+      },
+      "recentActivity": [
+        {
+          "id": "SBIN_FUT_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 1050.00",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "SBIN_FUT_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "State Bank of India",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "ITC_FUT_20260825",
@@ -3674,7 +4138,36 @@
             "value": 270.05
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 64812.0,
+        "overnight": 164190.4,
+        "span": 108020.0,
+        "exposure": 56170.4
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 86416.0,
+        "postHaircutValue": 69132.8
+      },
+      "recentActivity": [
+        {
+          "id": "ITC_FUT_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 270.05",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "ITC_FUT_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "ITC",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "LT_FUT_20260825",
@@ -3888,7 +4381,36 @@
             "value": 4100.5
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 107638.125,
+        "overnight": 272683.25,
+        "span": 179396.875,
+        "exposure": 93286.375
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 143517.5,
+        "postHaircutValue": 114814.0
+      },
+      "recentActivity": [
+        {
+          "id": "LT_FUT_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 4100.50",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "LT_FUT_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Larsen & Toubro",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "BHARTIARTL_FUT_20260825",
@@ -4103,7 +4625,36 @@
             "value": 1949.2
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 138880.5,
+        "overnight": 351830.6,
+        "span": 231467.5,
+        "exposure": 120363.1
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 185174.0,
+        "postHaircutValue": 148139.2
+      },
+      "recentActivity": [
+        {
+          "id": "BHARTIARTL_FUT_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 1949.20",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "BHARTIARTL_FUT_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Bharti Airtel",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "AXISBANK_FUT_20260825",
@@ -4318,7 +4869,36 @@
             "value": 1245.0
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 116718.75,
+        "overnight": 295687.5,
+        "span": 194531.25,
+        "exposure": 101156.25
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 155625.0,
+        "postHaircutValue": 124500.0
+      },
+      "recentActivity": [
+        {
+          "id": "AXISBANK_FUT_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 1245.00",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "AXISBANK_FUT_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Axis Bank",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "RELIANCE_OPT_1320_CE_20260825",
@@ -4534,7 +5114,36 @@
             "value": 22.8
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 1710.0,
+        "overnight": 4332.0,
+        "span": 2850.0,
+        "exposure": 1482.0
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 2280.0,
+        "postHaircutValue": 1824.0
+      },
+      "recentActivity": [
+        {
+          "id": "RELIANCE_OPT_1320_CE_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 22.80",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "RELIANCE_OPT_1320_CE_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Reliance Industries",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "TCS_OPT_2300_CE_20260825",
@@ -4750,7 +5359,36 @@
             "value": 70.6
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 2382.7499999999995,
+        "overnight": 6036.299999999999,
+        "span": 3971.2499999999995,
+        "exposure": 2065.0499999999997
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 3177.0,
+        "postHaircutValue": 2541.6000000000004
+      },
+      "recentActivity": [
+        {
+          "id": "TCS_OPT_2300_CE_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 70.60",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "TCS_OPT_2300_CE_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Tata Consultancy Services",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "INFY_OPT_1120_PE_20260825",
@@ -4966,7 +5604,36 @@
             "value": 18.4
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 1103.9999999999998,
+        "overnight": 2796.7999999999997,
+        "span": 1839.9999999999998,
+        "exposure": 956.8
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 1472.0,
+        "postHaircutValue": 1177.6000000000001
+      },
+      "recentActivity": [
+        {
+          "id": "INFY_OPT_1120_PE_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 18.40",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "INFY_OPT_1120_PE_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Infosys",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "HDFCBANK_OPT_730_CE_20260825",
@@ -5182,7 +5849,36 @@
             "value": 8.7
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 1435.5,
+        "overnight": 3636.6,
+        "span": 2392.5,
+        "exposure": 1244.1000000000001
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 1914.0,
+        "postHaircutValue": 1531.2
+      },
+      "recentActivity": [
+        {
+          "id": "HDFCBANK_OPT_730_CE_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 8.70",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "HDFCBANK_OPT_730_CE_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "HDFC Bank",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "ICICIBANK_OPT_1420_PE_20260825",
@@ -5399,7 +6095,36 @@
             "value": 19.8
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 2079.0,
+        "overnight": 5266.8,
+        "span": 3465.0,
+        "exposure": 1801.8
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 2772.0,
+        "postHaircutValue": 2217.6
+      },
+      "recentActivity": [
+        {
+          "id": "ICICIBANK_OPT_1420_PE_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 19.80",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "ICICIBANK_OPT_1420_PE_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "ICICI Bank",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "SBIN_OPT_1050_CE_20260825",
@@ -5615,7 +6340,36 @@
             "value": 13.9
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 1563.75,
+        "overnight": 3961.5,
+        "span": 2606.25,
+        "exposure": 1355.25
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 2085.0,
+        "postHaircutValue": 1668.0
+      },
+      "recentActivity": [
+        {
+          "id": "SBIN_OPT_1050_CE_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 13.90",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "SBIN_OPT_1050_CE_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "State Bank of India",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "ITC_OPT_270_PE_20260825",
@@ -5832,7 +6586,36 @@
             "value": 3.45
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 828.0,
+        "overnight": 2097.6,
+        "span": 1380.0,
+        "exposure": 717.6
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 1104.0,
+        "postHaircutValue": 883.2
+      },
+      "recentActivity": [
+        {
+          "id": "ITC_OPT_270_PE_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 3.45",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "ITC_OPT_270_PE_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "ITC",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "LT_OPT_4100_CE_20260825",
@@ -6048,7 +6831,36 @@
             "value": 63.5
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 1666.875,
+        "overnight": 4222.75,
+        "span": 2778.125,
+        "exposure": 1444.625
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 2222.5,
+        "postHaircutValue": 1778.0
+      },
+      "recentActivity": [
+        {
+          "id": "LT_OPT_4100_CE_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 63.50",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "LT_OPT_4100_CE_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Larsen & Toubro",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "BHARTIARTL_OPT_1950_PE_20260825",
@@ -6264,7 +7076,36 @@
             "value": 30.8
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 2194.5,
+        "overnight": 5559.4,
+        "span": 3657.5,
+        "exposure": 1901.9
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 2926.0,
+        "postHaircutValue": 2340.8
+      },
+      "recentActivity": [
+        {
+          "id": "BHARTIARTL_OPT_1950_PE_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 30.80",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "BHARTIARTL_OPT_1950_PE_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Bharti Airtel",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     },
     {
       "id": "AXISBANK_OPT_1240_CE_20260825",
@@ -6480,7 +7321,36 @@
             "value": 25.6
           }
         ]
-      }
+      },
+      "marginDetails": {
+        "delivery": null,
+        "intraday": 2400.0,
+        "overnight": 6080.0,
+        "span": 4000.0,
+        "exposure": 2080.0
+      },
+      "collateralDetails": {
+        "isEligible": false,
+        "haircutPercent": 20.0,
+        "eligibleValue": 3200.0,
+        "postHaircutValue": 2560.0
+      },
+      "recentActivity": [
+        {
+          "id": "AXISBANK_OPT_1240_CE_20260825_activity_1",
+          "type": "trade",
+          "title": "Traded 1 lot",
+          "description": "Executed at 25.60",
+          "timestamp": "2026-08-20T10:42:00+05:30"
+        },
+        {
+          "id": "AXISBANK_OPT_1240_CE_20260825_activity_2",
+          "type": "watchlist",
+          "title": "Viewed in market scanner",
+          "description": "Axis Bank",
+          "timestamp": "2026-08-18T12:15:00+05:30"
+        }
+      ]
     }
   ],
   "holdings": [
