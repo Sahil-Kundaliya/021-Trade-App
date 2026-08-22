@@ -3,7 +3,11 @@ import 'package:orders/orders.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zero_two_one_trade_assignment/app/app.dart';
 
+import 'helpers/test_trading_api.dart';
+
 void main() {
+  setUpAll(installImmediateTradingApi);
+
   testWidgets('bottom navigation stays synchronized with tab routing', (
     tester,
   ) async {

@@ -1,3 +1,10 @@
 export 'src/cache/key_value_storage.dart';
 export 'src/storage/flutter_secure_storage_impl.dart';
 export 'src/storage/secure_storage.dart';
+export 'src/trading/api/trading_local_api.dart';
+export 'src/trading/exceptions/trading_data_exception.dart';
+export 'src/trading/models/fund_dto.dart';
+export 'src/trading/models/holding_dto.dart';
+export 'src/trading/models/market_depth_dto.dart';
+export 'src/trading/models/market_depth_level_dto.dart';
+export 'src/trading/models/price_history_point_dto.dart';

@@ -4,7 +4,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:portfolio/portfolio.dart';
 import 'package:portfolio/src/holdings/presentation/widgets/holdings_list.dart';
 
+import 'helpers/test_trading_api.dart';
+
 void main() {
+  setUpAll(installImmediateTradingApi);
+
+  Future<void> finishLoading(WidgetTester tester) async {
+    await tester.pumpAndSettle();
+  }
+
   Future<void> pumpPortfolio(
     WidgetTester tester, {
     ThemeMode themeMode = ThemeMode.light,
@@ -19,24 +27,24 @@ void main() {
     );
   }
 
-  testWidgets('shows the portfolio summary and static holdings', (
+  testWidgets('shows the portfolio summary and dataset holdings', (
     tester,
   ) async {
     await pumpPortfolio(tester);
+    await finishLoading(tester);
 
     expect(find.text('Portfolio'), findsOneWidget);
     expect(find.text('Portfolio Value'), findsOneWidget);
-    expect(find.text('\u20B94,82,640.50'), findsNWidgets(2));
-    expect(find.text('+\u20B932,640.50'), findsOneWidget);
-    expect(find.text('+7.25%'), findsOneWidget);
+    expect(find.text('\u20B97,39,040.00'), findsNWidgets(2));
+    expect(find.text('+\u20B910,775.00'), findsOneWidget);
+    expect(find.text('+1.48%'), findsOneWidget);
     expect(find.text('Unrealised Gain'), findsOneWidget);
     expect(find.text('Total Invested'), findsOneWidget);
-    expect(find.text('\u20B94,50,000.00'), findsOneWidget);
+    expect(find.text('\u20B97,28,265.00'), findsOneWidget);
     expect(find.text('Holdings'), findsOneWidget);
     expect(find.text('P&L'), findsWidgets);
     expect(find.text('RELIANCE'), findsOneWidget);
-    expect(find.text('Reliance Industries'), findsOneWidget);
-    expect(find.text('+\u20B96,595.00'), findsOneWidget);
+    expect(find.text('+\u20B91,500.00'), findsOneWidget);
   });
 
   testWidgets('renders safely on a narrow screen and in dark mode', (
@@ -48,6 +56,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await pumpPortfolio(tester, themeMode: ThemeMode.dark);
+    await finishLoading(tester);
 
     expect(find.text('RELIANCE'), findsOneWidget);
     expect(tester.takeException(), isNull);

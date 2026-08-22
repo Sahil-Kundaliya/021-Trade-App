@@ -1,38 +1,32 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 
-import '../../data/market_preview_data.dart';
 import '../../domain/entities/market_category.dart';
 import '../../domain/entities/market_display_item.dart';
+import '../../domain/entities/market_instrument.dart';
 import '../../domain/entities/market_subcategory.dart';
 
-class MarketScreener extends StatefulWidget {
-  const MarketScreener({this.onItemTap, super.key});
+class MarketScreener extends StatelessWidget {
+  const MarketScreener({
+    required this.selectedCategory,
+    required this.selectedSubcategory,
+    required this.instruments,
+    required this.onCategorySelected,
+    required this.onSubcategorySelected,
+    this.onItemTap,
+    super.key,
+  });
 
+  final MarketCategory selectedCategory;
+  final MarketSubcategory selectedSubcategory;
+  final List<MarketInstrument> instruments;
+  final ValueChanged<MarketCategory> onCategorySelected;
+  final ValueChanged<MarketSubcategory> onSubcategorySelected;
   final ValueChanged<MarketDisplayItem>? onItemTap;
 
   @override
-  State<MarketScreener> createState() => _MarketScreenerState();
-}
-
-class _MarketScreenerState extends State<MarketScreener> {
-  MarketCategory _selectedCategory = MarketCategory.equity;
-  MarketSubcategory _selectedSubcategory = MarketSubcategory.topGainers;
-
-  void _selectCategory(MarketCategory category) {
-    if (category == _selectedCategory) return;
-    setState(() {
-      _selectedCategory = category;
-      _selectedSubcategory = category.subcategories.first;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final items = MarketPreviewData.itemsFor(
-      _selectedCategory,
-      _selectedSubcategory,
-    );
+    final items = instruments.map(_toDisplayItem).toList(growable: false);
 
     return AppCard(
       child: Column(
@@ -44,30 +38,62 @@ class _MarketScreenerState extends State<MarketScreener> {
           ),
           const SizedBox(height: AppSpacing.lg),
           MarketCategorySelector(
-            selectedCategory: _selectedCategory,
-            onSelected: _selectCategory,
+            selectedCategory: selectedCategory,
+            onSelected: onCategorySelected,
           ),
           const SizedBox(height: AppSpacing.md),
           MarketSubcategoryTabs(
-            subcategories: _selectedCategory.subcategories,
-            selectedSubcategory: _selectedSubcategory,
-            onSelected: (subcategory) {
-              setState(() => _selectedSubcategory = subcategory);
-            },
+            subcategories: selectedCategory.subcategories,
+            selectedSubcategory: selectedSubcategory,
+            onSelected: onSubcategorySelected,
           ),
           const SizedBox(height: AppSpacing.sm),
           AnimatedSwitcher(
             duration: AppDurations.fast,
             child: MarketList(
-              key: ValueKey((_selectedCategory, _selectedSubcategory)),
-              category: _selectedCategory,
+              key: ValueKey((selectedCategory, selectedSubcategory)),
+              category: selectedCategory,
               items: items,
-              onItemTap: widget.onItemTap,
+              onItemTap: onItemTap,
             ),
           ),
         ],
       ),
     );
+  }
+
+  MarketDisplayItem _toDisplayItem(MarketInstrument instrument) {
+    final expiry = instrument.expiryDate;
+    return MarketDisplayItem(
+      symbol: instrument.category == MarketCategory.options
+          ? instrument.underlyingSymbol ?? instrument.symbol
+          : instrument.symbol,
+      title: instrument.companyName,
+      ltp: _currency(instrument.ltp),
+      change: _signedCurrency(instrument.change),
+      changePercent: instrument.changePercent,
+      expiry: expiry == null
+          ? null
+          : '${expiry.day.toString().padLeft(2, '0')}/'
+                '${expiry.month.toString().padLeft(2, '0')}/'
+                '${expiry.year}',
+      strike: instrument.strikePrice?.toStringAsFixed(0),
+      optionType: instrument.optionType,
+      volume: _compactVolume(instrument.volume),
+    );
+  }
+
+  String _currency(double value) => '₹${value.toStringAsFixed(2)}';
+
+  String _signedCurrency(double value) {
+    final sign = value >= 0 ? '+' : '-';
+    return '$sign₹${value.abs().toStringAsFixed(2)}';
+  }
+
+  String _compactVolume(int value) {
+    if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
+    if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}K';
+    return value.toString();
   }
 }
 

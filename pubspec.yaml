@@ -22,6 +22,7 @@ dependencies:
     path: packages/features/watchlist
   flutter:
     sdk: flutter
+  get_it: ^8.2.0
   core_data:
     path: packages/foundation/core_data
   core_ui:

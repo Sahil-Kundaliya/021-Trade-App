@@ -4,9 +4,11 @@ import 'package:navigation_contract/navigation_contract.dart';
 import 'package:zero_two_one_trade_assignment/app/navigation/app_navigation_scope.dart';
 import 'package:zero_two_one_trade_assignment/app/navigation/app_navigator_impl.dart';
 import 'package:zero_two_one_trade_assignment/app/router/app_router.dart';
+import 'package:zero_two_one_trade_assignment/app/dependency_injection.dart';
 
 class TradingApp extends StatelessWidget {
   factory TradingApp({Key? key, AppRouter? router}) {
+    configureDependencies();
     final appRouter = router ?? AppRouter();
     return TradingApp._(
       key: key,
