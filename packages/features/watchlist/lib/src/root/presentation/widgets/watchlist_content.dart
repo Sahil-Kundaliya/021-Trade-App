@@ -1,0 +1,93 @@
+import 'package:core_ui/core_ui.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:navigation_contract/navigation_contract.dart';
+
+import '../../../watchlist/presentation/bloc/watchlist_bloc.dart';
+import '../../../watchlist/presentation/bloc/watchlist_event.dart';
+import '../../../watchlist/presentation/bloc/watchlist_state.dart';
+import '../../../watchlist/presentation/widgets/watchlist_header.dart';
+import '../../../watchlist/presentation/widgets/watchlist_section.dart';
+import 'watchlist_market_indices.dart';
+
+class WatchlistContent extends StatelessWidget {
+  const WatchlistContent({this.navigator, super.key});
+
+  final AppNavigator? navigator;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const WatchlistHeader(),
+              const SizedBox(height: AppSpacing.lg),
+              const WatchlistMarketIndices(),
+              const SizedBox(height: AppSpacing.lg),
+              BlocConsumer<WatchlistBloc, WatchlistState>(
+                listenWhen: (previous, current) =>
+                    current.message != null &&
+                    current.message != previous.message,
+                listener: (context, state) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(state.message!)));
+                },
+                builder: (context, state) => switch (state.status) {
+                  WatchlistStatus.initial ||
+                  WatchlistStatus.loading => const _WatchlistLoading(),
+                  WatchlistStatus.error => _WatchlistError(
+                    onRetry: () => context.read<WatchlistBloc>().add(
+                      const WatchlistRetryRequested(),
+                    ),
+                  ),
+                  WatchlistStatus.empty => const WatchlistSection(
+                    watchlists: [],
+                    selectedWatchlistId: null,
+                    funds: [],
+                  ),
+                  WatchlistStatus.loaded => WatchlistSection(
+                    watchlists: state.watchlists,
+                    selectedWatchlistId: state.selectedWatchlistId,
+                    funds: state.visibleFunds,
+                    onSelected: (watchlistId) => context
+                        .read<WatchlistBloc>()
+                        .add(WatchlistSelected(watchlistId: watchlistId)),
+                    onStockTap: (_) => navigator?.openFund(),
+                  ),
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WatchlistLoading extends StatelessWidget {
+  const _WatchlistLoading();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox(
+    height: 260,
+    child: Center(child: CircularProgressIndicator()),
+  );
+}
+
+class _WatchlistError extends StatelessWidget {
+  const _WatchlistError({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => AppEmptyState(
+    title: 'Unable to load watchlists.',
+    description: 'Please try loading your watchlists again.',
+    action: AppButton(label: 'Retry', onPressed: onRetry),
+  );
+}

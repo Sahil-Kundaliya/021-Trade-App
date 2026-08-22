@@ -8,3 +8,6 @@ export 'src/trading/models/holding_dto.dart';
 export 'src/trading/models/market_depth_dto.dart';
 export 'src/trading/models/market_depth_level_dto.dart';
 export 'src/trading/models/price_history_point_dto.dart';
+export 'src/watchlist/api/watchlist_local_api.dart';
+export 'src/watchlist/exceptions/watchlist_data_exception.dart';
+export 'src/watchlist/models/watchlist_dto.dart';

@@ -15,6 +15,10 @@ Future<void> installImmediateTradingApi() async {
       results[1] as List<HoldingDto>,
     ),
   );
+  if (getIt.isRegistered<WatchlistLocalApi>()) {
+    await getIt.unregister<WatchlistLocalApi>();
+  }
+  getIt.registerSingleton<WatchlistLocalApi>(_ImmediateWatchlistApi());
 }
 
 final class _ImmediateTradingApi implements TradingLocalApi {
@@ -28,4 +32,38 @@ final class _ImmediateTradingApi implements TradingLocalApi {
 
   @override
   Future<List<HoldingDto>> getHoldings() async => _holdings;
+}
+
+final class _ImmediateWatchlistApi implements WatchlistLocalApi {
+  _ImmediateWatchlistApi() : _watchlists = _defaults();
+
+  List<WatchlistDto> _watchlists;
+
+  @override
+  Future<List<WatchlistDto>> getWatchlists() async =>
+      List<WatchlistDto>.unmodifiable(_watchlists);
+
+  @override
+  Future<void> saveWatchlists(List<WatchlistDto> watchlists) async {
+    _watchlists = List<WatchlistDto>.unmodifiable(watchlists);
+  }
+
+  static List<WatchlistDto> _defaults() {
+    final now = DateTime(2026, 8, 22);
+    return <WatchlistDto>[
+      WatchlistDto(
+        id: 'watchlist_default',
+        name: 'Default',
+        fundIds: const [
+          'RELIANCE_EQ',
+          'TCS_EQ',
+          'INFY_EQ',
+          'HDFCBANK_EQ',
+          'ICICIBANK_EQ',
+        ],
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ];
+  }
 }

@@ -1,0 +1,312 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
+
+import '../../domain/entities/watchlist.dart';
+import '../../domain/entities/watchlist_fund.dart';
+import '../../domain/repositories/watchlist_repository.dart';
+import 'watchlist_event.dart';
+import 'watchlist_state.dart';
+
+@injectable
+class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
+  WatchlistBloc(this._repository) : super(WatchlistState()) {
+    on<WatchlistStarted>(_load);
+    on<WatchlistRetryRequested>(_load);
+    on<WatchlistSelected>(_select);
+    on<WatchlistCreateRequested>(_create);
+    on<WatchlistRenameRequested>(_rename);
+    on<WatchlistDeleteRequested>(_delete);
+    on<WatchlistFundAddRequested>(_addFund);
+    on<WatchlistFundRemoveRequested>(_removeFund);
+    on<WatchlistFundsReorderRequested>(_reorderFunds);
+  }
+
+  static const maximumWatchlists = 5;
+  static const defaultWatchlistId = 'watchlist_default';
+
+  final WatchlistRepository _repository;
+
+  Future<void> _load(WatchlistEvent event, Emitter<WatchlistState> emit) async {
+    emit(state.copyWith(status: WatchlistStatus.loading, clearError: true));
+    try {
+      final watchlistsFuture = _repository.getWatchlists();
+      final fundsFuture = _repository.getAllFunds();
+      final watchlists = await watchlistsFuture;
+      final funds = await fundsFuture;
+      if (watchlists.isEmpty) {
+        emit(WatchlistState(status: WatchlistStatus.empty, allFunds: funds));
+        return;
+      }
+      final selected = watchlists.any((item) => item.id == defaultWatchlistId)
+          ? defaultWatchlistId
+          : watchlists.first.id;
+      emit(
+        WatchlistState(
+          status: WatchlistStatus.loaded,
+          watchlists: watchlists,
+          selectedWatchlistId: selected,
+          allFunds: funds,
+          visibleFunds: _resolve(watchlists, selected, funds),
+        ),
+      );
+    } on Object catch (error) {
+      emit(
+        state.copyWith(
+          status: WatchlistStatus.error,
+          errorMessage: error.toString(),
+        ),
+      );
+    }
+  }
+
+  void _select(WatchlistSelected event, Emitter<WatchlistState> emit) {
+    if (state.status != WatchlistStatus.loaded ||
+        !state.watchlists.any((item) => item.id == event.watchlistId)) {
+      return;
+    }
+    emit(
+      state.copyWith(
+        selectedWatchlistId: event.watchlistId,
+        visibleFunds: _resolve(
+          state.watchlists,
+          event.watchlistId,
+          state.allFunds,
+        ),
+        clearMessage: true,
+      ),
+    );
+  }
+
+  Future<void> _create(
+    WatchlistCreateRequested event,
+    Emitter<WatchlistState> emit,
+  ) async {
+    if (!_canWrite(emit)) return;
+    final name = event.name.trim();
+    if (state.watchlists.length >= maximumWatchlists) {
+      _reject(emit, 'A maximum of 5 watchlists is allowed.');
+      return;
+    }
+    if (name.isEmpty || _hasName(name)) {
+      _reject(
+        emit,
+        name.isEmpty
+            ? 'Watchlist name is required.'
+            : 'A watchlist with this name already exists.',
+      );
+      return;
+    }
+    final now = DateTime.now();
+    var id = 'watchlist_${now.microsecondsSinceEpoch}';
+    while (state.watchlists.any((item) => item.id == id)) {
+      id = '${id}_new';
+    }
+    final next = <Watchlist>[
+      ...state.watchlists,
+      Watchlist(
+        id: id,
+        name: name,
+        fundIds: const [],
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ];
+    await _save(next, emit, selectedId: id);
+  }
+
+  Future<void> _rename(
+    WatchlistRenameRequested event,
+    Emitter<WatchlistState> emit,
+  ) async {
+    if (!_canWrite(emit)) return;
+    final name = event.newName.trim();
+    final index = state.watchlists.indexWhere(
+      (item) => item.id == event.watchlistId,
+    );
+    if (index < 0 ||
+        name.isEmpty ||
+        _hasName(name, exceptId: event.watchlistId)) {
+      _reject(
+        emit,
+        index < 0
+            ? 'Watchlist not found.'
+            : name.isEmpty
+            ? 'Watchlist name is required.'
+            : 'A watchlist with this name already exists.',
+      );
+      return;
+    }
+    final next = List<Watchlist>.of(state.watchlists);
+    next[index] = next[index].copyWith(name: name, updatedAt: DateTime.now());
+    await _save(next, emit);
+  }
+
+  Future<void> _delete(
+    WatchlistDeleteRequested event,
+    Emitter<WatchlistState> emit,
+  ) async {
+    if (!_canWrite(emit)) return;
+    if (event.watchlistId == defaultWatchlistId) {
+      _reject(emit, 'The Default watchlist cannot be deleted.');
+      return;
+    }
+    if (!state.watchlists.any((item) => item.id == event.watchlistId)) {
+      _reject(emit, 'Watchlist not found.');
+      return;
+    }
+    final next = state.watchlists
+        .where((item) => item.id != event.watchlistId)
+        .toList();
+    final selectedId = state.selectedWatchlistId == event.watchlistId
+        ? (next.any((item) => item.id == defaultWatchlistId)
+              ? defaultWatchlistId
+              : next.first.id)
+        : state.selectedWatchlistId;
+    await _save(next, emit, selectedId: selectedId);
+  }
+
+  Future<void> _addFund(
+    WatchlistFundAddRequested event,
+    Emitter<WatchlistState> emit,
+  ) async {
+    if (!_canWrite(emit)) return;
+    final index = state.watchlists.indexWhere(
+      (item) => item.id == event.watchlistId,
+    );
+    if (index < 0 || !state.allFunds.any((fund) => fund.id == event.fundId)) {
+      _reject(emit, index < 0 ? 'Watchlist not found.' : 'Fund not found.');
+      return;
+    }
+    final target = state.watchlists[index];
+    if (target.fundIds.contains(event.fundId)) {
+      _reject(emit, 'This fund is already in the watchlist.');
+      return;
+    }
+    final next = List<Watchlist>.of(state.watchlists);
+    next[index] = target.copyWith(
+      fundIds: <String>[...target.fundIds, event.fundId],
+      updatedAt: DateTime.now(),
+    );
+    await _save(next, emit);
+  }
+
+  Future<void> _removeFund(
+    WatchlistFundRemoveRequested event,
+    Emitter<WatchlistState> emit,
+  ) async {
+    if (!_canWrite(emit)) return;
+    final index = state.watchlists.indexWhere(
+      (item) => item.id == event.watchlistId,
+    );
+    if (index < 0) {
+      _reject(emit, 'Watchlist not found.');
+      return;
+    }
+    final target = state.watchlists[index];
+    if (!target.fundIds.contains(event.fundId)) return;
+    final next = List<Watchlist>.of(state.watchlists);
+    next[index] = target.copyWith(
+      fundIds: target.fundIds.where((id) => id != event.fundId).toList(),
+      updatedAt: DateTime.now(),
+    );
+    await _save(next, emit);
+  }
+
+  Future<void> _reorderFunds(
+    WatchlistFundsReorderRequested event,
+    Emitter<WatchlistState> emit,
+  ) async {
+    if (!_canWrite(emit)) return;
+    final index = state.watchlists.indexWhere(
+      (item) => item.id == event.watchlistId,
+    );
+    if (index < 0) {
+      _reject(emit, 'Watchlist not found.');
+      return;
+    }
+    final target = state.watchlists[index];
+    if (event.oldIndex < 0 ||
+        event.oldIndex >= target.fundIds.length ||
+        event.newIndex < 0 ||
+        event.newIndex > target.fundIds.length) {
+      _reject(emit, 'Invalid fund order.');
+      return;
+    }
+    final fundIds = List<String>.of(target.fundIds);
+    var insertionIndex = event.newIndex;
+    if (insertionIndex > event.oldIndex) insertionIndex -= 1;
+    final fundId = fundIds.removeAt(event.oldIndex);
+    fundIds.insert(insertionIndex, fundId);
+    final next = List<Watchlist>.of(state.watchlists);
+    next[index] = target.copyWith(fundIds: fundIds, updatedAt: DateTime.now());
+    await _save(next, emit);
+  }
+
+  bool _canWrite(Emitter<WatchlistState> emit) {
+    if (state.status != WatchlistStatus.loaded || state.isSaving) return false;
+    return true;
+  }
+
+  bool _hasName(String name, {String? exceptId}) => state.watchlists.any(
+    (item) =>
+        item.id != exceptId && item.name.toLowerCase() == name.toLowerCase(),
+  );
+
+  void _reject(Emitter<WatchlistState> emit, String message) {
+    emit(state.copyWith(message: message, clearError: true));
+  }
+
+  Future<void> _save(
+    List<Watchlist> next,
+    Emitter<WatchlistState> emit, {
+    String? selectedId,
+  }) async {
+    final previous = state;
+    emit(
+      previous.copyWith(isSaving: true, clearMessage: true, clearError: true),
+    );
+    try {
+      await _repository.saveWatchlists(next);
+      final selected =
+          selectedId ?? previous.selectedWatchlistId ?? next.first.id;
+      emit(
+        WatchlistState(
+          status: WatchlistStatus.loaded,
+          watchlists: next,
+          selectedWatchlistId: selected,
+          allFunds: previous.allFunds,
+          visibleFunds: _resolve(next, selected, previous.allFunds),
+        ),
+      );
+    } on Object catch (error) {
+      emit(
+        previous.copyWith(
+          isSaving: false,
+          message: 'Unable to save watchlist changes.',
+          errorMessage: error.toString(),
+        ),
+      );
+    }
+  }
+
+  static List<WatchlistFund> _resolve(
+    List<Watchlist> watchlists,
+    String selectedId,
+    List<WatchlistFund> funds,
+  ) {
+    Watchlist? selected;
+    for (final item in watchlists) {
+      if (item.id == selectedId) {
+        selected = item;
+        break;
+      }
+    }
+    if (selected == null) return const <WatchlistFund>[];
+    final byId = <String, WatchlistFund>{
+      for (final fund in funds) fund.id: fund,
+    };
+    return List<WatchlistFund>.unmodifiable(
+      selected.fundIds.map((id) => byId[id]).whereType<WatchlistFund>(),
+    );
+  }
+}

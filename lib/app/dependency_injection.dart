@@ -3,6 +3,7 @@ import 'package:core_data/dependency_injection.dart';
 import 'package:dashboard/dependency_injection.dart';
 import 'package:get_it/get_it.dart';
 import 'package:portfolio/dependency_injection.dart';
+import 'package:watchlist/dependency_injection.dart';
 
 final getIt = GetIt.instance;
 
@@ -11,4 +12,5 @@ void configureDependencies() {
   registerCoreDataDependencies(getIt);
   registerDashboardDependencies(getIt);
   registerPortfolioDependencies(getIt);
+  registerWatchlistDependencies(getIt);
 }

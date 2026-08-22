@@ -1,12 +1,12 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 
-import '../../domain/entities/watchlist_stock.dart';
+import '../../domain/entities/watchlist_fund.dart';
 
 class WatchlistStockTile extends StatelessWidget {
   const WatchlistStockTile({required this.stock, this.onTap, super.key});
 
-  final WatchlistStock stock;
+  final WatchlistFund stock;
   final VoidCallback? onTap;
 
   @override

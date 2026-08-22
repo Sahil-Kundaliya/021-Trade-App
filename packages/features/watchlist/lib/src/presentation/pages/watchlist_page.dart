@@ -1,10 +1,11 @@
-import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:navigation_contract/navigation_contract.dart';
 
-import '../../root/presentation/widgets/watchlist_market_indices.dart';
-import '../../watchlist/presentation/widgets/watchlist_header.dart';
-import '../../watchlist/presentation/widgets/watchlist_section.dart';
+import '../../root/presentation/widgets/watchlist_content.dart';
+import '../../watchlist/presentation/bloc/watchlist_bloc.dart';
+import '../../watchlist/presentation/bloc/watchlist_event.dart';
 
 class WatchlistPage extends StatelessWidget {
   const WatchlistPage({this.navigator, super.key});
@@ -13,22 +14,10 @@ class WatchlistPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const WatchlistHeader(),
-              const SizedBox(height: AppSpacing.lg),
-              const WatchlistMarketIndices(),
-              const SizedBox(height: AppSpacing.lg),
-              WatchlistSection(onStockTap: (_) => navigator?.openFund()),
-            ],
-          ),
-        ),
-      ),
+    return BlocProvider(
+      create: (_) =>
+          GetIt.instance<WatchlistBloc>()..add(const WatchlistStarted()),
+      child: WatchlistContent(navigator: navigator),
     );
   }
 }

@@ -1,14 +1,14 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 
-import '../../domain/entities/watchlist_stock.dart';
+import '../../domain/entities/watchlist_fund.dart';
 import 'watchlist_stock_tile.dart';
 
 class WatchlistStockList extends StatelessWidget {
   const WatchlistStockList({required this.stocks, this.onStockTap, super.key});
 
-  final List<WatchlistStock> stocks;
-  final ValueChanged<WatchlistStock>? onStockTap;
+  final List<WatchlistFund> stocks;
+  final ValueChanged<WatchlistFund>? onStockTap;
 
   @override
   Widget build(BuildContext context) {
