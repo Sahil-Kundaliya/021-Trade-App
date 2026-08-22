@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:watchlist/src/watchlist/domain/entities/watchlist.dart';
 import 'package:watchlist/src/watchlist/domain/entities/watchlist_fund.dart';
@@ -20,7 +22,10 @@ void main() {
     await loaded;
   });
 
-  tearDown(() => bloc.close());
+  tearDown(() async {
+    await bloc.close();
+    await repository.close();
+  });
 
   test('started selects Default and resolves funds in fundIds order', () {
     expect(bloc.state.selectedWatchlistId, 'watchlist_default');
@@ -43,6 +48,42 @@ void main() {
     expect(repository.readCount, readsBefore);
   });
 
+  test('refreshes when another feature changes persisted funds', () async {
+    final added = bloc.stream.firstWhere(
+      (state) => state.visibleFunds.any((fund) => fund.id == 'AXISBANK_EQ'),
+    );
+    repository.replaceDefaultFundIds(<String>[
+      'INFY_EQ',
+      'RELIANCE_EQ',
+      'TCS_EQ',
+      'AXISBANK_EQ',
+    ]);
+    await added;
+
+    expect(bloc.state.visibleFunds.map((fund) => fund.id), <String>[
+      'INFY_EQ',
+      'RELIANCE_EQ',
+      'TCS_EQ',
+      'AXISBANK_EQ',
+    ]);
+
+    final removed = bloc.stream.firstWhere(
+      (state) => !state.visibleFunds.any((fund) => fund.id == 'INFY_EQ'),
+    );
+    repository.replaceDefaultFundIds(<String>[
+      'RELIANCE_EQ',
+      'TCS_EQ',
+      'AXISBANK_EQ',
+    ]);
+    await removed;
+
+    expect(bloc.state.visibleFunds.map((fund) => fund.id), <String>[
+      'RELIANCE_EQ',
+      'TCS_EQ',
+      'AXISBANK_EQ',
+    ]);
+  });
+
   test('create and rename validate and persist immutable updates', () async {
     final created = bloc.stream.firstWhere(
       (state) => state.watchlists.length == 3,
@@ -52,6 +93,7 @@ void main() {
     final growth = bloc.state.watchlists.singleWhere(
       (item) => item.name == 'Growth',
     );
+    expect(growth.fundIds, isEmpty);
 
     final renamed = bloc.stream.firstWhere(
       (state) => state.watchlists.any((item) => item.name == 'Long Term'),
@@ -174,6 +216,9 @@ void main() {
 }
 
 final class _FakeRepository implements WatchlistRepository {
+  final StreamController<void> _changes = StreamController<void>.broadcast(
+    sync: true,
+  );
   int readCount = 0;
   int saveCount = 0;
   late List<Watchlist> _watchlists = <Watchlist>[
@@ -188,7 +233,21 @@ final class _FakeRepository implements WatchlistRepository {
     _fund('RELIANCE_EQ', 'RELIANCE'),
     _fund('TCS_EQ', 'TCS'),
     _fund('INFY_EQ', 'INFY'),
+    _fund('AXISBANK_EQ', 'AXISBANK'),
   ];
+
+  @override
+  Stream<void> get watchlistChanges => _changes.stream;
+
+  void replaceDefaultFundIds(List<String> fundIds) {
+    _watchlists = <Watchlist>[
+      _watchlists.first.copyWith(fundIds: fundIds, updatedAt: DateTime.now()),
+      ..._watchlists.skip(1),
+    ];
+    _changes.add(null);
+  }
+
+  Future<void> close() => _changes.close();
 
   @override
   Future<List<Watchlist>> getWatchlists() async {

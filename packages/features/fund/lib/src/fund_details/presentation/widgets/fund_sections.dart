@@ -117,11 +117,21 @@ class _InstrumentHeader extends StatelessWidget {
               const SizedBox(width: AppSpacing.xs),
               IconButton(
                 visualDensity: VisualDensity.compact,
-                tooltip: 'Add to Watchlist',
-                onPressed: () => context.read<FundDetailsBloc>().add(
-                  const FundAddToWatchlistOpened(),
+                tooltip: state.isFundInWatchlist
+                    ? 'Remove from Watchlist'
+                    : 'Add to Watchlist',
+                onPressed: state.isAddingToWatchlist
+                    ? null
+                    : () => context.read<FundDetailsBloc>().add(
+                        state.isFundInWatchlist
+                            ? const FundRemoveFromWatchlistRequested()
+                            : const FundAddToWatchlistOpened(),
+                      ),
+                icon: Icon(
+                  state.isFundInWatchlist
+                      ? Icons.bookmark
+                      : Icons.bookmark_add_outlined,
                 ),
-                icon: const Icon(Icons.bookmark_add_outlined),
               ),
             ],
           ),

@@ -2,6 +2,8 @@ import '../entities/watchlist.dart';
 import '../entities/watchlist_fund.dart';
 
 abstract interface class WatchlistRepository {
+  Stream<void> get watchlistChanges;
+
   Future<List<Watchlist>> getWatchlists();
 
   Future<void> saveWatchlists(List<Watchlist> watchlists);

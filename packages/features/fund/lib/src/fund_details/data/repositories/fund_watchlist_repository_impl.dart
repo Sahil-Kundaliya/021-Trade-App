@@ -36,6 +36,29 @@ final class FundWatchlistRepositoryImpl implements FundWatchlistRepository {
     await _api.saveWatchlists(updated);
   }
 
+  @override
+  Future<void> removeFundFromWatchlist({
+    required String watchlistId,
+    required String fundId,
+  }) async {
+    final watchlists = await _api.getWatchlists();
+    final index = watchlists.indexWhere((item) => item.id == watchlistId);
+    if (index < 0) throw StateError('Selected watchlist no longer exists.');
+    final selected = watchlists[index];
+    if (!selected.fundIds.contains(fundId)) return;
+    final updated = List<WatchlistDto>.of(watchlists);
+    updated[index] = WatchlistDto(
+      id: selected.id,
+      name: selected.name,
+      fundIds: selected.fundIds
+          .where((id) => id != fundId)
+          .toList(growable: false),
+      createdAt: selected.createdAt,
+      updatedAt: DateTime.now(),
+    );
+    await _api.saveWatchlists(updated);
+  }
+
   static AvailableWatchlist _toDomain(WatchlistDto dto) =>
       AvailableWatchlist(id: dto.id, name: dto.name, fundIds: dto.fundIds);
 }

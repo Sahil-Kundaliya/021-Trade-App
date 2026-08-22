@@ -1,4 +1,5 @@
 import 'package:fund/fund.dart';
+import 'package:flutter/material.dart';
 import 'package:orders/orders.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zero_two_one_trade_assignment/app/app.dart';
@@ -163,5 +164,19 @@ void main() {
     await tester.tap(find.text('Add'));
     await tester.pumpAndSettle();
     expect(find.text('Added to Default'), findsOneWidget);
+    expect(find.byTooltip('Remove from Watchlist'), findsOneWidget);
+    expect(find.byIcon(Icons.bookmark), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Close fund details'));
+    await tester.pumpAndSettle();
+    app.navigator.openFund(fundId: 'AXISBANK_EQ');
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Remove from Watchlist'), findsOneWidget);
+    expect(find.byIcon(Icons.bookmark), findsOneWidget);
+    await tester.tap(find.byTooltip('Remove from Watchlist'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Add to Watchlist'), findsOneWidget);
+    expect(find.byIcon(Icons.bookmark), findsNothing);
   });
 }

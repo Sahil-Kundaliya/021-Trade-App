@@ -10,6 +10,10 @@ final class WatchlistRetryRequested extends WatchlistEvent {
   const WatchlistRetryRequested();
 }
 
+final class WatchlistDataChanged extends WatchlistEvent {
+  const WatchlistDataChanged();
+}
+
 final class WatchlistSelected extends WatchlistEvent {
   const WatchlistSelected({required this.watchlistId});
   final String watchlistId;

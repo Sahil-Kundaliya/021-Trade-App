@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
@@ -12,6 +14,7 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
   WatchlistBloc(this._repository) : super(WatchlistState()) {
     on<WatchlistStarted>(_load);
     on<WatchlistRetryRequested>(_load);
+    on<WatchlistDataChanged>(_refresh);
     on<WatchlistSelected>(_select);
     on<WatchlistCreateRequested>(_create);
     on<WatchlistRenameRequested>(_rename);
@@ -19,12 +22,22 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     on<WatchlistFundAddRequested>(_addFund);
     on<WatchlistFundRemoveRequested>(_removeFund);
     on<WatchlistFundsReorderRequested>(_reorderFunds);
+    _watchlistChangesSubscription = _repository.watchlistChanges.listen((_) {
+      if (!isClosed && !state.isSaving) add(const WatchlistDataChanged());
+    });
   }
 
   static const maximumWatchlists = 5;
   static const defaultWatchlistId = 'watchlist_default';
 
   final WatchlistRepository _repository;
+  late final StreamSubscription<void> _watchlistChangesSubscription;
+
+  @override
+  Future<void> close() async {
+    await _watchlistChangesSubscription.cancel();
+    return super.close();
+  }
 
   Future<void> _load(WatchlistEvent event, Emitter<WatchlistState> emit) async {
     emit(state.copyWith(status: WatchlistStatus.loading, clearError: true));
@@ -53,6 +66,36 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
       emit(
         state.copyWith(
           status: WatchlistStatus.error,
+          errorMessage: error.toString(),
+        ),
+      );
+    }
+  }
+
+  Future<void> _refresh(
+    WatchlistDataChanged event,
+    Emitter<WatchlistState> emit,
+  ) async {
+    if (state.status != WatchlistStatus.loaded || state.isSaving) return;
+    try {
+      final watchlists = await _repository.getWatchlists();
+      final previousSelected = state.selectedWatchlistId;
+      final selected = watchlists.any((item) => item.id == previousSelected)
+          ? previousSelected!
+          : defaultWatchlistId;
+      emit(
+        state.copyWith(
+          watchlists: watchlists,
+          selectedWatchlistId: selected,
+          visibleFunds: _resolve(watchlists, selected, state.allFunds),
+          clearMessage: true,
+          clearError: true,
+        ),
+      );
+    } on Object catch (error) {
+      emit(
+        state.copyWith(
+          message: 'Unable to refresh watchlists.',
           errorMessage: error.toString(),
         ),
       );

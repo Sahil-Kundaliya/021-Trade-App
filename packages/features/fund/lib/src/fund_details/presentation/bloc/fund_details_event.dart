@@ -34,3 +34,7 @@ final class FundWatchlistSelected extends FundDetailsEvent {
 final class FundAddToWatchlistRequested extends FundDetailsEvent {
   const FundAddToWatchlistRequested();
 }
+
+final class FundRemoveFromWatchlistRequested extends FundDetailsEvent {
+  const FundRemoveFromWatchlistRequested();
+}

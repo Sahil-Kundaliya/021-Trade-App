@@ -12,4 +12,12 @@ class AvailableWatchlist {
   AvailableWatchlist withFund(String fundId) => containsFund(fundId)
       ? this
       : AvailableWatchlist(id: id, name: name, fundIds: [...fundIds, fundId]);
+
+  AvailableWatchlist withoutFund(String fundId) => !containsFund(fundId)
+      ? this
+      : AvailableWatchlist(
+          id: id,
+          name: name,
+          fundIds: fundIds.where((id) => id != fundId).toList(growable: false),
+        );
 }

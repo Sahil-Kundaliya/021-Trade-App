@@ -48,6 +48,23 @@ class FundDetailsState {
   final int messageVersion;
   final String? errorMessage;
 
+  AvailableWatchlist? get watchlistContainingFund {
+    final details = fund;
+    if (details == null) return null;
+    for (final watchlist in availableWatchlists) {
+      if (watchlist.id == selectedWatchlistId &&
+          watchlist.containsFund(details.id)) {
+        return watchlist;
+      }
+    }
+    for (final watchlist in availableWatchlists) {
+      if (watchlist.containsFund(details.id)) return watchlist;
+    }
+    return null;
+  }
+
+  bool get isFundInWatchlist => watchlistContainingFund != null;
+
   List<FundHistoryPoint> get selectedHistoryPoints {
     final details = fund;
     if (details == null) return const [];

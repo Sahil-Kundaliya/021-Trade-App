@@ -19,6 +19,7 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
     on<FundAddToWatchlistDismissed>(_onPickerDismissed);
     on<FundWatchlistSelected>(_onWatchlistSelected);
     on<FundAddToWatchlistRequested>(_onAddRequested);
+    on<FundRemoveFromWatchlistRequested>(_onRemoveRequested);
   }
 
   final FundRepository _fundRepository;
@@ -38,11 +39,17 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
       ]);
       final fund = results[0] as FundDetails;
       final watchlists = results[1] as List<AvailableWatchlist>;
+      final selectedWatchlistId = watchlists
+          .where((watchlist) => watchlist.containsFund(fund.id))
+          .firstOrNull
+          ?.id;
       emit(
         state.copyWith(
           status: FundDetailsStatus.loaded,
           fund: fund,
           availableWatchlists: watchlists,
+          selectedWatchlistId:
+              selectedWatchlistId ?? watchlists.firstOrNull?.id,
           clearError: true,
         ),
       );
@@ -154,6 +161,48 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
         state.copyWith(
           isAddingToWatchlist: false,
           message: 'Unable to add to watchlist.',
+          messageVersion: state.messageVersion + 1,
+        ),
+      );
+    }
+  }
+
+  Future<void> _onRemoveRequested(
+    FundRemoveFromWatchlistRequested event,
+    Emitter<FundDetailsState> emit,
+  ) async {
+    final fund = state.fund;
+    final selected = state.watchlistContainingFund;
+    if (fund == null || selected == null || state.isAddingToWatchlist) return;
+    emit(state.copyWith(isAddingToWatchlist: true, clearMessage: true));
+    try {
+      await _watchlistRepository.removeFundFromWatchlist(
+        watchlistId: selected.id,
+        fundId: fund.id,
+      );
+      final updated = state.availableWatchlists
+          .map(
+            (item) => item.id == selected.id ? item.withoutFund(fund.id) : item,
+          )
+          .toList(growable: false);
+      final nextContaining = updated
+          .where((watchlist) => watchlist.containsFund(fund.id))
+          .firstOrNull;
+      emit(
+        state.copyWith(
+          availableWatchlists: updated,
+          selectedWatchlistId: nextContaining?.id ?? selected.id,
+          isAddingToWatchlist: false,
+          isWatchlistPickerOpen: false,
+          message: 'Removed from ${selected.name}',
+          messageVersion: state.messageVersion + 1,
+        ),
+      );
+    } on Object {
+      emit(
+        state.copyWith(
+          isAddingToWatchlist: false,
+          message: 'Unable to remove from watchlist.',
           messageVersion: state.messageVersion + 1,
         ),
       );

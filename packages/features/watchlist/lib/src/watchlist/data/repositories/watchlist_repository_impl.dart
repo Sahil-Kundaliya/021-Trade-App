@@ -14,6 +14,9 @@ final class WatchlistRepositoryImpl implements WatchlistRepository {
   final TradingLocalApi _tradingApi;
 
   @override
+  Stream<void> get watchlistChanges => _watchlistApi.watchlistChanges;
+
+  @override
   Future<List<Watchlist>> getWatchlists() async =>
       (await _watchlistApi.getWatchlists())
           .map(WatchlistMapper.toDomain)

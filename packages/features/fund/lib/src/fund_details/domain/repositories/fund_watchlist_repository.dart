@@ -6,6 +6,11 @@ abstract interface class FundWatchlistRepository {
     required String watchlistId,
     required String fundId,
   });
+
+  Future<void> removeFundFromWatchlist({
+    required String watchlistId,
+    required String fundId,
+  });
 }
 
 class FundAlreadyInWatchlistException implements Exception {

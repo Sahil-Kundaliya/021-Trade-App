@@ -14,7 +14,7 @@ class WatchlistStockList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (stocks.isEmpty) {
       return const AppEmptyState(
-        title: 'No stocks in this watchlist',
+        title: 'No fund added',
         description: 'Add stocks to start tracking the market.',
         icon: Icons.bookmark_border,
       );

@@ -52,13 +52,13 @@ void main() {
       );
 
       await repository.addFundToWatchlist(
-        watchlistId: 'default',
+        watchlistId: 'watchlist_default',
         fundId: 'AXISBANK_EQ',
       );
       expect(api.watchlists.single.fundIds, contains('AXISBANK_EQ'));
       await expectLater(
         repository.addFundToWatchlist(
-          watchlistId: 'default',
+          watchlistId: 'watchlist_default',
           fundId: 'AXISBANK_EQ',
         ),
         throwsA(isA<FundAlreadyInWatchlistException>()),
@@ -67,6 +67,12 @@ void main() {
         api.watchlists.single.fundIds.where((id) => id == 'AXISBANK_EQ'),
         hasLength(1),
       );
+
+      await repository.removeFundFromWatchlist(
+        watchlistId: 'watchlist_default',
+        fundId: 'AXISBANK_EQ',
+      );
+      expect(api.watchlists.single.fundIds, isNot(contains('AXISBANK_EQ')));
     },
   );
 
@@ -87,7 +93,9 @@ void main() {
       bloc.add(const FundDetailsStarted(fundId: 'RELIANCE_EQ'));
       await loaded;
       expect(bloc.state.selectedHistoryPeriod, FundHistoryPeriod.oneMonth);
-    expect(bloc.state.availableWatchlists.first.name, 'Default');
+      expect(bloc.state.availableWatchlists.first.name, 'Default');
+      expect(bloc.state.isFundInWatchlist, isTrue);
+      expect(bloc.state.selectedWatchlistId, 'watchlist_default');
 
       bloc.add(const FundHistoryPeriodChanged(FundHistoryPeriod.threeMonths));
       await Future<void>.delayed(Duration.zero);
@@ -124,13 +132,37 @@ void main() {
       await bloc.close();
     },
   );
+
+  test(
+    'bloc removes persisted membership and updates bookmark state',
+    () async {
+      final funds = _FakeFundRepository(reliance);
+      final watchlists = _FakeFundWatchlistRepository();
+      final bloc = FundDetailsBloc(funds, watchlists);
+      bloc.add(const FundDetailsStarted(fundId: 'RELIANCE_EQ'));
+      await bloc.stream.firstWhere(
+        (state) => state.status == FundDetailsStatus.loaded,
+      );
+
+      expect(bloc.state.isFundInWatchlist, isTrue);
+      bloc.add(const FundRemoveFromWatchlistRequested());
+      await bloc.stream.firstWhere(
+        (state) => state.message == 'Removed from Default',
+      );
+
+      expect(watchlists.removeCalls, 1);
+      expect(watchlists.removedWatchlistId, 'watchlist_default');
+      expect(bloc.state.isFundInWatchlist, isFalse);
+      await bloc.close();
+    },
+  );
 }
 
 final class _MemoryWatchlistApi implements WatchlistLocalApi {
   _MemoryWatchlistApi()
     : watchlists = [
         WatchlistDto(
-          id: 'default',
+          id: 'watchlist_default',
           name: 'Default',
           fundIds: const [],
           createdAt: DateTime(2026),
@@ -138,6 +170,10 @@ final class _MemoryWatchlistApi implements WatchlistLocalApi {
         ),
       ];
   List<WatchlistDto> watchlists;
+
+  @override
+  Stream<void> get watchlistChanges => const Stream<void>.empty();
+
   @override
   Future<List<WatchlistDto>> getWatchlists() async =>
       List.unmodifiable(watchlists);
@@ -160,9 +196,11 @@ final class _FakeFundRepository implements FundRepository {
 final class _FakeFundWatchlistRepository implements FundWatchlistRepository {
   int readCalls = 0;
   int addCalls = 0;
+  int removeCalls = 0;
+  String? removedWatchlistId;
   final items = <AvailableWatchlist>[
     AvailableWatchlist(
-      id: 'default',
+      id: 'watchlist_default',
       name: 'Default',
       fundIds: const ['RELIANCE_EQ'],
     ),
@@ -180,5 +218,14 @@ final class _FakeFundWatchlistRepository implements FundWatchlistRepository {
     required String fundId,
   }) async {
     addCalls++;
+  }
+
+  @override
+  Future<void> removeFundFromWatchlist({
+    required String watchlistId,
+    required String fundId,
+  }) async {
+    removeCalls++;
+    removedWatchlistId = watchlistId;
   }
 }

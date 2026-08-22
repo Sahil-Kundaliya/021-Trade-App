@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:core_data/core_data.dart';
 import 'package:zero_two_one_trade_assignment/app/dependency_injection.dart';
 
@@ -38,6 +40,12 @@ final class _ImmediateWatchlistApi implements WatchlistLocalApi {
   _ImmediateWatchlistApi() : _watchlists = _defaults();
 
   List<WatchlistDto> _watchlists;
+  final StreamController<void> _changes = StreamController<void>.broadcast(
+    sync: true,
+  );
+
+  @override
+  Stream<void> get watchlistChanges => _changes.stream;
 
   @override
   Future<List<WatchlistDto>> getWatchlists() async =>
@@ -46,6 +54,7 @@ final class _ImmediateWatchlistApi implements WatchlistLocalApi {
   @override
   Future<void> saveWatchlists(List<WatchlistDto> watchlists) async {
     _watchlists = List<WatchlistDto>.unmodifiable(watchlists);
+    _changes.add(null);
   }
 
   static List<WatchlistDto> _defaults() {

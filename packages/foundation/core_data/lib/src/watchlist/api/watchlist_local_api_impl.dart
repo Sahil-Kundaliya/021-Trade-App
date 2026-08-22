@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:injectable/injectable.dart';
@@ -13,9 +14,15 @@ final class WatchlistLocalApiImpl implements WatchlistLocalApi {
 
   static const _storageKey = 'trading_watchlists_v1';
   static const _requestDelay = Duration(milliseconds: 800);
-  static const _maximumWatchlists = 5;
+  static const _defaultWatchlistId = 'watchlist_default';
+  static const _maximumUserWatchlists = 4;
 
   final KeyValueStorage _storage;
+  final StreamController<void> _watchlistChanges =
+      StreamController<void>.broadcast(sync: true);
+
+  @override
+  Stream<void> get watchlistChanges => _watchlistChanges.stream;
 
   @override
   Future<List<WatchlistDto>> getWatchlists() async {
@@ -23,24 +30,29 @@ final class WatchlistLocalApiImpl implements WatchlistLocalApi {
     try {
       final source = await _storage.getString(_storageKey);
       if (source == null || source.trim().isEmpty) {
-        final defaults = _defaultWatchlists();
-        await _persist(defaults);
-        return defaults;
+        return List<WatchlistDto>.unmodifiable(<WatchlistDto>[
+          _buildDefaultWatchlist(const <String>[]),
+        ]);
       }
       final decoded = jsonDecode(source);
       if (decoded is! Map<String, dynamic> || decoded['watchlists'] is! List) {
         throw const FormatException('Invalid watchlist document.');
       }
-      final watchlists = (decoded['watchlists'] as List)
+      final defaultFundIds = _parseFundIds(decoded['defaultFundIds']);
+      final userWatchlists = (decoded['watchlists'] as List)
           .map((value) {
             if (value is! Map<String, dynamic>) {
               throw const FormatException('Invalid watchlist entry.');
             }
             return WatchlistDto.fromJson(value);
           })
+          .where((watchlist) => watchlist.id != _defaultWatchlistId)
           .toList(growable: false);
-      _validate(watchlists);
-      return List<WatchlistDto>.unmodifiable(watchlists);
+      _validateUserWatchlists(userWatchlists);
+      return List<WatchlistDto>.unmodifiable(<WatchlistDto>[
+        _buildDefaultWatchlist(defaultFundIds),
+        ...userWatchlists,
+      ]);
     } on WatchlistDataException {
       rethrow;
     } on Object catch (error) {
@@ -52,8 +64,25 @@ final class WatchlistLocalApiImpl implements WatchlistLocalApi {
   Future<void> saveWatchlists(List<WatchlistDto> watchlists) async {
     await Future<void>.delayed(_requestDelay);
     try {
-      _validate(watchlists);
-      await _persist(watchlists);
+      final defaultWatchlists = watchlists.where(
+        (watchlist) => watchlist.id == _defaultWatchlistId,
+      );
+      if (defaultWatchlists.length != 1) {
+        throw const WatchlistDataException(
+          'Exactly one Default watchlist is required.',
+        );
+      }
+      final defaultWatchlist = defaultWatchlists.single;
+      final userWatchlists = watchlists
+          .where((watchlist) => watchlist.id != _defaultWatchlistId)
+          .toList(growable: false);
+      _validateFundIds(defaultWatchlist.fundIds);
+      _validateUserWatchlists(userWatchlists);
+      await _persist(
+        defaultFundIds: defaultWatchlist.fundIds,
+        userWatchlists: userWatchlists,
+      );
+      _watchlistChanges.add(null);
     } on WatchlistDataException {
       rethrow;
     } on Object catch (error) {
@@ -61,24 +90,30 @@ final class WatchlistLocalApiImpl implements WatchlistLocalApi {
     }
   }
 
-  Future<void> _persist(List<WatchlistDto> watchlists) => _storage.setString(
+  Future<void> _persist({
+    required List<String> defaultFundIds,
+    required List<WatchlistDto> userWatchlists,
+  }) => _storage.setString(
     _storageKey,
     jsonEncode(<String, dynamic>{
-      'watchlists': watchlists.map((item) => item.toJson()).toList(),
+      'defaultFundIds': defaultFundIds,
+      'watchlists': userWatchlists.map((item) => item.toJson()).toList(),
     }),
   );
 
-  static void _validate(List<WatchlistDto> watchlists) {
-    if (watchlists.length > _maximumWatchlists) {
+  static void _validateUserWatchlists(List<WatchlistDto> watchlists) {
+    if (watchlists.length > _maximumUserWatchlists) {
       throw const WatchlistDataException(
-        'A maximum of 5 watchlists is allowed.',
+        'A maximum of 4 user-created watchlists is allowed.',
       );
     }
     final ids = <String>{};
     final names = <String>{};
     for (final watchlist in watchlists) {
       final normalizedName = watchlist.name.trim().toLowerCase();
-      if (watchlist.id.trim().isEmpty || normalizedName.isEmpty) {
+      if (watchlist.id == _defaultWatchlistId ||
+          watchlist.id.trim().isEmpty ||
+          normalizedName.isEmpty) {
         throw const WatchlistDataException(
           'Watchlist IDs and names are required.',
         );
@@ -88,30 +123,38 @@ final class WatchlistLocalApiImpl implements WatchlistLocalApi {
           'Watchlist IDs and names must be unique.',
         );
       }
-      if (watchlist.fundIds.toSet().length != watchlist.fundIds.length) {
-        throw const WatchlistDataException(
-          'Fund IDs must be unique per watchlist.',
-        );
-      }
+      _validateFundIds(watchlist.fundIds);
     }
   }
 
-  static List<WatchlistDto> _defaultWatchlists() {
+  static List<String> _parseFundIds(Object? value) {
+    if (value == null) return const <String>[];
+    if (value is! List ||
+        value.any((id) => id is! String || id.trim().isEmpty)) {
+      throw const FormatException('Invalid default fund IDs.');
+    }
+    final fundIds = value.cast<String>();
+    _validateFundIds(fundIds);
+    return List<String>.unmodifiable(fundIds);
+  }
+
+  static void _validateFundIds(List<String> fundIds) {
+    if (fundIds.any((id) => id.trim().isEmpty) ||
+        fundIds.toSet().length != fundIds.length) {
+      throw const WatchlistDataException(
+        'Fund IDs must be non-empty and unique per watchlist.',
+      );
+    }
+  }
+
+  static WatchlistDto _buildDefaultWatchlist(List<String> fundIds) {
     final now = DateTime.now();
-    return List<WatchlistDto>.unmodifiable(<WatchlistDto>[
-      WatchlistDto(
-        id: 'watchlist_default',
-        name: 'Default',
-        fundIds: const <String>[
-          'RELIANCE_EQ',
-          'TCS_EQ',
-          'INFY_EQ',
-          'HDFCBANK_EQ',
-          'ICICIBANK_EQ',
-        ],
-        createdAt: now,
-        updatedAt: now,
-      ),
-    ]);
+    return WatchlistDto(
+      id: _defaultWatchlistId,
+      name: 'Default',
+      fundIds: fundIds,
+      createdAt: now,
+      updatedAt: now,
+    );
   }
 }
