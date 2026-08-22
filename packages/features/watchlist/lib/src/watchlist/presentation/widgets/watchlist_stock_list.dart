@@ -5,9 +5,10 @@ import '../../domain/entities/watchlist_stock.dart';
 import 'watchlist_stock_tile.dart';
 
 class WatchlistStockList extends StatelessWidget {
-  const WatchlistStockList({required this.stocks, super.key});
+  const WatchlistStockList({required this.stocks, this.onStockTap, super.key});
 
   final List<WatchlistStock> stocks;
+  final ValueChanged<WatchlistStock>? onStockTap;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +26,11 @@ class WatchlistStockList extends StatelessWidget {
       itemCount: stocks.length,
       separatorBuilder: (_, _) => const AppDivider(),
       itemBuilder: (context, index) {
-        return WatchlistStockTile(stock: stocks[index]);
+        final stock = stocks[index];
+        return WatchlistStockTile(
+          stock: stock,
+          onTap: onStockTap == null ? null : () => onStockTap!(stock),
+        );
       },
     );
   }

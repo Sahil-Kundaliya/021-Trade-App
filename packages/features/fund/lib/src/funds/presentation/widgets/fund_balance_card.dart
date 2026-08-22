@@ -4,18 +4,23 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/fund_summary.dart';
 import '../formatters/fund_currency_format.dart';
 import 'fund_action_buttons.dart';
+import 'fund_quick_trade_actions.dart';
 
 class FundBalanceCard extends StatelessWidget {
   const FundBalanceCard({
     required this.summary,
     required this.onAddFunds,
     required this.onWithdraw,
+    required this.onBuy,
+    required this.onSell,
     super.key,
   });
 
   final FundSummary summary;
   final VoidCallback onAddFunds;
   final VoidCallback onWithdraw;
+  final VoidCallback onBuy;
+  final VoidCallback onSell;
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +57,8 @@ class FundBalanceCard extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: AppSpacing.xl),
+            FundQuickTradeActions(onBuy: onBuy, onSell: onSell),
             const SizedBox(height: AppSpacing.xl),
             Text(
               'Withdrawable',

@@ -2,11 +2,14 @@ import 'package:core_ui/core_ui.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../data/mock_watchlist_data.dart';
+import '../../domain/entities/watchlist_stock.dart';
 import 'watchlist_stock_list.dart';
 import 'watchlist_tabs.dart';
 
 class WatchlistSection extends StatefulWidget {
-  const WatchlistSection({super.key});
+  const WatchlistSection({this.onStockTap, super.key});
+
+  final ValueChanged<WatchlistStock>? onStockTap;
 
   @override
   State<WatchlistSection> createState() => _WatchlistSectionState();
@@ -30,7 +33,10 @@ class _WatchlistSectionState extends State<WatchlistSection> {
           },
         ),
         const SizedBox(height: AppSpacing.sm),
-        WatchlistStockList(stocks: mockWatchlists[selectedWatchlistIndex]),
+        WatchlistStockList(
+          stocks: mockWatchlists[selectedWatchlistIndex],
+          onStockTap: widget.onStockTap,
+        ),
       ],
     );
   }

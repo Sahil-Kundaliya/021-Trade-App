@@ -7,7 +7,9 @@ import '../../domain/entities/market_display_item.dart';
 import '../../domain/entities/market_subcategory.dart';
 
 class MarketScreener extends StatefulWidget {
-  const MarketScreener({super.key});
+  const MarketScreener({this.onItemTap, super.key});
+
+  final ValueChanged<MarketDisplayItem>? onItemTap;
 
   @override
   State<MarketScreener> createState() => _MarketScreenerState();
@@ -60,6 +62,7 @@ class _MarketScreenerState extends State<MarketScreener> {
               key: ValueKey((_selectedCategory, _selectedSubcategory)),
               category: _selectedCategory,
               items: items,
+              onItemTap: widget.onItemTap,
             ),
           ),
         ],
@@ -199,10 +202,16 @@ class _MarketTab extends StatelessWidget {
 }
 
 class MarketList extends StatelessWidget {
-  const MarketList({required this.category, required this.items, super.key});
+  const MarketList({
+    required this.category,
+    required this.items,
+    this.onItemTap,
+    super.key,
+  });
 
   final MarketCategory category;
   final List<MarketDisplayItem> items;
+  final ValueChanged<MarketDisplayItem>? onItemTap;
 
   @override
   Widget build(BuildContext context) {
@@ -226,10 +235,17 @@ class MarketList extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: visibleItems.length,
       itemBuilder: (context, index) {
+        final item = visibleItems[index];
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            MarketListItem(category: category, item: visibleItems[index]),
+            Semantics(
+              button: onItemTap != null,
+              child: InkWell(
+                onTap: onItemTap == null ? null : () => onItemTap!(item),
+                child: MarketListItem(category: category, item: item),
+              ),
+            ),
             if (index < visibleItems.length - 1) const AppDivider(),
           ],
         );

@@ -1,6 +1,7 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:navigation_contract/navigation_contract.dart';
+import 'package:zero_two_one_trade_assignment/app/navigation/app_navigation_scope.dart';
 import 'package:zero_two_one_trade_assignment/app/navigation/app_navigator_impl.dart';
 import 'package:zero_two_one_trade_assignment/app/router/app_router.dart';
 
@@ -25,13 +26,16 @@ class TradingApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: '021 Trade',
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
-      themeAnimationDuration: AppDurations.normal,
-      routerConfig: router.config(),
+    return AppNavigationScope(
+      navigator: navigator,
+      child: MaterialApp.router(
+        title: '021 Trade',
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: ThemeMode.system,
+        themeAnimationDuration: AppDurations.normal,
+        routerConfig: router.config(),
+      ),
     );
   }
 }

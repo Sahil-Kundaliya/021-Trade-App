@@ -11,6 +11,8 @@ dependencies:
     path: ../../foundation/core_ui
   flutter:
     sdk: flutter
+  navigation_contract:
+    path: ../../navigation/navigation_contract
 
 dev_dependencies:
   flutter_lints: ^6.0.0

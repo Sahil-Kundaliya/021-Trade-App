@@ -6,9 +6,10 @@ import 'holding_tile.dart';
 import 'holdings_empty_state.dart';
 
 class HoldingsList extends StatelessWidget {
-  const HoldingsList({required this.holdings, super.key});
+  const HoldingsList({required this.holdings, this.onHoldingTap, super.key});
 
   final List<Holding> holdings;
+  final ValueChanged<Holding>? onHoldingTap;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +26,12 @@ class HoldingsList extends StatelessWidget {
         child: Column(
           children: [
             for (var index = 0; index < holdings.length; index++) ...[
-              HoldingTile(holding: holdings[index]),
+              HoldingTile(
+                holding: holdings[index],
+                onTap: onHoldingTap == null
+                    ? null
+                    : () => onHoldingTap!(holdings[index]),
+              ),
               if (index != holdings.length - 1) const AppDivider(),
             ],
           ],

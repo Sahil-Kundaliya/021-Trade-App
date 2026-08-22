@@ -1,4 +1,7 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:core_ui/core_ui.dart';
+import 'package:flutter/material.dart';
+import 'package:fund/fund.dart';
 import 'package:navigation_contract/navigation_contract.dart';
 import 'package:zero_two_one_trade_assignment/app/router/app_router.dart';
 
@@ -23,11 +26,27 @@ final class AppNavigatorImpl implements AppNavigator {
   Future<void> openOrders() => _router.push<void>(const OrdersRoute());
 
   @override
-  Future<void> openFund() => _router.push<void>(const FundRoute());
+  Future<void> openFund() async {
+    final context = _router.navigatorKey.currentContext;
+    if (context == null) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: context.appColors.surface.withValues(alpha: 0),
+      builder: (_) => FundSheet(navigator: this),
+    );
+  }
 
   @override
   Future<void> pop() async {
-    await _router.maybePop();
+    final context = _router.navigatorKey.currentContext;
+    if (context != null) {
+      await Navigator.of(context).maybePop();
+    }
   }
 
   void _openTab(PageRouteInfo route) {

@@ -6,13 +6,15 @@ import 'package:portfolio/portfolio.dart';
 import 'package:profile/profile.dart';
 import 'package:watchlist/watchlist.dart';
 import 'package:flutter/widgets.dart';
+import 'package:zero_two_one_trade_assignment/app/navigation/app_navigation_scope.dart';
 
 @RoutePage(name: 'DashboardRoute')
 class DashboardRoutePage extends StatelessWidget {
   const DashboardRoutePage({super.key});
 
   @override
-  Widget build(BuildContext context) => const DashboardPage();
+  Widget build(BuildContext context) =>
+      DashboardPage(navigator: AppNavigationScope.of(context));
 }
 
 @RoutePage(name: 'WatchlistRoute')
@@ -20,7 +22,8 @@ class WatchlistRoutePage extends StatelessWidget {
   const WatchlistRoutePage({super.key});
 
   @override
-  Widget build(BuildContext context) => const WatchlistPage();
+  Widget build(BuildContext context) =>
+      WatchlistPage(navigator: AppNavigationScope.of(context));
 }
 
 @RoutePage(name: 'PortfolioRoute')
@@ -28,7 +31,8 @@ class PortfolioRoutePage extends StatelessWidget {
   const PortfolioRoutePage({super.key});
 
   @override
-  Widget build(BuildContext context) => const PortfolioPage();
+  Widget build(BuildContext context) =>
+      PortfolioPage(navigator: AppNavigationScope.of(context));
 }
 
 @RoutePage(name: 'ProfileRoute')
@@ -52,5 +56,6 @@ class FundRoutePage extends StatelessWidget {
   const FundRoutePage({super.key});
 
   @override
-  Widget build(BuildContext context) => const FundPage();
+  Widget build(BuildContext context) =>
+      FundPage(navigator: AppNavigationScope.of(context));
 }

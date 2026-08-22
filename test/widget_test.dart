@@ -56,11 +56,64 @@ void main() {
 
     app.navigator.openFund();
     await tester.pumpAndSettle();
-    expect(find.byType(FundPage), findsOneWidget);
+    expect(find.byType(FundSheet), findsOneWidget);
+    expect(find.text('Buy'), findsOneWidget);
+    expect(find.text('Sell'), findsOneWidget);
 
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    expect(find.byType(FundPage), findsNothing);
+    expect(find.byType(FundSheet), findsNothing);
     expect(find.text('Dashboard'), findsExactly(2));
+  });
+
+  testWidgets('all main feature entry points open the shared fund sheet', (
+    tester,
+  ) async {
+    await tester.pumpWidget(TradingApp());
+    await tester.pumpAndSettle();
+
+    Future<void> openAndCloseFunds(Finder entryPoint) async {
+      await tester.ensureVisible(entryPoint);
+      await tester.tap(entryPoint);
+      await tester.pumpAndSettle();
+      expect(find.byType(FundSheet), findsOneWidget);
+      await tester.tap(find.byTooltip('Close funds'));
+      await tester.pumpAndSettle();
+      expect(find.byType(FundSheet), findsNothing);
+    }
+
+    await openAndCloseFunds(find.text('RELIANCE'));
+
+    await tester.tap(find.text('Watchlist').last);
+    await tester.pumpAndSettle();
+    await openAndCloseFunds(find.text('RELIANCE'));
+
+    await tester.tap(find.text('Portfolio').last);
+    await tester.pumpAndSettle();
+    await openAndCloseFunds(find.text('RELIANCE'));
+  });
+
+  testWidgets('fund buy and sell close the sheet before opening orders', (
+    tester,
+  ) async {
+    await tester.pumpWidget(TradingApp());
+    await tester.pumpAndSettle();
+
+    Future<void> verifyQuickTrade(String action) async {
+      await tester.tap(find.text('RELIANCE'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(action));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FundSheet), findsNothing);
+      expect(find.byType(OrdersPage), findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Dashboard'), findsExactly(2));
+    }
+
+    await verifyQuickTrade('Buy');
+    await verifyQuickTrade('Sell');
   });
 }
