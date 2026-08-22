@@ -36,7 +36,9 @@ void main() {
     expect(find.text('+18.40  +1.28%'), findsOneWidget);
     expect(find.text('Recommended'), findsNWidgets(2));
     expect(find.text('Top Loser'), findsNWidgets(2));
-    expect(find.byIcon(Icons.bookmark), findsNWidgets(5));
+    expect(find.text('Equity'), findsNothing);
+    expect(find.byIcon(Icons.bookmark), findsNothing);
+    expect(find.byIcon(Icons.bookmark_outline), findsNothing);
   });
 
   testWidgets('switches between the static watchlist data sets', (

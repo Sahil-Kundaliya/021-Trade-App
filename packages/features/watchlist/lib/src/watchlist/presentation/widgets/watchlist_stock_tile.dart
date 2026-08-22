@@ -4,14 +4,9 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/watchlist_stock.dart';
 
 class WatchlistStockTile extends StatelessWidget {
-  const WatchlistStockTile({
-    required this.stock,
-    this.onBookmarkPressed,
-    super.key,
-  });
+  const WatchlistStockTile({required this.stock, super.key});
 
   final WatchlistStock stock;
-  final VoidCallback? onBookmarkPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -48,10 +43,9 @@ class WatchlistStockTile extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Wrap(
-                  spacing: AppSpacing.xs,
-                  runSpacing: AppSpacing.xs,
+                  spacing: AppSpacing.xxs,
+                  runSpacing: AppSpacing.xxs,
                   children: [
-                    _StockTag(label: stock.category),
                     for (final tag in stock.tags) _StockTag(label: tag),
                   ],
                 ),
@@ -62,20 +56,6 @@ class WatchlistStockTile extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              AppIconButton(
-                tooltip: stock.isBookmarked
-                    ? 'Saved to watchlist'
-                    : 'Not saved to watchlist',
-                onPressed: onBookmarkPressed ?? _noOp,
-                icon: Icon(
-                  stock.isBookmarked ? Icons.bookmark : Icons.bookmark_outline,
-                  size: AppSizes.iconSm,
-                  color: stock.isBookmarked
-                      ? context.appColors.primary
-                      : context.appColors.textTertiary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
               Text(
                 _formatRupees(stock.ltp),
                 style: context.appTextStyles.priceSmall.copyWith(
@@ -112,13 +92,14 @@ class _StockTag extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
+          horizontal: AppSpacing.xs,
+          vertical: AppSpacing.xxs,
         ),
         child: Text(
           label,
           style: context.textTheme.labelSmall?.copyWith(
             color: context.appColors.textSecondary,
+            fontSize: 10,
           ),
         ),
       ),
@@ -147,5 +128,3 @@ String _formatNumber(double value) {
   );
   return '$groupedLeading,$lastThree.${parts.last}';
 }
-
-void _noOp() {}
