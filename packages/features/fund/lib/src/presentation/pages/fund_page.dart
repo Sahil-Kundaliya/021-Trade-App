@@ -1,3 +1,4 @@
+import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 
 class FundPage extends StatelessWidget {
@@ -5,6 +6,6 @@ class FundPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('Fund')));
+    return const Scaffold(body: AppEmptyState(title: 'Fund'));
   }
 }

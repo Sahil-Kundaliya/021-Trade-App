@@ -1,3 +1,4 @@
+import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 
 class OrdersPage extends StatelessWidget {
@@ -5,6 +6,6 @@ class OrdersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('Orders')));
+    return const Scaffold(body: AppEmptyState(title: 'Orders'));
   }
 }

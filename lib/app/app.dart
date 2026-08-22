@@ -1,3 +1,4 @@
+import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:navigation_contract/navigation_contract.dart';
 import 'package:zero_two_one_trade_assignment/app/navigation/app_navigator_impl.dart';
@@ -26,10 +27,10 @@ class TradingApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: '021 Trade',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.system,
+      themeAnimationDuration: AppDurations.normal,
       routerConfig: router.config(),
     );
   }
