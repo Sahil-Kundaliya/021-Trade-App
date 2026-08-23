@@ -110,6 +110,100 @@ void main() {
     );
   });
 
+  test('rename preserves stable ID, fund membership, and fund order', () async {
+    final before = bloc.state.watchlists.singleWhere(
+      (item) => item.id == 'watchlist_2',
+    );
+    final renamed = bloc.stream.firstWhere(
+      (state) => state.watchlists.any((item) => item.name == 'Banks'),
+    );
+
+    bloc.add(
+      const WatchlistRenameRequested(
+        watchlistId: 'watchlist_2',
+        newName: 'Banks',
+      ),
+    );
+    await renamed;
+
+    final after = bloc.state.watchlists.singleWhere(
+      (item) => item.id == 'watchlist_2',
+    );
+    expect(after.id, before.id);
+    expect(after.fundIds, before.fundIds);
+    expect(after.createdAt, before.createdAt);
+  });
+
+  test('renames Default while preserving its ID and funds', () async {
+    final before = bloc.state.watchlists.first;
+    final renamed = bloc.stream.firstWhere(
+      (state) => state.watchlists.first.name == 'Main',
+    );
+
+    bloc.add(
+      const WatchlistRenameRequested(
+        watchlistId: 'watchlist_default',
+        newName: 'Main',
+      ),
+    );
+    await renamed;
+
+    expect(bloc.state.watchlists.first.id, 'watchlist_default');
+    expect(bloc.state.watchlists.first.fundIds, before.fundIds);
+  });
+
+  test(
+    'rejects duplicate names case-insensitively and names over 30 chars',
+    () async {
+      var rejected = bloc.stream.firstWhere((state) => state.message != null);
+      bloc.add(const WatchlistCreateRequested(name: 'default'));
+      await rejected;
+      expect(repository.saveCount, 0);
+
+      rejected = bloc.stream.firstWhere(
+        (state) => state.message?.contains('30 characters') ?? false,
+      );
+      bloc.add(
+        WatchlistCreateRequested(name: List<String>.filled(31, 'x').join()),
+      );
+      await rejected;
+      expect(repository.saveCount, 0);
+    },
+  );
+
+  test('failed rename keeps the previous name and fund membership', () async {
+    repository.failSaves = true;
+    final failed = bloc.stream.firstWhere(
+      (state) => state.errorMessage != null && !state.isSaving,
+    );
+
+    bloc.add(
+      const WatchlistRenameRequested(
+        watchlistId: 'watchlist_2',
+        newName: 'Banks',
+      ),
+    );
+    await failed;
+
+    final watchlist = bloc.state.watchlists.singleWhere(
+      (item) => item.id == 'watchlist_2',
+    );
+    expect(watchlist.name, 'Watchlist 2');
+    expect(watchlist.fundIds, <String>['RELIANCE_EQ']);
+  });
+
+  test('an effectively unchanged rename does not write', () async {
+    bloc.add(
+      const WatchlistRenameRequested(
+        watchlistId: 'watchlist_2',
+        newName: '  Watchlist 2  ',
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(repository.saveCount, 0);
+  });
+
   test('does not create a sixth watchlist', () async {
     for (var index = 3; index <= 5; index++) {
       final count = index;
@@ -144,6 +238,7 @@ void main() {
       bloc.add(const WatchlistDeleteRequested(watchlistId: 'watchlist_2'));
       await deleted;
       expect(bloc.state.watchlists.single.id, 'watchlist_default');
+      expect(bloc.state.selectedWatchlistId, 'watchlist_default');
     },
   );
 
@@ -221,6 +316,7 @@ final class _FakeRepository implements WatchlistRepository {
   );
   int readCount = 0;
   int saveCount = 0;
+  bool failSaves = false;
   late List<Watchlist> _watchlists = <Watchlist>[
     _watchlist('watchlist_default', 'Default', [
       'INFY_EQ',
@@ -268,6 +364,7 @@ final class _FakeRepository implements WatchlistRepository {
   @override
   Future<void> saveWatchlists(List<Watchlist> watchlists) async {
     saveCount += 1;
+    if (failSaves) throw StateError('storage unavailable');
     _watchlists = List<Watchlist>.of(watchlists);
   }
 }

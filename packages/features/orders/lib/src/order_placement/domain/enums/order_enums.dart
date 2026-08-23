@@ -1,6 +1,8 @@
+import 'package:core_data/core_data.dart' as core;
+
 enum OrderSide { buy, sell }
 
-enum TradeExchange { nse, bse }
+typedef TradeExchange = core.TradeExchange;
 
 enum TradeOrderType { market, limit, stopLoss, stopLossMarket }
 

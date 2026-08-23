@@ -54,7 +54,7 @@ void main() {
 
     await tester.tap(find.text('Futures'));
     await tester.pumpAndSettle();
-    expect(find.text('HDFCBANK AUG FUT'), findsOneWidget);
+    expect(find.text('SBIN AUG FUT'), findsOneWidget);
 
     await tester.tap(find.text('Top Losers'));
     await tester.pumpAndSettle();

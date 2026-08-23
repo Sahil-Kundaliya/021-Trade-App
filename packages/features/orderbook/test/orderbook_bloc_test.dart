@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orderbook/src/orderbook/domain/entities/trade_order.dart';
 import 'package:orderbook/src/orderbook/domain/repositories/orderbook_repository.dart';
@@ -55,9 +57,38 @@ void main() {
     expect(bloc.state.visibleOrders, isEmpty);
     await bloc.close();
   });
+
+  test(
+    'moves an executed order from open to closed without a reload',
+    () async {
+      final repository = _ReactiveRepository([
+        _order('limit', OrderStatus.open, DateTime(2026, 1, 1)),
+      ]);
+      final bloc = OrderBookBloc(repository)..add(const OrderBookStarted());
+      await bloc.stream.firstWhere(
+        (state) => state.status == OrderBookStatus.loaded,
+      );
+
+      repository.emit([
+        _order('limit', OrderStatus.executed, DateTime(2026, 1, 2)),
+      ]);
+      await bloc.stream.firstWhere((state) => state.closedCount == 1);
+
+      expect(bloc.state.openCount, 0);
+      expect(bloc.state.visibleOrders, isEmpty);
+      expect(repository.calls, 1);
+      bloc.add(const OrderBookTabChanged(OrderBookTab.closed));
+      await bloc.stream.firstWhere(
+        (state) => state.selectedTab == OrderBookTab.closed,
+      );
+      expect(bloc.state.visibleOrders.single.status, OrderStatus.executed);
+      await bloc.close();
+      await repository.close();
+    },
+  );
 }
 
-final class _Repository implements OrderBookRepository {
+class _Repository implements OrderBookRepository {
   _Repository(this.orders);
   final List<TradeOrder> orders;
   int calls = 0;
@@ -66,6 +97,22 @@ final class _Repository implements OrderBookRepository {
     calls++;
     return orders;
   }
+
+  @override
+  Future<bool> cancelOrder(String orderId) async => true;
+}
+
+final class _ReactiveRepository extends _Repository
+    implements ReactiveOrderBookRepository {
+  _ReactiveRepository(super.orders);
+
+  final _changes = StreamController<List<TradeOrder>>.broadcast(sync: true);
+
+  @override
+  Stream<List<TradeOrder>> get orderChanges => _changes.stream;
+
+  void emit(List<TradeOrder> orders) => _changes.add(orders);
+  Future<void> close() => _changes.close();
 }
 
 TradeOrder _order(String id, OrderStatus status, DateTime createdAt) =>

@@ -36,7 +36,13 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
   Future<void> _load(HoldingsEvent event, Emitter<HoldingsState> emit) async {
     emit(state.copyWith(status: HoldingsStatus.loading, clearError: true));
     try {
-      final holdings = await _repository.getHoldings();
+      final loaded = await _repository.getHoldings();
+      final holdings = loaded
+          .map((holding) {
+            final cached = _livePrices.latestFor(holding.marketKey);
+            return cached == null ? holding : holding.withLivePrice(cached);
+          })
+          .toList(growable: false);
       if (holdings.isEmpty) {
         emit(state.copyWith(status: HoldingsStatus.empty, holdings: const []));
         return;
@@ -108,7 +114,14 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
   void _watch(List<Holding> holdings) {
     final seeds = holdings.map(
       (holding) => LiveInstrumentSeed.fromPrices(
-        instrumentId: holding.fundId,
+        marketKey: holding.marketKey,
+        fundId: holding.fundId,
+        exchange: holding.tradeExchange,
+        assetType: switch (holding.instrumentType) {
+          'FUTURE' => LiveMarketAssetType.future,
+          'OPTION' => LiveMarketAssetType.option,
+          _ => LiveMarketAssetType.equity,
+        },
         symbol: holding.symbol,
         ltp: holding.ltp,
         previousClose: holding.previousClose,
@@ -132,7 +145,7 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
     };
     final holdings = state.holdings
         .map((holding) {
-          final tick = ticks[holding.fundId];
+          final tick = ticks[holding.marketKey];
           return tick == null ? holding : holding.withLivePrice(tick);
         })
         .toList(growable: false);

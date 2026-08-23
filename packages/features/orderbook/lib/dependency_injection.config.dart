@@ -27,7 +27,7 @@ _i174.GetIt configureOrderBookDependencies(
 }) {
   final gh = _i526.GetItHelper(getIt, environment, environmentFilter);
   gh.lazySingleton<_i231.OrderBookRepository>(
-    () => _i24.OrderBookRepositoryImpl(gh<_i607.OrderBookLocalApi>()),
+    () => _i24.OrderBookRepositoryImpl(gh<_i607.OrderStore>()),
   );
   gh.factory<_i410.OrderBookBloc>(
     () => _i410.OrderBookBloc(gh<_i231.OrderBookRepository>()),

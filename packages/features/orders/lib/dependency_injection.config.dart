@@ -29,7 +29,7 @@ _i174.GetIt configureOrdersDependencies(
   gh.lazySingleton<_i326.OrderPlacementRepository>(
     () => _i161.OrderPlacementRepositoryImpl(
       gh<_i607.TradingLocalApi>(),
-      gh<_i607.OrderBookLocalApi>(),
+      gh<_i607.OrderStore>(),
     ),
   );
   gh.factory<_i41.OrderPlacementBloc>(

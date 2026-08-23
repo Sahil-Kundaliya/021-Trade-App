@@ -12,6 +12,8 @@ class WatchlistSection extends StatelessWidget {
     required this.selectedWatchlistId,
     required this.funds,
     this.onSelected,
+    this.onLongPressed,
+    this.onAddPressed,
     this.onStockTap,
     super.key,
   });
@@ -20,6 +22,8 @@ class WatchlistSection extends StatelessWidget {
   final String? selectedWatchlistId;
   final List<WatchlistFund> funds;
   final ValueChanged<String>? onSelected;
+  final ValueChanged<Watchlist>? onLongPressed;
+  final VoidCallback? onAddPressed;
   final ValueChanged<WatchlistFund>? onStockTap;
 
   @override
@@ -34,9 +38,13 @@ class WatchlistSection extends StatelessWidget {
               (item) => item.id == selectedWatchlistId,
             ),
             onSelected: (index) => onSelected?.call(watchlists[index].id),
+            onLongPressed: (index) => onLongPressed?.call(watchlists[index]),
+            onAddPressed: onAddPressed,
           ),
         const SizedBox(height: AppSpacing.sm),
-        WatchlistStockList(stocks: funds, onStockTap: onStockTap),
+        Expanded(
+          child: WatchlistStockList(stocks: funds, onStockTap: onStockTap),
+        ),
       ],
     );
   }

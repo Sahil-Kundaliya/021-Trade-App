@@ -62,22 +62,39 @@ class OrderConfirmation extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    _row(context, 'Quantity', '${draft.quantity} Qty'),
+                    _row(
+                      context,
+                      'Quantity',
+                      '${draft.quantity} Qty',
+                      type: SensitiveValueType.quantity,
+                    ),
                     if (order.averagePrice != null)
                       _row(
                         context,
                         'Executed Price',
                         _money(order.averagePrice!),
+                        type: SensitiveValueType.currency,
                       ),
                     if (draft.limitPrice != null)
-                      _row(context, 'Limit Price', _money(draft.limitPrice!)),
+                      _row(
+                        context,
+                        'Limit Price',
+                        _money(draft.limitPrice!),
+                        type: SensitiveValueType.currency,
+                      ),
                     if (draft.triggerPrice != null)
                       _row(
                         context,
                         'Trigger Price',
                         _money(draft.triggerPrice!),
+                        type: SensitiveValueType.currency,
                       ),
-                    _row(context, 'Order Value', _money(order.orderValue)),
+                    _row(
+                      context,
+                      'Order Value',
+                      _money(order.orderValue),
+                      type: SensitiveValueType.currency,
+                    ),
                   ],
                 ),
               ),
@@ -95,20 +112,24 @@ class OrderConfirmation extends StatelessWidget {
     );
   }
 
-  static Widget _row(BuildContext context, String label, String value) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(color: context.appColors.textSecondary),
-              ),
-            ),
-            Text(value),
-          ],
+  static Widget _row(
+    BuildContext context,
+    String label,
+    String value, {
+    SensitiveValueType? type,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(color: context.appColors.textSecondary),
+          ),
         ),
-      );
+        type == null ? Text(value) : SensitiveValueText(value, type: type),
+      ],
+    ),
+  );
   static String _money(double value) => '₹${value.toStringAsFixed(2)}';
 }

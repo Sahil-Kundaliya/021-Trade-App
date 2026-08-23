@@ -1,4 +1,5 @@
 import 'package:core_ui/core_ui.dart';
+import 'package:core_data/core_data.dart';
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/market_category.dart';
@@ -10,18 +11,22 @@ class MarketScreener extends StatelessWidget {
   const MarketScreener({
     required this.selectedCategory,
     required this.selectedSubcategory,
+    required this.selectedExchange,
     required this.instruments,
     required this.onCategorySelected,
     required this.onSubcategorySelected,
+    required this.onExchangeSelected,
     this.onItemTap,
     super.key,
   });
 
   final MarketCategory selectedCategory;
   final MarketSubcategory selectedSubcategory;
+  final TradeExchange selectedExchange;
   final List<MarketInstrument> instruments;
   final ValueChanged<MarketCategory> onCategorySelected;
   final ValueChanged<MarketSubcategory> onSubcategorySelected;
+  final ValueChanged<TradeExchange> onExchangeSelected;
   final ValueChanged<MarketDisplayItem>? onItemTap;
 
   @override
@@ -42,6 +47,29 @@ class MarketScreener extends StatelessWidget {
             onSelected: onCategorySelected,
           ),
           const SizedBox(height: AppSpacing.md),
+          Text('Exchange', style: context.textTheme.labelMedium),
+          const SizedBox(height: AppSpacing.xs),
+          if (selectedCategory == MarketCategory.equity)
+            AppDropdown<TradeExchange>(
+              initialValue: selectedExchange,
+              items: TradeExchange.values
+                  .map(
+                    (exchange) => DropdownMenuItem(
+                      value: exchange,
+                      child: Text(exchange.code),
+                    ),
+                  )
+                  .toList(growable: false),
+              onChanged: (value) {
+                if (value != null) onExchangeSelected(value);
+              },
+            )
+          else
+            InputDecorator(
+              decoration: const InputDecoration(enabled: false),
+              child: Text(TradeExchange.nse.code),
+            ),
+          const SizedBox(height: AppSpacing.md),
           MarketSubcategoryTabs(
             subcategories: selectedCategory.subcategories,
             selectedSubcategory: selectedSubcategory,
@@ -51,7 +79,11 @@ class MarketScreener extends StatelessWidget {
           AnimatedSwitcher(
             duration: AppDurations.fast,
             child: MarketList(
-              key: ValueKey((selectedCategory, selectedSubcategory)),
+              key: ValueKey((
+                selectedCategory,
+                selectedSubcategory,
+                selectedExchange,
+              )),
               category: selectedCategory,
               items: items,
               onItemTap: onItemTap,
@@ -70,6 +102,7 @@ class MarketScreener extends StatelessWidget {
           ? instrument.underlyingSymbol ?? instrument.symbol
           : instrument.symbol,
       title: instrument.companyName,
+      exchange: instrument.exchange,
       ltp: _currency(instrument.ltp),
       change: _signedCurrency(instrument.change),
       changePercent: instrument.changePercent,
@@ -304,9 +337,9 @@ class EquityMarketListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final secondary = item.volume == null
-        ? item.title
-        : '${item.title} • Vol ${item.volume}';
+    final secondary = PrivacyModeScope.of(context) || item.volume == null
+        ? '${item.exchange.code} • ${item.title}'
+        : '${item.exchange.code} • ${item.title} • Vol ${item.volume}';
     return _MarketRow(primary: item.symbol, secondary: secondary, item: item);
   }
 }
@@ -318,7 +351,9 @@ class FutureMarketListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final volume = item.volume == null ? '' : ' • Vol ${item.volume}';
+    final volume = PrivacyModeScope.of(context) || item.volume == null
+        ? ''
+        : ' • Vol ${item.volume}';
     return _MarketRow(
       primary: item.symbol,
       secondary: '${item.title} • Expiry ${item.expiry}$volume',
@@ -335,7 +370,9 @@ class OptionMarketListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _MarketRow(
-      primary: '${item.symbol} ${item.strike} ${item.optionType}',
+      primary: PrivacyModeScope.of(context)
+          ? '${item.symbol} ${item.optionType}'
+          : '${item.symbol} ${item.strike} ${item.optionType}',
       secondary: '${item.title} • ${item.expiry}',
       item: item,
     );
@@ -395,15 +432,19 @@ class _MarketRow extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
+              SensitiveValueText(
                 item.ltp,
+                type: SensitiveValueType.currency,
                 style: context.appTextStyles.priceSmall.copyWith(
                   color: context.appColors.textPrimary,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
-              Text(
+              SensitiveValueText(
                 '${item.change}  $percentage',
+                type: SensitiveValueType.number,
+                maskedValue:
+                    '${PrivacyMask.currency}  ${PrivacyMask.percentage}',
                 style: context.appTextStyles.percentageSmall.copyWith(
                   color: movementColor,
                 ),

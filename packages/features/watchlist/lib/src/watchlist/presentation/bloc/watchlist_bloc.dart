@@ -31,6 +31,7 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
   }
 
   static const maximumWatchlists = 5;
+  static const maximumNameLength = 30;
   static const defaultWatchlistId = 'watchlist_default';
 
   final WatchlistRepository _repository;
@@ -141,11 +142,13 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
       _reject(emit, 'A maximum of 5 watchlists is allowed.');
       return;
     }
-    if (name.isEmpty || _hasName(name)) {
+    if (name.isEmpty || name.length > maximumNameLength || _hasName(name)) {
       _reject(
         emit,
         name.isEmpty
             ? 'Watchlist name is required.'
+            : name.length > maximumNameLength
+            ? 'Watchlist names can contain at most 30 characters.'
             : 'A watchlist with this name already exists.',
       );
       return;
@@ -179,6 +182,7 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     );
     if (index < 0 ||
         name.isEmpty ||
+        name.length > maximumNameLength ||
         _hasName(name, exceptId: event.watchlistId)) {
       _reject(
         emit,
@@ -186,10 +190,13 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
             ? 'Watchlist not found.'
             : name.isEmpty
             ? 'Watchlist name is required.'
+            : name.length > maximumNameLength
+            ? 'Watchlist names can contain at most 30 characters.'
             : 'A watchlist with this name already exists.',
       );
       return;
     }
+    if (state.watchlists[index].name == name) return;
     final next = List<Watchlist>.of(state.watchlists);
     next[index] = next[index].copyWith(name: name, updatedAt: DateTime.now());
     await _save(next, emit);
@@ -303,7 +310,8 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
 
   bool _hasName(String name, {String? exceptId}) => state.watchlists.any(
     (item) =>
-        item.id != exceptId && item.name.toLowerCase() == name.toLowerCase(),
+        item.id != exceptId &&
+        item.name.trim().toLowerCase() == name.trim().toLowerCase(),
   );
 
   void _reject(Emitter<WatchlistState> emit, String message) {
@@ -368,9 +376,34 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
   void _watch(List<WatchlistFund> funds) {
     final manager = _livePrices;
     if (manager == null) return;
+    final cached = funds
+        .map((fund) => manager.latestFor(fund.marketKey))
+        .whereType<LivePriceTick>()
+        .toList(growable: false);
+    if (cached.isNotEmpty) {
+      final sequence = cached
+          .map((tick) => tick.sequence)
+          .reduce((a, b) => a > b ? a : b);
+      add(
+        WatchlistLivePricesReceived(
+          LivePriceBatch(
+            sequence: sequence,
+            timestamp: cached.last.timestamp,
+            updates: cached,
+          ),
+        ),
+      );
+    }
     final seeds = funds.map(
       (fund) => LiveInstrumentSeed.fromPrices(
-        instrumentId: fund.id,
+        marketKey: fund.marketKey,
+        fundId: fund.id,
+        exchange: fund.tradeExchange,
+        assetType: switch (fund.category) {
+          'Future' => LiveMarketAssetType.future,
+          'Options' => LiveMarketAssetType.option,
+          _ => LiveMarketAssetType.equity,
+        },
         symbol: fund.symbol,
         ltp: fund.ltp,
         previousClose: fund.previousClose,
@@ -398,7 +431,7 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
       for (final tick in event.batch.updates) tick.instrumentId: tick,
     };
     WatchlistFund updated(WatchlistFund fund) {
-      final tick = ticks[fund.id];
+      final tick = ticks[fund.marketKey];
       return tick == null ? fund : fund.withLivePrice(tick);
     }
 

@@ -1,5 +1,5 @@
-import 'package:core_data/core_data.dart';
-import 'package:navigation_contract/navigation_contract.dart';
+import 'package:core_data/core_data.dart' hide TradeExchange;
+import 'package:navigation_contract/navigation_contract.dart' show TradeSide;
 
 import '../../domain/enums/order_enums.dart';
 
@@ -8,8 +8,13 @@ sealed class OrderPlacementEvent {
 }
 
 final class OrderPlacementStarted extends OrderPlacementEvent {
-  const OrderPlacementStarted({required this.fundId, this.side});
+  const OrderPlacementStarted({
+    required this.fundId,
+    this.exchange = TradeExchange.nse,
+    this.side,
+  });
   final String fundId;
+  final TradeExchange exchange;
   final TradeSide? side;
 }
 

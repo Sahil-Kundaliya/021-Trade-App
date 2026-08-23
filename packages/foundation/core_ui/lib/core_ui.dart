@@ -11,6 +11,8 @@ export 'src/components/market/market_index_view_data.dart';
 export 'src/components/market/market_indices_strip.dart';
 export 'src/components/sections/app_section_header.dart';
 export 'src/components/states/app_empty_state.dart';
+export 'src/privacy/privacy_mode_scope.dart';
+export 'src/privacy/sensitive_value_text.dart';
 export 'src/theme/app_color_scheme.dart';
 export 'src/theme/app_theme.dart';
 export 'src/theme/extensions/app_colors.dart';

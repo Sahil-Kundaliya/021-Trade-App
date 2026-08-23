@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
@@ -12,9 +14,34 @@ class OrderBookBloc extends Bloc<OrderBookEvent, OrderBookState> {
     on<OrderBookStarted>(_load);
     on<OrderBookRetryRequested>(_load);
     on<OrderBookTabChanged>(_changeTab);
+    on<OrderBookOrdersChanged>(_ordersChanged);
+    on<OrderBookCancelRequested>(_cancelRequested);
+    if (_repository case final ReactiveOrderBookRepository reactive) {
+      _changesSubscription = reactive.orderChanges.listen(
+        (orders) => add(OrderBookOrdersChanged(orders)),
+      );
+    }
+  }
+
+  Future<void> _cancelRequested(
+    OrderBookCancelRequested event,
+    Emitter<OrderBookState> emit,
+  ) async {
+    try {
+      await _repository.cancelOrder(event.orderId);
+    } catch (_) {
+      emit(state.copyWith(errorMessage: 'Unable to cancel this order.'));
+    }
   }
 
   final OrderBookRepository _repository;
+  StreamSubscription<List<TradeOrder>>? _changesSubscription;
+
+  @override
+  Future<void> close() async {
+    await _changesSubscription?.cancel();
+    return super.close();
+  }
 
   Future<void> _load(OrderBookEvent event, Emitter<OrderBookState> emit) async {
     emit(state.copyWith(status: OrderBookStatus.loading, clearError: true));
@@ -48,6 +75,25 @@ class OrderBookBloc extends Bloc<OrderBookEvent, OrderBookState> {
       state.copyWith(
         selectedTab: event.tab,
         visibleOrders: _filter(state.allOrders, event.tab),
+      ),
+    );
+  }
+
+  void _ordersChanged(
+    OrderBookOrdersChanged event,
+    Emitter<OrderBookState> emit,
+  ) {
+    final orders = List<TradeOrder>.of(event.orders)
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    final immutable = List<TradeOrder>.unmodifiable(orders);
+    emit(
+      state.copyWith(
+        status: immutable.isEmpty
+            ? OrderBookStatus.empty
+            : OrderBookStatus.loaded,
+        allOrders: immutable,
+        visibleOrders: _filter(immutable, state.selectedTab),
+        clearError: true,
       ),
     );
   }

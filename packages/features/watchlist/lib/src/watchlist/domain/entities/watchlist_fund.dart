@@ -19,6 +19,9 @@ class WatchlistFund {
   final String symbol;
   final String companyName;
   final String exchange;
+  TradeExchange get tradeExchange => TradeExchange.parse(exchange);
+  String get marketKey =>
+      MarketInstrumentKey(fundId: id, exchange: tradeExchange).value;
   final String category;
   final double ltp;
   final double change;

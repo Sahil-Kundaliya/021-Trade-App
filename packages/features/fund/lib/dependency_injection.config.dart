@@ -41,6 +41,7 @@ _i174.GetIt configureFundDependencies(
       gh<_i987.FundRepository>(),
       gh<_i87.FundWatchlistRepository>(),
       gh<_i607.LivePriceStreamManager>(),
+      gh<_i607.OrderStore>(),
     ),
   );
   return getIt;

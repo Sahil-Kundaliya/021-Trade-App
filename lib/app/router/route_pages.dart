@@ -1,4 +1,6 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:core_data/core_data.dart';
+import 'package:core_ui/core_ui.dart';
 import 'package:dashboard/dashboard.dart';
 import 'package:orders/orders.dart';
 import 'package:orderbook/orderbook.dart';
@@ -10,7 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:navigation_contract/navigation_contract.dart';
 import 'package:zero_two_one_trade_assignment/app/dependency_injection.dart';
 import 'package:zero_two_one_trade_assignment/app/navigation/app_navigation_scope.dart';
-import 'package:zero_two_one_trade_assignment/app/theme/theme_bloc.dart';
+import 'package:zero_two_one_trade_assignment/app/preferences/app_preferences_bloc.dart';
 
 @RoutePage(name: 'DashboardRoute')
 class DashboardRoutePage extends StatelessWidget {
@@ -35,8 +37,15 @@ class PortfolioRoutePage extends StatelessWidget {
   const PortfolioRoutePage({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      PortfolioPage(navigator: AppNavigationScope.of(context));
+  Widget build(BuildContext context) {
+    final privacyMode = context.select<AppPreferencesBloc, bool>(
+      (bloc) => bloc.state.preferences.privacyMode,
+    );
+    return PrivacyModeScope(
+      enabled: privacyMode,
+      child: PortfolioPage(navigator: AppNavigationScope.of(context)),
+    );
+  }
 }
 
 @RoutePage(name: 'ProfileRoute')
@@ -48,8 +57,19 @@ class ProfileRoutePage extends StatefulWidget {
 }
 
 class _ProfileRoutePageState extends State<ProfileRoutePage> {
+  bool _permissionRefreshed = false;
   late final ProfileBloc _profileBloc = getIt<ProfileBloc>()
     ..add(const ProfileStarted());
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_permissionRefreshed) return;
+    _permissionRefreshed = true;
+    context.read<AppPreferencesBloc>().add(
+      const AppNotificationPermissionRefreshed(),
+    );
+  }
 
   @override
   void dispose() {
@@ -59,26 +79,43 @@ class _ProfileRoutePageState extends State<ProfileRoutePage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeBloc = context.watch<ThemeBloc>();
+    final preferencesBloc = context.watch<AppPreferencesBloc>();
+    final appState = preferencesBloc.state;
     return ProfilePage(
       bloc: _profileBloc,
       navigator: AppNavigationScope.of(context),
-      themeMode: themeBloc.state.mode,
-      onThemeChanged: (mode) => themeBloc.add(ThemeModeChanged(mode)),
+      themeMode: appState.preferences.themeMode,
+      privacyMode: appState.preferences.privacyMode,
+      notificationsEnabled: appState.notificationsEffective,
+      notificationPermissionBlocked:
+          appState.notificationPermission ==
+          NotificationPermissionStatus.denied,
+      onThemeChanged: (mode) => preferencesBloc.add(AppThemeModeChanged(mode)),
+      onPrivacyChanged: (enabled) =>
+          preferencesBloc.add(AppPrivacyModeChanged(enabled)),
+      onNotificationsChanged: (enabled) =>
+          preferencesBloc.add(AppNotificationsChanged(enabled)),
     );
   }
 }
 
 @RoutePage(name: 'OrdersRoute')
 class OrdersRoutePage extends StatelessWidget {
-  const OrdersRoutePage({required this.fundId, this.side, super.key});
+  const OrdersRoutePage({
+    required this.fundId,
+    required this.exchange,
+    this.side,
+    super.key,
+  });
 
   final String fundId;
+  final TradeExchange exchange;
   final TradeSide? side;
 
   @override
   Widget build(BuildContext context) => OrdersScreen(
     fundId: fundId,
+    exchange: exchange,
     side: side,
     navigator: AppNavigationScope.of(context),
   );

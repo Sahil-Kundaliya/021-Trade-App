@@ -8,22 +8,34 @@ import '../../../fund_details/presentation/bloc/fund_details_event.dart';
 import '../widgets/fund_content.dart';
 
 class FundPage extends StatelessWidget {
-  const FundPage({required this.fundId, this.navigator, super.key});
+  const FundPage({
+    required this.fundId,
+    this.exchange = TradeExchange.nse,
+    this.navigator,
+    super.key,
+  });
   final String fundId;
+  final TradeExchange exchange;
   final AppNavigator? navigator;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) =>
         GetIt.instance<FundDetailsBloc>()
-          ..add(FundDetailsStarted(fundId: fundId)),
+          ..add(FundDetailsStarted(fundId: fundId, exchange: exchange)),
     child: Scaffold(
       body: SafeArea(
         child: FundContent(
-          onBuy: () =>
-              navigator?.openOrders(fundId: fundId, side: TradeSide.buy),
-          onSell: () =>
-              navigator?.openOrders(fundId: fundId, side: TradeSide.sell),
+          onBuy: () => navigator?.openOrders(
+            fundId: fundId,
+            exchange: exchange,
+            side: TradeSide.buy,
+          ),
+          onSell: () => navigator?.openOrders(
+            fundId: fundId,
+            exchange: exchange,
+            side: TradeSide.sell,
+          ),
         ),
       ),
     ),

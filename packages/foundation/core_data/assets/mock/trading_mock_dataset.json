@@ -7353,6 +7353,23 @@
       ]
     }
   ],
+  "marketListings": [
+    {"fundId":"RELIANCE_EQ","exchange":"BSE","ltp":1315.8,"previousClose":1310.4,"open":1312.1,"high":1318.2,"low":1309.5,"volume":3912400,"tickSize":0.05},
+    {"fundId":"TCS_EQ","exchange":"BSE","ltp":2297.6,"previousClose":2303.2,"open":2305.0,"high":2307.4,"low":2291.8,"volume":1825400,"tickSize":0.1},
+    {"fundId":"INFY_EQ","exchange":"BSE","ltp":1126.4,"previousClose":1120.1,"open":1121.0,"high":1129.5,"low":1118.2,"volume":4278300,"tickSize":0.05},
+    {"fundId":"HDFCBANK_EQ","exchange":"BSE","ltp":724.8,"previousClose":727.25,"open":728.0,"high":729.6,"low":723.9,"volume":18412600,"tickSize":0.05},
+    {"fundId":"ICICIBANK_EQ","exchange":"BSE","ltp":1416.5,"previousClose":1412.0,"open":1412.9,"high":1418.1,"low":1409.7,"volume":3285100,"tickSize":0.05},
+    {"fundId":"SBIN_EQ","exchange":"BSE","ltp":1052.15,"previousClose":1046.6,"open":1048.3,"high":1053.8,"low":1047.1,"volume":9326000,"tickSize":0.05},
+    {"fundId":"ITC_EQ","exchange":"BSE","ltp":270.65,"previousClose":269.8,"open":270.0,"high":271.2,"low":269.4,"volume":6472300,"tickSize":0.05},
+    {"fundId":"LT_EQ","exchange":"BSE","ltp":4078.5,"previousClose":4090.0,"open":4092.0,"high":4096.5,"low":4072.0,"volume":1214000,"tickSize":0.05},
+    {"fundId":"BHARTIARTL_EQ","exchange":"BSE","ltp":1951.2,"previousClose":1944.6,"open":1946.2,"high":1953.8,"low":1943.1,"volume":2157600,"tickSize":0.05},
+    {"fundId":"AXISBANK_EQ","exchange":"BSE","ltp":1248.4,"previousClose":1242.0,"open":1243.3,"high":1250.1,"low":1240.8,"volume":1689300,"tickSize":0.05}
+  ],
+  "indices": [
+    {"id":"INDEX_NIFTY_50_NSE","symbol":"NIFTY 50","exchange":"NSE","ltp":24572.30,"previousClose":24469.85,"tickSize":0.05},
+    {"id":"INDEX_BANK_NIFTY_NSE","symbol":"BANK NIFTY","exchange":"NSE","ltp":51820.45,"previousClose":51913.65,"tickSize":0.05},
+    {"id":"INDEX_SENSEX_BSE","symbol":"SENSEX","exchange":"BSE","ltp":80940.20,"previousClose":80690.60,"tickSize":0.01}
+  ],
   "holdings": [
     {
       "id": "HLD_RELIANCE_EQ",

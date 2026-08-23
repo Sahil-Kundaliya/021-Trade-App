@@ -47,13 +47,16 @@ class OrderInstrumentHeader extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
+            SensitiveValueText(
               _money(instrument.ltp),
+              type: SensitiveValueType.currency,
               style: context.appTextStyles.priceMedium,
             ),
             const SizedBox(height: AppSpacing.xxs),
-            Text(
+            SensitiveValueText(
               '$sign${_money(instrument.change)} ($sign${instrument.changePercent.toStringAsFixed(2)}%)',
+              maskedValue:
+                  '${PrivacyMask.currency} (${PrivacyMask.percentage})',
               maxLines: 1,
               style: context.appTextStyles.percentageMedium.copyWith(
                 color: changeColor,

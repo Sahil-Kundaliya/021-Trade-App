@@ -4,6 +4,8 @@ import '../../theme/extensions/theme_context_extension.dart';
 import '../../theme/tokens/app_radius.dart';
 import '../../theme/tokens/app_spacing.dart';
 import 'market_index_view_data.dart';
+import '../../privacy/privacy_mode_scope.dart';
+import '../../privacy/sensitive_value_text.dart';
 
 class MarketIndexChip extends StatelessWidget {
   const MarketIndexChip({required this.item, this.onTap, super.key});
@@ -22,9 +24,9 @@ class MarketIndexChip extends StatelessWidget {
 
     return Semantics(
       button: onTap != null,
-      label:
-          '${item.name}, ${item.value}, ${item.change}, '
-          '${item.changePercent}',
+      label: PrivacyModeScope.of(context)
+          ? '${item.name}, values hidden'
+          : '${item.name}, ${item.value}, ${item.change}, ${item.changePercent}',
       child: SizedBox(
         width: width,
         height: height,
@@ -52,8 +54,9 @@ class MarketIndexChip extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  Text(
+                  SensitiveValueText(
                     item.value,
+                    type: SensitiveValueType.number,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.appTextStyles.marketValueMedium.copyWith(
@@ -64,14 +67,16 @@ class MarketIndexChip extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      SensitiveValueText(
                         item.change,
+                        type: SensitiveValueType.number,
                         style: context.appTextStyles.percentageSmall.copyWith(
                           color: movementColor,
                         ),
                       ),
-                      Text(
+                      SensitiveValueText(
                         item.changePercent,
+                        type: SensitiveValueType.percentage,
                         style: context.appTextStyles.percentageSmall.copyWith(
                           color: movementColor,
                         ),

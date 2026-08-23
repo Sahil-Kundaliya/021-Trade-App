@@ -35,6 +35,7 @@ void main() {
         darkTheme: AppTheme.dark,
         home: OrdersScreen(
           fundId: 'RELIANCE_EQ',
+          exchange: TradeExchange.nse,
           side: side,
           navigator: navigator,
         ),
@@ -150,13 +151,20 @@ final class _FakeNavigator implements AppNavigator {
   @override
   void goToWatchlist() {}
   @override
-  Future<void> openFund({required String fundId}) async {}
+  Future<void> openFund({
+    required String fundId,
+    required TradeExchange exchange,
+  }) async {}
   @override
   Future<void> openOrderBook() async {}
   @override
   Future<void> openLicenceInformation() async {}
   @override
-  Future<void> openOrders({required String fundId, TradeSide? side}) async {}
+  Future<void> openOrders({
+    required String fundId,
+    required TradeExchange exchange,
+    TradeSide? side,
+  }) async {}
   @override
   Future<void> pop() async {}
 }

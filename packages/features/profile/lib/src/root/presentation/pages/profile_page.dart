@@ -19,12 +19,22 @@ class ProfilePage extends StatelessWidget {
     required this.bloc,
     required this.themeMode,
     required this.onThemeChanged,
+    required this.privacyMode,
+    required this.notificationsEnabled,
+    required this.notificationPermissionBlocked,
+    required this.onPrivacyChanged,
+    required this.onNotificationsChanged,
     this.navigator,
     super.key,
   });
   final ProfileBloc bloc;
   final AppThemeMode themeMode;
   final ValueChanged<AppThemeMode> onThemeChanged;
+  final bool privacyMode;
+  final bool notificationsEnabled;
+  final bool notificationPermissionBlocked;
+  final ValueChanged<bool> onPrivacyChanged;
+  final ValueChanged<bool> onNotificationsChanged;
   final AppNavigator? navigator;
 
   @override
@@ -34,6 +44,11 @@ class ProfilePage extends StatelessWidget {
       navigator: navigator,
       themeMode: themeMode,
       onThemeChanged: onThemeChanged,
+      privacyMode: privacyMode,
+      notificationsEnabled: notificationsEnabled,
+      notificationPermissionBlocked: notificationPermissionBlocked,
+      onPrivacyChanged: onPrivacyChanged,
+      onNotificationsChanged: onNotificationsChanged,
     ),
   );
 }
@@ -42,12 +57,22 @@ class ProfileContent extends StatelessWidget {
   const ProfileContent({
     required this.themeMode,
     required this.onThemeChanged,
+    required this.privacyMode,
+    required this.notificationsEnabled,
+    required this.notificationPermissionBlocked,
+    required this.onPrivacyChanged,
+    required this.onNotificationsChanged,
     this.navigator,
     super.key,
   });
   final AppNavigator? navigator;
   final AppThemeMode themeMode;
   final ValueChanged<AppThemeMode> onThemeChanged;
+  final bool privacyMode;
+  final bool notificationsEnabled;
+  final bool notificationPermissionBlocked;
+  final ValueChanged<bool> onPrivacyChanged;
+  final ValueChanged<bool> onNotificationsChanged;
 
   @override
   Widget build(BuildContext context) => BlocConsumer<ProfileBloc, ProfileState>(
@@ -70,6 +95,11 @@ class ProfileContent extends StatelessWidget {
                 navigator: navigator,
                 themeMode: themeMode,
                 onThemeChanged: onThemeChanged,
+                privacyMode: privacyMode,
+                notificationsEnabled: notificationsEnabled,
+                notificationPermissionBlocked: notificationPermissionBlocked,
+                onPrivacyChanged: onPrivacyChanged,
+                onNotificationsChanged: onNotificationsChanged,
               ),
             ),
           ),
@@ -85,11 +115,21 @@ class _ProfileSections extends StatelessWidget {
     required this.navigator,
     required this.themeMode,
     required this.onThemeChanged,
+    required this.privacyMode,
+    required this.notificationsEnabled,
+    required this.notificationPermissionBlocked,
+    required this.onPrivacyChanged,
+    required this.onNotificationsChanged,
   });
   final ProfileState state;
   final AppNavigator? navigator;
   final AppThemeMode themeMode;
   final ValueChanged<AppThemeMode> onThemeChanged;
+  final bool privacyMode;
+  final bool notificationsEnabled;
+  final bool notificationPermissionBlocked;
+  final ValueChanged<bool> onPrivacyChanged;
+  final ValueChanged<bool> onNotificationsChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -140,20 +180,18 @@ class _ProfileSections extends StatelessWidget {
             ProfileToggleTile(
               icon: Icons.visibility_off_outlined,
               title: 'Privacy Mode',
-              subtitle: 'Hide sensitive portfolio and fund values',
-              value: preferences.privacyMode,
-              onChanged: (value) => context.read<ProfileBloc>().add(
-                ProfilePrivacyModeChanged(value),
-              ),
+              subtitle: 'Hide sensitive portfolio values',
+              value: privacyMode,
+              onChanged: onPrivacyChanged,
             ),
             ProfileToggleTile(
               icon: Icons.notifications_none_outlined,
               title: 'Notifications',
-              subtitle: 'Local notification preference',
-              value: preferences.notificationsEnabled,
-              onChanged: (value) => context.read<ProfileBloc>().add(
-                ProfileNotificationsChanged(value),
-              ),
+              subtitle: notificationPermissionBlocked
+                  ? 'Permission disabled in system settings'
+                  : 'Local notifications for order updates',
+              value: notificationsEnabled,
+              onChanged: onNotificationsChanged,
             ),
           ],
         ),

@@ -127,13 +127,16 @@ class _InstrumentHeader extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
+                  SensitiveValueText(
                     _money(fund.ltp),
+                    type: SensitiveValueType.currency,
                     style: context.appTextStyles.priceSmall,
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  Text(
+                  SensitiveValueText(
                     '${_signedMoney(fund.change)} ${_signedPercent(fund.changePercent)}',
+                    maskedValue:
+                        '${PrivacyMask.currency} ${PrivacyMask.percentage}',
                     style: context.appTextStyles.percentageSmall.copyWith(
                       color: movementColor,
                     ),
@@ -156,7 +159,7 @@ class _InstrumentHeader extends StatelessWidget {
                 icon: Icon(
                   state.isFundInWatchlist
                       ? Icons.bookmark
-                      : Icons.bookmark_add_outlined,
+                      : Icons.bookmark_outline,
                 ),
               ),
             ],
@@ -166,7 +169,7 @@ class _InstrumentHeader extends StatelessWidget {
             spacing: AppSpacing.xs,
             runSpacing: AppSpacing.xs,
             children: [
-              _SmallTagChip(label: fund.exchange),
+              _SmallTagChip(label: fund.exchange.code),
               _SmallTagChip(label: fund.category),
               for (final tag in fund.tags) _SmallTagChip(label: tag),
             ],
@@ -436,14 +439,24 @@ class _DepthRow extends StatelessWidget {
         for (var i = 0; i < values.length; i++)
           Expanded(
             flex: i == 2 || i == 3 ? 3 : 2,
-            child: Text(
-              values[i],
-              textAlign: i < 3 ? TextAlign.left : TextAlign.right,
-              maxLines: 1,
-              style: header
-                  ? context.appTextStyles.tableHeader
-                  : context.appTextStyles.tableValue.copyWith(fontSize: 10),
-            ),
+            child: header
+                ? Text(
+                    values[i],
+                    textAlign: i < 3 ? TextAlign.left : TextAlign.right,
+                    maxLines: 1,
+                    style: context.appTextStyles.tableHeader,
+                  )
+                : SensitiveValueText(
+                    values[i],
+                    type: i == 2 || i == 3
+                        ? SensitiveValueType.currency
+                        : SensitiveValueType.quantity,
+                    textAlign: i < 3 ? TextAlign.left : TextAlign.right,
+                    maxLines: 1,
+                    style: context.appTextStyles.tableValue.copyWith(
+                      fontSize: 10,
+                    ),
+                  ),
           ),
       ],
     ),
@@ -481,8 +494,10 @@ class _DepthImbalance extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  Text(
+                  SensitiveValueText(
                     '${buyPercent.toStringAsFixed(0)}% (${_integer(buyQuantity)})',
+                    maskedValue:
+                        '${PrivacyMask.percentage} (${PrivacyMask.quantity})',
                     style: context.appTextStyles.tableValue,
                   ),
                 ],
@@ -499,8 +514,10 @@ class _DepthImbalance extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  Text(
+                  SensitiveValueText(
                     '${sellPercent.toStringAsFixed(0)}% (${_integer(sellQuantity)})',
+                    maskedValue:
+                        '${PrivacyMask.percentage} (${PrivacyMask.quantity})',
                     style: context.appTextStyles.tableValue,
                   ),
                 ],
@@ -545,12 +562,14 @@ class _PriceHistory extends StatelessWidget {
             ),
           )
         else ...[
-          Text(
+          SensitiveValueText(
             _money(summary.latest),
+            type: SensitiveValueType.currency,
             style: context.appTextStyles.priceMedium,
           ),
-          Text(
+          SensitiveValueText(
             '${_signedMoney(summary.change)} (${_signedPercent(summary.changePercent)})',
+            maskedValue: '${PrivacyMask.currency} (${PrivacyMask.percentage})',
             style: context.appTextStyles.percentageMedium.copyWith(
               color: summary.change >= 0
                   ? context.appColors.positive
@@ -591,12 +610,14 @@ class _PriceHistory extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              SensitiveValueText(
                 'Low ${_money(summary.low)}',
+                maskedValue: 'Low ${PrivacyMask.currency}',
                 style: context.appTextStyles.tableValue,
               ),
-              Text(
+              SensitiveValueText(
                 'High ${_money(summary.high)}',
+                maskedValue: 'High ${PrivacyMask.currency}',
                 style: context.appTextStyles.tableValue,
               ),
             ],
@@ -707,7 +728,9 @@ class _RecentActivity extends StatelessWidget {
           contentPadding: EdgeInsets.zero,
           title: Text(activity.title),
           subtitle: Text(
-            '${activity.description}\n${_dateTime(activity.timestamp)}',
+            PrivacyModeScope.of(context) && activity.type != 'watchlist'
+                ? 'Trading values hidden\n${_dateTime(activity.timestamp)}'
+                : '${activity.description}\n${_dateTime(activity.timestamp)}',
           ),
           isThreeLine: true,
           leading: Icon(
@@ -771,16 +794,34 @@ class _ValueRow extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.md),
         Flexible(
-          child: Text(
-            value,
-            textAlign: TextAlign.end,
-            style: context.appTextStyles.tableValue,
-          ),
+          child: _structuralValueLabels.contains(label)
+              ? Text(
+                  value,
+                  textAlign: TextAlign.end,
+                  style: context.appTextStyles.tableValue,
+                )
+              : SensitiveValueText(
+                  value,
+                  textAlign: TextAlign.end,
+                  style: context.appTextStyles.tableValue,
+                  type: value.contains('%')
+                      ? SensitiveValueType.percentage
+                      : value.contains('₹') || value.contains('â‚¹')
+                      ? SensitiveValueType.currency
+                      : SensitiveValueType.number,
+                ),
         ),
       ],
     ),
   );
 }
+
+const _structuralValueLabels = <String>{
+  'Expiry',
+  'Underlying',
+  'Option Type',
+  'Eligible',
+};
 
 String _money(num? value) =>
     value == null ? '—' : '₹${_group(value.toStringAsFixed(2))}';

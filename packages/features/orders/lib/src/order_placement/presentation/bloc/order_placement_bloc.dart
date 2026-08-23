@@ -7,6 +7,7 @@ import 'package:injectable/injectable.dart';
 import 'package:navigation_contract/navigation_contract.dart';
 
 import '../../domain/enums/order_enums.dart';
+import '../../domain/entities/order_draft.dart';
 import '../../domain/entities/order_instrument.dart';
 import '../../domain/repositories/order_placement_repository.dart';
 import 'order_placement_event.dart';
@@ -95,20 +96,24 @@ class OrderPlacementBloc
       ),
     );
     try {
-      final instrument = await _repository.getInstrument(event.fundId);
+      final loaded = await _repository.getInstrument(event.fundId);
+      final exchange = loaded.availableExchanges.contains(event.exchange)
+          ? event.exchange
+          : loaded.defaultExchange;
+      final instrument = loaded.forExchange(exchange);
+      _watch(instrument);
       emit(
         OrderPlacementState(
           status: OrderPlacementStatus.ready,
           instrument: instrument,
           side: event.side == TradeSide.sell ? OrderSide.sell : OrderSide.buy,
-          exchange: instrument.defaultExchange,
+          exchange: exchange,
           quantity: instrument.quantityStep,
           product: instrument.allowedProducts.first,
           limitPrice: instrument.ltp,
           triggerPrice: instrument.ltp,
         ),
       );
-      _watch(instrument);
     } on Object {
       emit(
         OrderPlacementState(
@@ -125,7 +130,12 @@ class OrderPlacementBloc
   ) {
     if (state.instrument?.availableExchanges.contains(event.exchange) ??
         false) {
-      _edit(emit, state.copyWith(exchange: event.exchange));
+      final instrument = state.instrument!.forExchange(event.exchange);
+      _edit(
+        emit,
+        state.copyWith(exchange: event.exchange, instrument: instrument),
+      );
+      _watch(instrument);
     }
   }
 
@@ -171,13 +181,27 @@ class OrderPlacementBloc
             state.status != OrderPlacementStatus.error)) {
       return;
     }
-    final draft = state.draft;
+    var draft = state.draft;
     final errors = _validate(state);
     if (draft == null || errors.isNotEmpty) {
       emit(
         state.copyWith(status: OrderPlacementStatus.ready, fieldErrors: errors),
       );
       return;
+    }
+    final latest = _livePrices?.latestFor(draft.instrument.marketKey);
+    if (latest != null) {
+      draft = OrderDraft(
+        instrument: draft.instrument.withLivePrice(latest),
+        side: draft.side,
+        exchange: draft.exchange,
+        quantity: draft.quantity,
+        orderType: draft.orderType,
+        product: draft.product,
+        validity: draft.validity,
+        limitPrice: draft.limitPrice,
+        triggerPrice: draft.triggerPrice,
+      );
     }
     emit(
       state.copyWith(status: OrderPlacementStatus.placing, clearError: true),
@@ -285,18 +309,42 @@ class OrderPlacementBloc
   void _watch(OrderInstrument instrument) {
     final manager = _livePrices;
     if (manager == null) return;
+    final cached = manager.latestFor(instrument.marketKey);
+    if (cached != null) {
+      add(
+        OrderLivePricesReceived(
+          LivePriceBatch(
+            sequence: cached.sequence,
+            timestamp: cached.timestamp,
+            updates: <LivePriceTick>[cached],
+          ),
+        ),
+      );
+    }
     final seed = LiveInstrumentSeed.fromPrices(
-      instrumentId: instrument.id,
+      marketKey: instrument.marketKey,
+      fundId: instrument.id,
+      exchange: instrument.exchange,
+      assetType: switch (instrument.instrumentType) {
+        OrderInstrumentType.equity => LiveMarketAssetType.equity,
+        OrderInstrumentType.future => LiveMarketAssetType.future,
+        OrderInstrumentType.option => LiveMarketAssetType.option,
+      },
       symbol: instrument.symbol,
       ltp: instrument.ltp,
       previousClose: instrument.previousClose,
       tickSize: instrument.tickSize,
     );
-    final acquired = manager.acquire(instruments: [seed]);
-    _lease = acquired;
-    _liveSubscription = acquired.stream.listen(
-      (batch) => add(OrderLivePricesReceived(batch)),
-    );
+    final lease = _lease;
+    if (lease == null) {
+      final acquired = manager.acquire(instruments: [seed]);
+      _lease = acquired;
+      _liveSubscription = acquired.stream.listen(
+        (batch) => add(OrderLivePricesReceived(batch)),
+      );
+    } else {
+      unawaited(lease.update([seed]));
+    }
   }
 
   void _onLivePrices(
@@ -306,7 +354,7 @@ class OrderPlacementBloc
     final instrument = state.instrument;
     if (instrument == null) return;
     for (final tick in event.batch.updates) {
-      if (tick.instrumentId == instrument.id) {
+      if (tick.instrumentId == instrument.marketKey) {
         emit(state.copyWith(instrument: instrument.withLivePrice(tick)));
         return;
       }

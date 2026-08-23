@@ -16,13 +16,17 @@ void main() {
   Future<void> pumpPortfolio(
     WidgetTester tester, {
     ThemeMode themeMode = ThemeMode.light,
+    bool privacyMode = false,
   }) {
     return tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: themeMode,
-        home: const PortfolioPage(),
+        home: PrivacyModeScope(
+          enabled: privacyMode,
+          child: const PortfolioPage(),
+        ),
       ),
     );
   }
@@ -60,6 +64,19 @@ void main() {
 
     expect(find.text('RELIANCE'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('privacy masks position values but keeps public LTP visible', (
+    tester,
+  ) async {
+    await pumpPortfolio(tester, privacyMode: true);
+    await finishLoading(tester);
+
+    expect(find.text('₹1,316.00'), findsOneWidget);
+    expect(find.text(PrivacyMask.currency), findsWidgets);
+    expect(find.text('₹7,39,040.00'), findsNothing);
+    expect(find.text('+₹1,500.00'), findsNothing);
+    expect(find.text('RELIANCE'), findsOneWidget);
   });
 
   testWidgets('shows the empty holdings state', (tester) async {

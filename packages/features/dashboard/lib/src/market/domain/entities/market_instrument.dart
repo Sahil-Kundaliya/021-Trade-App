@@ -26,7 +26,9 @@ class MarketInstrument {
   final String symbol;
   final String companyName;
   final MarketCategory category;
-  final String exchange;
+  final TradeExchange exchange;
+  String get marketKey =>
+      MarketInstrumentKey(fundId: id, exchange: exchange).value;
   final double ltp;
   final double change;
   final double changePercent;
@@ -52,6 +54,25 @@ class MarketInstrument {
     tickSize: tickSize,
     volume: volume,
     tags: tags,
+    expiryDate: expiryDate,
+    strikePrice: strikePrice,
+    optionType: optionType,
+    underlyingSymbol: underlyingSymbol,
+  );
+
+  MarketInstrument withTags(List<String> value) => MarketInstrument(
+    id: id,
+    symbol: symbol,
+    companyName: companyName,
+    category: category,
+    exchange: exchange,
+    ltp: ltp,
+    change: change,
+    changePercent: changePercent,
+    previousClose: previousClose,
+    tickSize: tickSize,
+    volume: volume,
+    tags: List<String>.unmodifiable(value),
     expiryDate: expiryDate,
     strikePrice: strikePrice,
     optionType: optionType,

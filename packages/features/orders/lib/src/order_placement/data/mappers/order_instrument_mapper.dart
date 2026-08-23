@@ -1,4 +1,4 @@
-import 'package:core_data/core_data.dart';
+import 'package:core_data/core_data.dart' hide TradeExchange;
 
 import '../../domain/entities/order_instrument.dart';
 import '../../domain/enums/order_enums.dart';
@@ -18,10 +18,17 @@ abstract final class OrderInstrumentMapper {
       symbol: dto.symbol,
       companyName: dto.companyName,
       instrumentType: type,
-      availableExchanges: type == OrderInstrumentType.equity
-          ? const [TradeExchange.nse, TradeExchange.bse]
-          : [exchange],
+      availableExchanges: dto.availableExchanges,
       defaultExchange: exchange,
+      exchange: exchange,
+      marketByExchange: {
+        for (final listing in dto.listings)
+          listing.exchange: OrderMarketListing(
+            ltp: listing.ltp,
+            previousClose: listing.previousClose,
+            tickSize: listing.tickSize,
+          ),
+      },
       ltp: dto.ltp,
       change: dto.change,
       changePercent: dto.changePercent,

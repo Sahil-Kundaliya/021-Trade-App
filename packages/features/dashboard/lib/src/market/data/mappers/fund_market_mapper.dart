@@ -16,7 +16,7 @@ abstract final class FundMarketMapper {
         'Unsupported market category: $category.',
       ),
     },
-    exchange: dto.exchange,
+    exchange: TradeExchange.parse(dto.exchange),
     ltp: dto.ltp,
     change: dto.change,
     changePercent: dto.changePercent,

@@ -1,6 +1,7 @@
 import '../../domain/entities/market_category.dart';
 import '../../domain/entities/market_instrument.dart';
 import '../../domain/entities/market_subcategory.dart';
+import 'package:core_data/core_data.dart';
 
 enum MarketStatus { initial, loading, loaded, empty, error }
 
@@ -10,6 +11,7 @@ class MarketState {
     this.allFunds = const [],
     this.selectedCategory = MarketCategory.equity,
     this.selectedSubcategory = MarketSubcategory.topGainers,
+    this.selectedExchange = TradeExchange.nse,
     this.visibleFunds = const [],
     this.errorMessage,
   });
@@ -18,6 +20,7 @@ class MarketState {
   final List<MarketInstrument> allFunds;
   final MarketCategory selectedCategory;
   final MarketSubcategory selectedSubcategory;
+  final TradeExchange selectedExchange;
   final List<MarketInstrument> visibleFunds;
   final String? errorMessage;
 
@@ -26,6 +29,7 @@ class MarketState {
     List<MarketInstrument>? allFunds,
     MarketCategory? selectedCategory,
     MarketSubcategory? selectedSubcategory,
+    TradeExchange? selectedExchange,
     List<MarketInstrument>? visibleFunds,
     String? errorMessage,
     bool clearError = false,
@@ -34,6 +38,7 @@ class MarketState {
     allFunds: allFunds ?? this.allFunds,
     selectedCategory: selectedCategory ?? this.selectedCategory,
     selectedSubcategory: selectedSubcategory ?? this.selectedSubcategory,
+    selectedExchange: selectedExchange ?? this.selectedExchange,
     visibleFunds: visibleFunds ?? this.visibleFunds,
     errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
   );

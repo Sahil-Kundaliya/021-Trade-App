@@ -23,6 +23,12 @@ final class MarketSubcategoryChanged extends MarketEvent {
   final MarketSubcategory subcategory;
 }
 
+final class MarketExchangeChanged extends MarketEvent {
+  const MarketExchangeChanged(this.exchange);
+
+  final TradeExchange exchange;
+}
+
 final class MarketRetryRequested extends MarketEvent {
   const MarketRetryRequested();
 }

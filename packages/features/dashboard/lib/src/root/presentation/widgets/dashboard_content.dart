@@ -40,6 +40,7 @@ class DashboardContent extends StatelessWidget {
                   MarketStatus.loaded => MarketScreener(
                     selectedCategory: state.selectedCategory,
                     selectedSubcategory: state.selectedSubcategory,
+                    selectedExchange: state.selectedExchange,
                     instruments: state.visibleFunds,
                     onCategorySelected: (category) => context
                         .read<MarketBloc>()
@@ -47,8 +48,13 @@ class DashboardContent extends StatelessWidget {
                     onSubcategorySelected: (subcategory) => context
                         .read<MarketBloc>()
                         .add(MarketSubcategoryChanged(subcategory)),
-                    onItemTap: (instrument) =>
-                        navigator?.openFund(fundId: instrument.id),
+                    onExchangeSelected: (exchange) => context
+                        .read<MarketBloc>()
+                        .add(MarketExchangeChanged(exchange)),
+                    onItemTap: (instrument) => navigator?.openFund(
+                      fundId: instrument.id,
+                      exchange: instrument.exchange,
+                    ),
                   ),
                 },
               ),

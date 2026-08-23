@@ -1,4 +1,6 @@
-import 'package:core_data/core_data.dart';
+import 'dart:async';
+
+import 'package:core_data/core_data.dart' hide TradeExchange;
 import 'package:core_data/dependency_injection.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -21,7 +23,7 @@ void main() {
     () async {
       final repository = OrderPlacementRepositoryImpl(
         tradingApi,
-        _MemoryOrderBookApi(),
+        OrderStore(_MemoryOrderBookApi()),
       );
       expect(
         (await repository.getInstrument('RELIANCE_EQ')).instrumentType,
@@ -48,7 +50,10 @@ void main() {
     'repository appends deterministic market, limit, SL and SL-M records',
     () async {
       final api = _MemoryOrderBookApi();
-      final repository = OrderPlacementRepositoryImpl(tradingApi, api);
+      final repository = OrderPlacementRepositoryImpl(
+        tradingApi,
+        OrderStore(api),
+      );
       final instrument = await repository.getInstrument('RELIANCE_EQ');
 
       Future<OrderDto> place(TradeOrderType type) async {
@@ -160,6 +165,97 @@ void main() {
     expect(repository.drafts.single.side, OrderSide.sell);
     await bloc.close();
   });
+
+  test(
+    'live LTP updates market value but preserves user price fields',
+    () async {
+      final repository = _BlocRepository(_instrument());
+      final platform = _PricePlatform();
+      final manager = LivePriceStreamManager(platform);
+      final bloc = OrderPlacementBloc(repository, manager)
+        ..add(const OrderPlacementStarted(fundId: 'equity'));
+      await bloc.stream.firstWhere(
+        (state) => state.status == OrderPlacementStatus.ready,
+      );
+      bloc.add(const OrderQuantityChanged('10'));
+      await Future<void>.delayed(Duration.zero);
+
+      platform.emit(ltpMinor: 10100, previousLtpMinor: 10000, sequence: 1);
+      await bloc.stream.firstWhere((state) => state.instrument?.ltp == 101);
+      expect(bloc.state.estimatedOrderValue, 1010);
+
+      bloc.add(const OrderTypeChanged(TradeOrderType.limit));
+      bloc.add(const OrderLimitPriceChanged('95'));
+      await Future<void>.delayed(Duration.zero);
+      platform.emit(ltpMinor: 10200, previousLtpMinor: 10100, sequence: 2);
+      await bloc.stream.firstWhere((state) => state.instrument?.ltp == 102);
+      expect(bloc.state.limitPrice, 95);
+      expect(bloc.state.quantity, 10);
+      await bloc.close();
+      await platform.close();
+    },
+  );
+
+  test('market confirmation snapshots the latest shared cache', () async {
+    final repository = _BlocRepository(_instrument());
+    final platform = _PricePlatform();
+    final manager = LivePriceStreamManager(platform);
+    final bloc = OrderPlacementBloc(repository, manager)
+      ..add(const OrderPlacementStarted(fundId: 'equity'));
+    await bloc.stream.firstWhere(
+      (state) => state.status == OrderPlacementStatus.ready,
+    );
+    bloc.add(const OrderQuantityChanged('10'));
+    bloc.add(const OrderReviewRequested());
+    await bloc.stream.firstWhere(
+      (state) => state.status == OrderPlacementStatus.review,
+    );
+    platform.emit(ltpMinor: 10100, previousLtpMinor: 10000, sequence: 1);
+    await bloc.stream.firstWhere((state) => state.instrument?.ltp == 101);
+
+    bloc.add(const OrderPlacementConfirmed());
+    await bloc.stream.firstWhere(
+      (state) => state.status == OrderPlacementStatus.success,
+    );
+    expect(repository.drafts.single.instrument.ltp, 101);
+    expect(repository.drafts.single.estimatedOrderValue, 1010);
+    await bloc.close();
+    await platform.close();
+  });
+
+  test(
+    'incoming BSE defaults the ticket and exchange switch updates value',
+    () async {
+      final repository = _BlocRepository(_instrument());
+      final platform = _PricePlatform();
+      final bloc =
+          OrderPlacementBloc(repository, LivePriceStreamManager(platform))..add(
+            const OrderPlacementStarted(
+              fundId: 'fund',
+              exchange: TradeExchange.bse,
+            ),
+          );
+      await bloc.stream.firstWhere(
+        (state) => state.status == OrderPlacementStatus.ready,
+      );
+
+      expect(bloc.state.exchange, TradeExchange.bse);
+      expect(bloc.state.instrument?.ltp, 99);
+      bloc.add(const OrderQuantityChanged('10'));
+      await Future<void>.delayed(Duration.zero);
+      expect(bloc.state.estimatedOrderValue, 990);
+
+      bloc.add(const OrderExchangeChanged(TradeExchange.nse));
+      await bloc.stream.firstWhere(
+        (state) => state.exchange == TradeExchange.nse,
+      );
+      expect(bloc.state.instrument?.ltp, 100);
+      expect(bloc.state.quantity, 10);
+      expect(bloc.state.estimatedOrderValue, 1000);
+      await bloc.close();
+      await platform.close();
+    },
+  );
 }
 
 OrderInstrument _instrument({
@@ -174,6 +270,18 @@ OrderInstrument _instrument({
       ? TradeExchange.values
       : const [TradeExchange.nse],
   defaultExchange: TradeExchange.nse,
+  marketByExchange: const {
+    TradeExchange.nse: OrderMarketListing(
+      ltp: 100,
+      previousClose: 99,
+      tickSize: .05,
+    ),
+    TradeExchange.bse: OrderMarketListing(
+      ltp: 99,
+      previousClose: 98,
+      tickSize: .05,
+    ),
+  },
   ltp: 100,
   change: 1,
   changePercent: 1,
@@ -217,4 +325,44 @@ final class _BlocRepository implements OrderPlacementRepository {
       createdAt: DateTime(2026),
     );
   }
+}
+
+final class _PricePlatform implements LivePricePlatformApi {
+  final _controller = StreamController<Object?>.broadcast();
+
+  @override
+  Stream<Object?> get batches => _controller.stream;
+
+  void emit({
+    required int ltpMinor,
+    required int previousLtpMinor,
+    required int sequence,
+  }) {
+    _controller.add({
+      'sequence': sequence,
+      'timestamp': 1787460000000,
+      'updates': [
+        {
+          'instrumentId': 'fund',
+          'symbol': 'TEST',
+          'ltpMinor': ltpMinor,
+          'previousLtpMinor': previousLtpMinor,
+          'previousCloseMinor': 10000,
+          'changeMinor': ltpMinor - 10000,
+          'changePercent': (ltpMinor - 10000) / 100,
+          'direction': ltpMinor > previousLtpMinor ? 'up' : 'flat',
+        },
+      ],
+    });
+  }
+
+  @override
+  Future<void> pause() async {}
+  @override
+  Future<void> resume() async {}
+  @override
+  Future<void> subscribe(Iterable<LiveInstrumentSeed> instruments) async {}
+  @override
+  Future<void> unsubscribe(Iterable<String> instrumentIds) async {}
+  Future<void> close() => _controller.close();
 }

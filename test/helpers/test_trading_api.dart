@@ -9,12 +9,14 @@ Future<void> installImmediateTradingApi() async {
   final results = await Future.wait<Object>([
     delayedApi.getFunds(),
     delayedApi.getHoldings(),
+    delayedApi.getMarketIndices(),
   ]);
   await getIt.unregister<TradingLocalApi>();
   getIt.registerSingleton<TradingLocalApi>(
     _ImmediateTradingApi(
       results[0] as List<FundDto>,
       results[1] as List<HoldingDto>,
+      results[2] as List<MarketIndexDto>,
     ),
   );
   if (getIt.isRegistered<WatchlistLocalApi>()) {
@@ -38,16 +40,20 @@ final class _ImmediateOrderBookApi implements OrderBookLocalApi {
 }
 
 final class _ImmediateTradingApi implements TradingLocalApi {
-  const _ImmediateTradingApi(this._funds, this._holdings);
+  const _ImmediateTradingApi(this._funds, this._holdings, this._indices);
 
   final List<FundDto> _funds;
   final List<HoldingDto> _holdings;
+  final List<MarketIndexDto> _indices;
 
   @override
   Future<List<FundDto>> getFunds() async => _funds;
 
   @override
   Future<List<HoldingDto>> getHoldings() async => _holdings;
+
+  @override
+  Future<List<MarketIndexDto>> getMarketIndices() async => _indices;
 }
 
 final class _ImmediateWatchlistApi implements WatchlistLocalApi {

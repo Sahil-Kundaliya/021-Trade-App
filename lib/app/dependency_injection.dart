@@ -9,6 +9,7 @@ import 'package:orderbook/dependency_injection.dart';
 import 'package:orders/dependency_injection.dart';
 import 'package:watchlist/dependency_injection.dart';
 import 'package:zero_two_one_trade_assignment/app/theme/theme_bloc.dart';
+import 'package:zero_two_one_trade_assignment/app/preferences/app_preferences_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -24,5 +25,11 @@ void configureDependencies() {
   registerWatchlistDependencies(getIt);
   getIt.registerFactory<ThemeBloc>(
     () => ThemeBloc(getIt<AppPreferencesRepository>()),
+  );
+  getIt.registerFactory<AppPreferencesBloc>(
+    () => AppPreferencesBloc(
+      getIt<AppPreferencesRepository>(),
+      getIt<LocalNotificationService>(),
+    ),
   );
 }

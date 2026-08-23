@@ -126,6 +126,8 @@ class _ProfileHarness extends StatefulWidget {
 
 class _ProfileHarnessState extends State<_ProfileHarness> {
   AppThemeMode mode = AppThemeMode.system;
+  bool privacyMode = false;
+  bool notificationsEnabled = false;
   late ThemeMode renderedTheme = widget.initialThemeMode;
   late final ProfileBloc bloc = ProfileBloc(
     ProfilePreferencesRepositoryImpl(
@@ -147,6 +149,12 @@ class _ProfileHarnessState extends State<_ProfileHarness> {
     home: ProfilePage(
       bloc: bloc,
       themeMode: mode,
+      privacyMode: privacyMode,
+      notificationsEnabled: notificationsEnabled,
+      notificationPermissionBlocked: false,
+      onPrivacyChanged: (value) => setState(() => privacyMode = value),
+      onNotificationsChanged: (value) =>
+          setState(() => notificationsEnabled = value),
       onThemeChanged: (value) => setState(() {
         mode = value;
         renderedTheme = switch (value) {

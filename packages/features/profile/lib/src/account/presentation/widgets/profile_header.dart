@@ -38,8 +38,9 @@ class ProfileHeader extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                Text(
+                SensitiveValueText(
                   'Client ID: ${profile.clientId}',
+                  maskedValue: 'Client ID: ${PrivacyMask.number}',
                   style: context.textTheme.bodySmall?.copyWith(
                     color: context.appColors.textSecondary,
                   ),

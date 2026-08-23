@@ -12,10 +12,10 @@ import '../mappers/placed_order_mapper.dart';
 
 @LazySingleton(as: OrderPlacementRepository)
 final class OrderPlacementRepositoryImpl implements OrderPlacementRepository {
-  OrderPlacementRepositoryImpl(this._tradingLocalApi, this._orderBookLocalApi);
+  OrderPlacementRepositoryImpl(this._tradingLocalApi, this._orderStore);
 
   final TradingLocalApi _tradingLocalApi;
-  final OrderBookLocalApi _orderBookLocalApi;
+  final OrderStore _orderStore;
   static const _uuid = Uuid();
 
   @override
@@ -34,11 +34,7 @@ final class OrderPlacementRepositoryImpl implements OrderPlacementRepository {
       draft: draft,
       createdAt: DateTime.now(),
     );
-    final existing = await _orderBookLocalApi.getOrders();
-    await _orderBookLocalApi.saveOrders([
-      ...existing,
-      PlacedOrderMapper.toDto(placed),
-    ]);
+    await _orderStore.append(PlacedOrderMapper.toDto(placed));
     return placed;
   }
 }

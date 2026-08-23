@@ -39,7 +39,9 @@ class FundDetails {
   final String id;
   final String symbol;
   final String companyName;
-  final String exchange;
+  final TradeExchange exchange;
+  String get marketKey =>
+      MarketInstrumentKey(fundId: id, exchange: exchange).value;
   final String category;
   final FundInstrumentType instrumentType;
   final String currency;
@@ -96,6 +98,38 @@ class FundDetails {
     marginDetails: marginDetails,
     collateralDetails: collateralDetails,
     recentActivity: recentActivity,
+  );
+
+  FundDetails withRecentActivity(List<FundActivity> activity) => FundDetails(
+    id: id,
+    symbol: symbol,
+    companyName: companyName,
+    exchange: exchange,
+    category: category,
+    instrumentType: instrumentType,
+    currency: currency,
+    ltp: ltp,
+    previousClose: previousClose,
+    change: change,
+    changePercent: changePercent,
+    tickSize: tickSize,
+    open: open,
+    high: high,
+    low: low,
+    volume: volume,
+    lotSize: lotSize,
+    expiryDate: expiryDate,
+    strikePrice: strikePrice,
+    optionType: optionType,
+    underlyingSymbol: underlyingSymbol,
+    openInterest: openInterest,
+    impliedVolatility: impliedVolatility,
+    tags: tags,
+    marketDepth: marketDepth,
+    priceHistory: priceHistory,
+    marginDetails: marginDetails,
+    collateralDetails: collateralDetails,
+    recentActivity: activity,
   );
 }
 

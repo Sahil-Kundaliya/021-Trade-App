@@ -9,8 +9,14 @@ import '../../../fund_details/presentation/bloc/fund_details_event.dart';
 import 'fund_content.dart';
 
 class FundSheet extends StatelessWidget {
-  const FundSheet({required this.fundId, required this.navigator, super.key});
+  const FundSheet({
+    required this.fundId,
+    required this.exchange,
+    required this.navigator,
+    super.key,
+  });
   final String fundId;
+  final TradeExchange exchange;
   final AppNavigator navigator;
 
   @override
@@ -35,9 +41,8 @@ class FundSheet extends StatelessWidget {
           child: SafeArea(
             top: false,
             child: BlocProvider(
-              create: (_) =>
-                  GetIt.instance<FundDetailsBloc>()
-                    ..add(FundDetailsStarted(fundId: fundId)),
+              create: (_) => GetIt.instance<FundDetailsBloc>()
+                ..add(FundDetailsStarted(fundId: fundId, exchange: exchange)),
               child: FundContent(
                 scrollController: scrollController,
                 showDragHandle: true,
@@ -53,6 +58,6 @@ class FundSheet extends StatelessWidget {
 
   Future<void> _openOrders(TradeSide side) async {
     await navigator.pop();
-    await navigator.openOrders(fundId: fundId, side: side);
+    await navigator.openOrders(fundId: fundId, exchange: exchange, side: side);
   }
 }

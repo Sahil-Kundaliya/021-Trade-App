@@ -17,9 +17,18 @@ import 'package:core_data/src/live_price/platform/live_price_platform_api_impl.d
     as _i578;
 import 'package:core_data/src/live_price/stream/live_price_stream_manager.dart'
     as _i951;
+import 'package:core_data/src/notifications/local_notification_service.dart'
+    as _i993;
+import 'package:core_data/src/notifications/local_notification_service_impl.dart'
+    as _i514;
+import 'package:core_data/src/notifications/trading_notification_coordinator.dart'
+    as _i485;
+import 'package:core_data/src/order_execution/order_execution_engine.dart'
+    as _i51;
 import 'package:core_data/src/orderbook/api/orderbook_local_api.dart' as _i871;
 import 'package:core_data/src/orderbook/api/orderbook_local_api_impl.dart'
     as _i196;
+import 'package:core_data/src/orderbook/store/order_store.dart' as _i32;
 import 'package:core_data/src/preferences/api/app_preferences_local_api.dart'
     as _i464;
 import 'package:core_data/src/preferences/api/app_preferences_local_api_impl.dart'
@@ -41,6 +50,9 @@ _i174.GetIt configureCoreDataDependencies(
   _i526.EnvironmentFilter? environmentFilter,
 }) {
   final gh = _i526.GetItHelper(getIt, environment, environmentFilter);
+  gh.lazySingleton<_i993.LocalNotificationService>(
+    () => _i514.LocalNotificationServiceImpl(),
+  );
   gh.lazySingleton<_i767.KeyValueStorage>(
     () => const _i572.FlutterKeyValueStorage(),
   );
@@ -62,6 +74,23 @@ _i174.GetIt configureCoreDataDependencies(
   );
   gh.lazySingleton<_i376.AppPreferencesRepository>(
     () => _i376.AppPreferencesRepository(gh<_i464.AppPreferencesLocalApi>()),
+  );
+  gh.lazySingleton<_i32.OrderStore>(
+    () => _i32.OrderStore(gh<_i871.OrderBookLocalApi>()),
+  );
+  gh.lazySingleton<_i51.OrderExecutionEngine>(
+    () => _i51.OrderExecutionEngine(
+      gh<_i32.OrderStore>(),
+      gh<_i951.LivePriceStreamManager>(),
+      gh<_i414.TradingLocalApi>(),
+    ),
+  );
+  gh.lazySingleton<_i485.TradingNotificationCoordinator>(
+    () => _i485.TradingNotificationCoordinator(
+      gh<_i993.LocalNotificationService>(),
+      gh<_i376.AppPreferencesRepository>(),
+      gh<_i32.OrderStore>(),
+    ),
   );
   return getIt;
 }

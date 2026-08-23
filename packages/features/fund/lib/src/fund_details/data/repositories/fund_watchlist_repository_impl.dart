@@ -5,9 +5,13 @@ import '../../domain/entities/available_watchlist.dart';
 import '../../domain/repositories/fund_watchlist_repository.dart';
 
 @LazySingleton(as: FundWatchlistRepository)
-final class FundWatchlistRepositoryImpl implements FundWatchlistRepository {
+final class FundWatchlistRepositoryImpl
+    implements FundWatchlistRepository, FundWatchlistChangeSource {
   const FundWatchlistRepositoryImpl(this._api);
   final WatchlistLocalApi _api;
+
+  @override
+  Stream<void> get watchlistChanges => _api.watchlistChanges;
 
   @override
   Future<List<AvailableWatchlist>> getAvailableWatchlists() async =>

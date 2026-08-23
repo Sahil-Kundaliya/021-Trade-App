@@ -115,6 +115,51 @@ void main() {
       await platform.close();
     },
   );
+
+  test(
+    'same fund deduplicates per exchange but keeps NSE and BSE distinct',
+    () async {
+      const nse = LiveInstrumentSeed(
+        marketKey: 'RELIANCE_EQ:NSE',
+        fundId: 'RELIANCE_EQ',
+        exchange: TradeExchange.nse,
+        symbol: 'RELIANCE',
+        ltpMinor: 131625,
+        previousCloseMinor: 131320,
+        tickSizeMinor: 5,
+      );
+      const bse = LiveInstrumentSeed(
+        marketKey: 'RELIANCE_EQ:BSE',
+        fundId: 'RELIANCE_EQ',
+        exchange: TradeExchange.bse,
+        symbol: 'RELIANCE',
+        ltpMinor: 131585,
+        previousCloseMinor: 131040,
+        tickSizeMinor: 5,
+      );
+      final platform = _FakePlatform();
+      final manager = LivePriceStreamManager(platform);
+      final firstNse = manager.acquire(instruments: [nse]);
+      final secondNse = manager.acquire(instruments: [nse]);
+      final bseLease = manager.acquire(instruments: [bse]);
+      await _flush();
+
+      expect(platform.subscribed.expand((ids) => ids), [
+        'RELIANCE_EQ:NSE',
+        'RELIANCE_EQ:BSE',
+      ]);
+
+      await firstNse.dispose();
+      expect(platform.unsubscribed, isEmpty);
+      await secondNse.dispose();
+      expect(platform.unsubscribed, [
+        ['RELIANCE_EQ:NSE'],
+      ]);
+      await bseLease.dispose();
+      expect(platform.unsubscribed.last, ['RELIANCE_EQ:BSE']);
+      await platform.close();
+    },
+  );
 }
 
 Future<void> _flush() => Future<void>.delayed(Duration.zero);

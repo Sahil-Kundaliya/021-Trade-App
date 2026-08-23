@@ -18,6 +18,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
     on<MarketRetryRequested>(_load);
     on<MarketCategoryChanged>(_changeCategory);
     on<MarketSubcategoryChanged>(_changeSubcategory);
+    on<MarketExchangeChanged>(_changeExchange);
     on<MarketLivePricesReceived>(_applyLivePrices);
   }
 
@@ -36,8 +37,19 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
   Future<void> _load(MarketEvent event, Emitter<MarketState> emit) async {
     emit(state.copyWith(status: MarketStatus.loading, clearError: true));
     try {
-      final funds = List<MarketInstrument>.unmodifiable(
-        await _repository.getFunds(),
+      final loaded = await _repository.getFunds();
+      var funds = List<MarketInstrument>.unmodifiable(
+        loaded.map((fund) {
+          final cached = _livePrices.latestFor(fund.marketKey);
+          return cached == null ? fund : fund.withLivePrice(cached);
+        }),
+      );
+      funds = List<MarketInstrument>.unmodifiable(
+        _applyDynamicTags(
+          funds,
+          state.selectedCategory,
+          state.selectedExchange,
+        ),
       );
       if (funds.isEmpty) {
         emit(state.copyWith(status: MarketStatus.empty, allFunds: funds));
@@ -51,10 +63,13 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
             funds,
             state.selectedCategory,
             state.selectedSubcategory,
+            state.selectedExchange,
           ),
         ),
       );
-      _watch(state.visibleFunds);
+      _watch(
+        _categoryFunds(funds, state.selectedCategory, state.selectedExchange),
+      );
     } on Object catch (error) {
       emit(
         state.copyWith(
@@ -71,14 +86,23 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
       return;
     }
     final subcategory = event.category.subcategories.first;
+    final exchange = event.category == MarketCategory.equity
+        ? state.selectedExchange
+        : TradeExchange.nse;
     emit(
       state.copyWith(
         selectedCategory: event.category,
         selectedSubcategory: subcategory,
-        visibleFunds: _filter(state.allFunds, event.category, subcategory),
+        selectedExchange: exchange,
+        visibleFunds: _filter(
+          state.allFunds,
+          event.category,
+          subcategory,
+          exchange,
+        ),
       ),
     );
-    _watch(state.visibleFunds);
+    _watch(_categoryFunds(state.allFunds, event.category, exchange));
   }
 
   void _changeSubcategory(
@@ -97,16 +121,49 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
           state.allFunds,
           state.selectedCategory,
           event.subcategory,
+          state.selectedExchange,
         ),
       ),
     );
-    _watch(state.visibleFunds);
+  }
+
+  void _changeExchange(MarketExchangeChanged event, Emitter<MarketState> emit) {
+    if (state.status != MarketStatus.loaded ||
+        state.selectedCategory != MarketCategory.equity ||
+        event.exchange == state.selectedExchange) {
+      return;
+    }
+    final all = _applyDynamicTags(
+      state.allFunds,
+      state.selectedCategory,
+      event.exchange,
+    );
+    emit(
+      state.copyWith(
+        allFunds: List.unmodifiable(all),
+        selectedExchange: event.exchange,
+        visibleFunds: _filter(
+          all,
+          state.selectedCategory,
+          state.selectedSubcategory,
+          event.exchange,
+        ),
+      ),
+    );
+    _watch(_categoryFunds(all, state.selectedCategory, event.exchange));
   }
 
   void _watch(List<MarketInstrument> funds) {
     final seeds = funds.map(
       (fund) => LiveInstrumentSeed.fromPrices(
-        instrumentId: fund.id,
+        marketKey: fund.marketKey,
+        fundId: fund.id,
+        exchange: fund.exchange,
+        assetType: switch (fund.category) {
+          MarketCategory.equity => LiveMarketAssetType.equity,
+          MarketCategory.futures => LiveMarketAssetType.future,
+          MarketCategory.options => LiveMarketAssetType.option,
+        },
         symbol: fund.symbol,
         ltp: fund.ltp,
         previousClose: fund.previousClose,
@@ -133,32 +190,74 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
     final ticks = {
       for (final tick in event.batch.updates) tick.instrumentId: tick,
     };
-    final visible = state.visibleFunds
+    var all = state.allFunds
         .map(
-          (fund) => ticks[fund.id] == null
+          (fund) => ticks[fund.marketKey] == null
               ? fund
-              : fund.withLivePrice(ticks[fund.id]!),
+              : fund.withLivePrice(ticks[fund.marketKey]!),
         )
         .toList(growable: false);
-    final byId = {for (final fund in visible) fund.id: fund};
-    final all = state.allFunds
-        .map((fund) => byId[fund.id] ?? fund)
-        .toList(growable: false);
+    all = _applyDynamicTags(
+      all,
+      state.selectedCategory,
+      state.selectedExchange,
+    );
     emit(
       state.copyWith(
         allFunds: List.unmodifiable(all),
-        visibleFunds: List.unmodifiable(visible),
+        visibleFunds: _filter(
+          all,
+          state.selectedCategory,
+          state.selectedSubcategory,
+          state.selectedExchange,
+        ),
       ),
     );
+  }
+
+  static List<MarketInstrument> _categoryFunds(
+    List<MarketInstrument> funds,
+    MarketCategory category,
+    TradeExchange exchange,
+  ) => funds
+      .where((fund) => fund.category == category && fund.exchange == exchange)
+      .toList(growable: false);
+
+  static List<MarketInstrument> _applyDynamicTags(
+    List<MarketInstrument> funds,
+    MarketCategory category,
+    TradeExchange exchange,
+  ) {
+    final candidates = _categoryFunds(funds, category, exchange);
+    final gainers = candidates.where((fund) => fund.changePercent > 0).toList()
+      ..sort((a, b) => b.changePercent.compareTo(a.changePercent));
+    final losers = candidates.where((fund) => fund.changePercent < 0).toList()
+      ..sort((a, b) => a.changePercent.compareTo(b.changePercent));
+    final gainerIds = gainers.take(3).map((fund) => fund.marketKey).toSet();
+    final loserIds = losers.take(3).map((fund) => fund.marketKey).toSet();
+    return funds
+        .map((fund) {
+          if (fund.category != category || fund.exchange != exchange) {
+            return fund;
+          }
+          final tags = fund.tags
+              .where((tag) => tag != 'Top Gainer' && tag != 'Top Loser')
+              .toList(growable: true);
+          if (gainerIds.contains(fund.marketKey)) tags.add('Top Gainer');
+          if (loserIds.contains(fund.marketKey)) tags.add('Top Loser');
+          return fund.withTags(tags);
+        })
+        .toList(growable: false);
   }
 
   static List<MarketInstrument> _filter(
     List<MarketInstrument> allFunds,
     MarketCategory category,
     MarketSubcategory subcategory,
+    TradeExchange exchange,
   ) {
     final categoryFunds = allFunds
-        .where((fund) => fund.category == category)
+        .where((fund) => fund.category == category && fund.exchange == exchange)
         .toList(growable: false);
     if (subcategory == MarketSubcategory.callMovers ||
         subcategory == MarketSubcategory.putMovers) {
@@ -173,31 +272,33 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
       return List<MarketInstrument>.unmodifiable(options.take(5));
     }
 
-    final tag = switch (subcategory) {
-      MarketSubcategory.topGainers => 'Top Gainer',
-      MarketSubcategory.topLosers => 'Top Loser',
-      MarketSubcategory.mostActive => 'Most Active',
-      _ => '',
-    };
-    final tagged = categoryFunds
-        .where((fund) => fund.tags.contains(tag))
-        .toList(growable: true);
     final ranked = List<MarketInstrument>.of(categoryFunds);
     switch (subcategory) {
       case MarketSubcategory.topGainers:
+        final positive = ranked
+            .where((fund) => fund.changePercent > 0)
+            .toList(growable: false);
+        if (positive.isNotEmpty) {
+          ranked
+            ..clear()
+            ..addAll(positive);
+        }
         ranked.sort((a, b) => b.changePercent.compareTo(a.changePercent));
       case MarketSubcategory.topLosers:
+        final negative = ranked
+            .where((fund) => fund.changePercent < 0)
+            .toList(growable: false);
+        if (negative.isNotEmpty) {
+          ranked
+            ..clear()
+            ..addAll(negative);
+        }
         ranked.sort((a, b) => a.changePercent.compareTo(b.changePercent));
       case MarketSubcategory.mostActive:
         ranked.sort((a, b) => b.volume.compareTo(a.volume));
       case MarketSubcategory.callMovers || MarketSubcategory.putMovers:
         break;
     }
-    final selected = <MarketInstrument>[...tagged];
-    for (final fund in ranked) {
-      if (selected.length == 5) break;
-      if (!selected.any((item) => item.id == fund.id)) selected.add(fund);
-    }
-    return List<MarketInstrument>.unmodifiable(selected.take(5));
+    return List<MarketInstrument>.unmodifiable(ranked.take(5));
   }
 }

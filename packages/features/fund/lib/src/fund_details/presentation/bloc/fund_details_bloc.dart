@@ -17,6 +17,7 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
     this._fundRepository,
     this._watchlistRepository, [
     this._livePrices,
+    this._orderStore,
   ]) : super(const FundDetailsState()) {
     on<FundDetailsStarted>(_onStarted);
     on<FundDetailsRetryRequested>(_onRetry);
@@ -27,17 +28,38 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
     on<FundAddToWatchlistRequested>(_onAddRequested);
     on<FundRemoveFromWatchlistRequested>(_onRemoveRequested);
     on<FundLivePricesReceived>(_onLivePrices);
+    on<FundOrdersChanged>(_onOrdersChanged);
+    on<FundWatchlistsChanged>(_onWatchlistsChanged);
+    if (_watchlistRepository is FundWatchlistChangeSource) {
+      final source = _watchlistRepository as FundWatchlistChangeSource;
+      _watchlistSubscription = source.watchlistChanges.listen((_) {
+        if (!isClosed && !state.isAddingToWatchlist) {
+          add(const FundWatchlistsChanged());
+        }
+      });
+    }
+    final orderStore = _orderStore;
+    if (orderStore != null) {
+      _orderSubscription = orderStore.changes.listen(
+        (change) => add(FundOrdersChanged(change.orders)),
+      );
+    }
   }
 
   final FundRepository _fundRepository;
   final FundWatchlistRepository _watchlistRepository;
   final LivePriceStreamManager? _livePrices;
+  final OrderStore? _orderStore;
   LivePriceLease? _lease;
   StreamSubscription<LivePriceBatch>? _liveSubscription;
+  StreamSubscription<OrderBookChange>? _orderSubscription;
+  StreamSubscription<void>? _watchlistSubscription;
 
   @override
   Future<void> close() async {
     await _liveSubscription?.cancel();
+    await _orderSubscription?.cancel();
+    await _watchlistSubscription?.cancel();
     await _lease?.dispose();
     return super.close();
   }
@@ -47,14 +69,19 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
     Emitter<FundDetailsState> emit,
   ) async {
     emit(
-      FundDetailsState(status: FundDetailsStatus.loading, fundId: event.fundId),
+      FundDetailsState(
+        status: FundDetailsStatus.loading,
+        fundId: event.fundId,
+        exchange: event.exchange,
+      ),
     );
     try {
       final results = await Future.wait<Object>([
-        _fundRepository.getFundById(event.fundId),
+        _fundRepository.getFundById(event.fundId, exchange: event.exchange),
         _watchlistRepository.getAvailableWatchlists(),
       ]);
       final fund = results[0] as FundDetails;
+      final orders = await _orderStore?.getOrders() ?? const <OrderDto>[];
       final watchlists = results[1] as List<AvailableWatchlist>;
       final selectedWatchlistId = watchlists
           .where((watchlist) => watchlist.containsFund(fund.id))
@@ -63,7 +90,9 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
       emit(
         state.copyWith(
           status: FundDetailsStatus.loaded,
-          fund: fund,
+          fund: fund.withRecentActivity(
+            _activities(fund.id, event.exchange, orders),
+          ),
           availableWatchlists: watchlists,
           selectedWatchlistId:
               selectedWatchlistId ?? watchlists.firstOrNull?.id,
@@ -86,7 +115,9 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
     Emitter<FundDetailsState> emit,
   ) {
     final id = state.fundId;
-    if (id != null) add(FundDetailsStarted(fundId: id));
+    if (id != null) {
+      add(FundDetailsStarted(fundId: id, exchange: state.exchange));
+    }
   }
 
   void _onHistoryChanged(
@@ -230,8 +261,27 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
   void _watch(FundDetails fund) {
     final manager = _livePrices;
     if (manager == null) return;
+    final cached = manager.latestFor(fund.marketKey);
+    if (cached != null) {
+      add(
+        FundLivePricesReceived(
+          LivePriceBatch(
+            sequence: cached.sequence,
+            timestamp: cached.timestamp,
+            updates: <LivePriceTick>[cached],
+          ),
+        ),
+      );
+    }
     final seed = LiveInstrumentSeed.fromPrices(
-      instrumentId: fund.id,
+      marketKey: fund.marketKey,
+      fundId: fund.id,
+      exchange: fund.exchange,
+      assetType: switch (fund.instrumentType) {
+        FundInstrumentType.equity => LiveMarketAssetType.equity,
+        FundInstrumentType.future => LiveMarketAssetType.future,
+        FundInstrumentType.option => LiveMarketAssetType.option,
+      },
       symbol: fund.symbol,
       ltp: fund.ltp,
       previousClose: fund.previousClose,
@@ -251,10 +301,93 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
     final fund = state.fund;
     if (fund == null) return;
     for (final tick in event.batch.updates) {
-      if (tick.instrumentId == fund.id) {
+      if (tick.instrumentId == fund.marketKey) {
         emit(state.copyWith(fund: fund.withLivePrice(tick)));
         return;
       }
     }
+  }
+
+  void _onOrdersChanged(
+    FundOrdersChanged event,
+    Emitter<FundDetailsState> emit,
+  ) {
+    final fund = state.fund;
+    if (fund == null) return;
+    emit(
+      state.copyWith(
+        fund: fund.withRecentActivity(
+          _activities(fund.id, fund.exchange, event.orders),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onWatchlistsChanged(
+    FundWatchlistsChanged event,
+    Emitter<FundDetailsState> emit,
+  ) async {
+    if (state.status != FundDetailsStatus.loaded || state.isAddingToWatchlist) {
+      return;
+    }
+    try {
+      final watchlists = await _watchlistRepository.getAvailableWatchlists();
+      final previousId = state.selectedWatchlistId;
+      final selectedId = watchlists.any((item) => item.id == previousId)
+          ? previousId
+          : watchlists.firstOrNull?.id;
+      emit(
+        state.copyWith(
+          availableWatchlists: watchlists,
+          selectedWatchlistId: selectedId,
+          clearSelectedWatchlist: selectedId == null,
+        ),
+      );
+    } on Object {
+      // Keep the last valid picker state if a background refresh fails.
+    }
+  }
+
+  static List<FundActivity> _activities(
+    String fundId,
+    TradeExchange exchange,
+    List<OrderDto> orders,
+  ) {
+    final matching =
+        orders
+            .where(
+              (order) =>
+                  order.fundId == fundId &&
+                  TradeExchange.parse(order.exchange) == exchange,
+            )
+            .toList()
+          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    return List<FundActivity>.unmodifiable(
+      matching.take(5).map((order) {
+        final side = order.side.toUpperCase();
+        final status = switch (order.status) {
+          'triggerPending' => 'TRIGGER PENDING',
+          'partiallyFilled' => 'PARTIALLY FILLED',
+          final value => value.toUpperCase(),
+        };
+        final description = switch (order.status) {
+          'executed' =>
+            '${order.side == 'buy' ? 'Bought' : 'Sold'} ${order.filledQuantity}\n'
+                '₹${(order.averagePrice ?? order.ltp).toStringAsFixed(2)}',
+          'triggerPending' =>
+            '${order.quantity} Qty\nTrigger ₹${order.triggerPrice?.toStringAsFixed(2) ?? '—'}',
+          _ when order.limitPrice != null =>
+            '${order.quantity} Qty\nLimit ₹${order.limitPrice!.toStringAsFixed(2)}',
+          _ => '${order.quantity} Qty',
+        };
+        return FundActivity(
+          id: order.id,
+          type: 'order',
+          title: '$side · $status',
+          description: description,
+          timestamp: order.updatedAt,
+        );
+      }),
+    );
   }
 }

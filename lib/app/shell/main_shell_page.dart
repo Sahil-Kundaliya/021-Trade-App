@@ -26,8 +26,8 @@ class MainShellPage extends StatelessWidget {
               label: 'Dashboard',
             ),
             NavigationDestination(
-              icon: Icon(Icons.star_border),
-              selectedIcon: Icon(Icons.star),
+              icon: Icon(Icons.bookmark_outline),
+              selectedIcon: Icon(Icons.bookmark),
               label: 'Watchlist',
             ),
             NavigationDestination(

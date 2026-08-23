@@ -29,7 +29,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Watchlist'), findsOneWidget);
-    expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.settings_outlined), findsNothing);
     expect(find.text('NIFTY 50'), findsOneWidget);
     expect(find.text('Default'), findsOneWidget);
     expect(find.text('Watchlist 2'), findsNothing);
@@ -69,5 +69,67 @@ void main() {
 
     expect(find.text('RELIANCE'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('creates, long-press renames, and settings deletes a watchlist', (
+    tester,
+  ) async {
+    await pumpWatchlist(tester);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+    expect(find.text('CREATE WATCHLIST'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const Key('watchlist-name-field')),
+      'Banking',
+    );
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+    expect(find.text('Banking'), findsOneWidget);
+    expect(find.text('No fund added'), findsOneWidget);
+
+    await tester.longPress(find.text('Banking'));
+    await tester.pumpAndSettle();
+    expect(find.text('WATCHLIST OPTIONS'), findsOneWidget);
+    expect(find.text('Rename Watchlist'), findsOneWidget);
+    expect(find.text('Delete Watchlist'), findsOneWidget);
+
+    await tester.tap(find.text('Rename Watchlist'));
+    await tester.pumpAndSettle();
+    final nameField = tester.widget<TextField>(
+      find.byKey(const Key('watchlist-name-field')),
+    );
+    expect(nameField.controller!.text, 'Banking');
+    await tester.enterText(
+      find.byKey(const Key('watchlist-name-field')),
+      'Banks',
+    );
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(find.text('Banks'), findsOneWidget);
+    expect(find.text('Banking'), findsNothing);
+
+    await tester.longPress(find.text('Banks'));
+    await tester.pumpAndSettle();
+    expect(find.text('Banks'), findsWidgets);
+    await tester.tap(find.text('Delete Watchlist'));
+    await tester.pumpAndSettle();
+    expect(find.text('DELETE WATCHLIST?'), findsOneWidget);
+    expect(find.text('Delete "Banks"?'), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Banks'), findsOneWidget);
+
+    await tester.longPress(find.text('Banks'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete Watchlist'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+    await tester.pumpAndSettle();
+    expect(find.text('Banks'), findsNothing);
+    expect(find.text('Default'), findsOneWidget);
   });
 }

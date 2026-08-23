@@ -1,7 +1,7 @@
 export 'src/order_placement/domain/entities/order_draft.dart';
 export 'src/order_placement/domain/entities/order_instrument.dart';
 export 'src/order_placement/domain/entities/placed_order.dart';
-export 'src/order_placement/domain/enums/order_enums.dart';
+export 'src/order_placement/domain/enums/order_enums.dart' hide TradeExchange;
 export 'src/order_placement/domain/exceptions/order_placement_exception.dart';
 export 'src/order_placement/domain/repositories/order_placement_repository.dart';
 export 'src/order_placement/presentation/bloc/order_placement_bloc.dart';

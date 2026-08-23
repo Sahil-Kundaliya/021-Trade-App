@@ -1,3 +1,4 @@
+import 'package:core_data/core_data.dart';
 import 'package:fund/fund.dart';
 import 'package:flutter/material.dart';
 import 'package:orders/orders.dart';
@@ -53,7 +54,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Dashboard'), findsExactly(2));
 
-    app.navigator.openOrders(fundId: 'RELIANCE_EQ');
+    app.navigator.openOrders(
+      fundId: 'RELIANCE_EQ',
+      exchange: TradeExchange.nse,
+    );
     await tester.pumpAndSettle();
     expect(find.byType(OrdersScreen), findsOneWidget);
 
@@ -69,7 +73,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(OrderBookScreen), findsNothing);
 
-    app.navigator.openFund(fundId: 'RELIANCE_EQ');
+    app.navigator.openFund(fundId: 'RELIANCE_EQ', exchange: TradeExchange.nse);
     await tester.pumpAndSettle();
     expect(find.byType(FundSheet), findsOneWidget);
     expect(find.text('BUY'), findsOneWidget);
@@ -161,7 +165,7 @@ void main() {
     await tester.pumpWidget(app);
     await tester.pumpAndSettle();
 
-    app.navigator.openFund(fundId: 'RELIANCE_EQ');
+    app.navigator.openFund(fundId: 'RELIANCE_EQ', exchange: TradeExchange.nse);
     await tester.pumpAndSettle();
 
     final fundSheet = find.byType(FundSheet);
@@ -195,6 +199,7 @@ void main() {
     await tester.pumpAndSettle();
 
     Future<void> verifyQuickTrade(String action) async {
+      await tester.ensureVisible(find.text('RELIANCE'));
       await tester.tap(find.text('RELIANCE'));
       await tester.pumpAndSettle();
       await tester.tap(find.text(action));
@@ -219,7 +224,10 @@ void main() {
     await tester.pumpWidget(app);
     await tester.pumpAndSettle();
 
-    app.navigator.openFund(fundId: 'TCS_FUT_20260825');
+    app.navigator.openFund(
+      fundId: 'TCS_FUT_20260825',
+      exchange: TradeExchange.nse,
+    );
     await tester.pumpAndSettle();
     expect(find.text('TCS AUG FUT'), findsOneWidget);
     expect(find.text('Future'), findsOneWidget);
@@ -227,7 +235,10 @@ void main() {
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
-    app.navigator.openFund(fundId: 'SBIN_OPT_1050_CE_20260825');
+    app.navigator.openFund(
+      fundId: 'SBIN_OPT_1050_CE_20260825',
+      exchange: TradeExchange.nse,
+    );
     await tester.pumpAndSettle();
     expect(find.text('SBIN 1050 CE'), findsOneWidget);
     expect(find.text('Options'), findsWidgets);
@@ -246,7 +257,7 @@ void main() {
     await tester.pumpWidget(app);
     await tester.pumpAndSettle();
 
-    app.navigator.openFund(fundId: 'AXISBANK_EQ');
+    app.navigator.openFund(fundId: 'AXISBANK_EQ', exchange: TradeExchange.nse);
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Add to Watchlist'));
     await tester.pumpAndSettle();
@@ -259,7 +270,7 @@ void main() {
 
     await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
-    app.navigator.openFund(fundId: 'AXISBANK_EQ');
+    app.navigator.openFund(fundId: 'AXISBANK_EQ', exchange: TradeExchange.nse);
     await tester.pumpAndSettle();
 
     expect(find.byTooltip('Remove from Watchlist'), findsOneWidget);

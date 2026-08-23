@@ -85,8 +85,13 @@ void main() {
               as Map<String, dynamic>;
       expect(
         stored.keys,
-        unorderedEquals(<String>['defaultFundIds', 'watchlists']),
+        unorderedEquals(<String>[
+          'defaultName',
+          'defaultFundIds',
+          'watchlists',
+        ]),
       );
+      expect(stored['defaultName'], 'Default');
       expect(stored['defaultFundIds'], <String>['RELIANCE_EQ']);
       final users = stored['watchlists'] as List<dynamic>;
       expect(users, hasLength(1));
@@ -106,6 +111,55 @@ void main() {
       expect(result.first.fundIds, <String>['RELIANCE_EQ']);
       expect(result.last.fundIds, <String>['HDFCBANK_EQ']);
     });
+
+    test(
+      'reads a missing defaultName without performing a migration write',
+      () async {
+        final storage = _MemoryStorage(
+          initialValues: <String, String>{
+            'trading_watchlists_v1': jsonEncode(<String, dynamic>{
+              'defaultFundIds': <String>['RELIANCE_EQ'],
+              'watchlists': <dynamic>[],
+            }),
+          },
+        );
+        final api = WatchlistLocalApiImpl(storage);
+
+        final result = await api.getWatchlists();
+
+        expect(result.single.name, 'Default');
+        expect(storage.writeCount, 0);
+      },
+    );
+
+    test(
+      'persists a renamed runtime Default without storing it as a user item',
+      () async {
+        final storage = _MemoryStorage();
+        final api = WatchlistLocalApiImpl(storage);
+        final now = DateTime.parse('2026-08-22T10:00:00+05:30');
+
+        await api.saveWatchlists(<WatchlistDto>[
+          WatchlistDto(
+            id: 'watchlist_default',
+            name: 'Main',
+            fundIds: const <String>['RELIANCE_EQ'],
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ]);
+
+        final stored =
+            jsonDecode(storage.values['trading_watchlists_v1']!)
+                as Map<String, dynamic>;
+        expect(stored['defaultName'], 'Main');
+        expect(stored['watchlists'], isEmpty);
+        final result = await api.getWatchlists();
+        expect(result.single.id, 'watchlist_default');
+        expect(result.single.name, 'Main');
+        expect(result.single.fundIds, <String>['RELIANCE_EQ']);
+      },
+    );
 
     test('rejects a fifth user-created watchlist', () async {
       final api = WatchlistLocalApiImpl(_MemoryStorage());

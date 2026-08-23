@@ -11,10 +11,15 @@ final class FundRepositoryImpl implements FundRepository {
   final TradingLocalApi _tradingLocalApi;
 
   @override
-  Future<FundDetails> getFundById(String fundId) async {
+  Future<FundDetails> getFundById(
+    String fundId, {
+    TradeExchange exchange = TradeExchange.nse,
+  }) async {
     final funds = await _tradingLocalApi.getFunds();
     for (final fund in funds) {
-      if (fund.id == fundId) return FundDetailsMapper.toDomain(fund);
+      if (fund.id == fundId) {
+        return FundDetailsMapper.toDomain(fund.forExchange(exchange));
+      }
     }
     throw FundNotFoundException(fundId);
   }

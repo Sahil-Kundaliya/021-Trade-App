@@ -18,11 +18,9 @@ class HoldingTile extends StatelessWidget {
 
     return Semantics(
       button: onTap != null,
-      label:
-          '${holding.symbol}, ${holding.companyName}, quantity '
-          '${holding.quantity}, profit and loss '
-          '${PortfolioNumberFormat.signedCurrency(holding.pnl)}, '
-          '${PortfolioNumberFormat.percentage(holding.pnlPercent)}',
+      label: PrivacyModeScope.of(context)
+          ? '${holding.symbol}, ${holding.companyName}, position values hidden, LTP ${PortfolioNumberFormat.currency(holding.ltp)}'
+          : '${holding.symbol}, ${holding.companyName}, quantity ${holding.quantity}, profit and loss ${PortfolioNumberFormat.signedCurrency(holding.pnl)}, ${PortfolioNumberFormat.percentage(holding.pnlPercent)}',
       child: Material(
         color: context.appColors.surface,
         child: InkWell(
@@ -96,6 +94,7 @@ class _CompactHoldingLayout extends StatelessWidget {
               child: _ValueMetric(
                 label: 'LTP',
                 value: PortfolioNumberFormat.currency(holding.ltp),
+                isSensitive: false,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -142,6 +141,7 @@ class _WideHoldingLayout extends StatelessWidget {
           child: _ValueMetric(
             label: 'LTP',
             value: PortfolioNumberFormat.currency(holding.ltp),
+            isSensitive: false,
           ),
         ),
         Expanded(
@@ -213,13 +213,15 @@ class _PnlValue extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        Text(
+        SensitiveValueText(
           PortfolioNumberFormat.signedCurrency(holding.pnl),
+          type: SensitiveValueType.currency,
           maxLines: 1,
           style: context.appTextStyles.marketValueMedium.copyWith(color: color),
         ),
-        Text(
+        SensitiveValueText(
           PortfolioNumberFormat.percentage(holding.pnlPercent),
+          type: SensitiveValueType.percentage,
           style: context.appTextStyles.percentageSmall.copyWith(color: color),
         ),
       ],
@@ -251,8 +253,11 @@ class _InlineMetric extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.xs),
         Flexible(
-          child: Text(
+          child: SensitiveValueText(
             value,
+            type: label == 'Qty'
+                ? SensitiveValueType.quantity
+                : SensitiveValueType.currency,
             maxLines: 1,
             overflow: TextOverflow.fade,
             softWrap: false,
@@ -272,12 +277,14 @@ class _ValueMetric extends StatelessWidget {
     required this.value,
     this.crossAxisAlignment = CrossAxisAlignment.start,
     this.textAlign = TextAlign.start,
+    this.isSensitive = true,
   });
 
   final String label;
   final String value;
   final CrossAxisAlignment crossAxisAlignment;
   final TextAlign textAlign;
+  final bool isSensitive;
 
   @override
   Widget build(BuildContext context) {
@@ -293,16 +300,31 @@ class _ValueMetric extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.fade,
-          softWrap: false,
-          textAlign: textAlign,
-          style: context.appTextStyles.tableValue.copyWith(
-            color: context.appColors.textPrimary,
+        if (isSensitive)
+          SensitiveValueText(
+            value,
+            type: label == 'Qty'
+                ? SensitiveValueType.quantity
+                : SensitiveValueType.currency,
+            maxLines: 1,
+            overflow: TextOverflow.fade,
+            softWrap: false,
+            textAlign: textAlign,
+            style: context.appTextStyles.tableValue.copyWith(
+              color: context.appColors.textPrimary,
+            ),
+          )
+        else
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.fade,
+            softWrap: false,
+            textAlign: textAlign,
+            style: context.appTextStyles.tableValue.copyWith(
+              color: context.appColors.textPrimary,
+            ),
           ),
-        ),
       ],
     );
   }

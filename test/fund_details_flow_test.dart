@@ -77,6 +77,29 @@ void main() {
   );
 
   test(
+    'repository resolves the selected exchange listing and market depth',
+    () async {
+      final nse = await realFundRepository.getFundById(
+        'RELIANCE_EQ',
+        exchange: TradeExchange.nse,
+      );
+      final bse = await realFundRepository.getFundById(
+        'RELIANCE_EQ',
+        exchange: TradeExchange.bse,
+      );
+
+      expect(nse.exchange, TradeExchange.nse);
+      expect(bse.exchange, TradeExchange.bse);
+      expect(bse.ltp, isNot(nse.ltp));
+      expect(bse.previousClose, isNot(nse.previousClose));
+      expect(
+        bse.marketDepth.bids.first.price,
+        isNot(nse.marketDepth.bids.first.price),
+      );
+    },
+  );
+
+  test(
     'bloc loads concurrently and changes history without refetching',
     () async {
       final funds = _FakeFundRepository(reliance);
@@ -156,6 +179,71 @@ void main() {
       await bloc.close();
     },
   );
+
+  test('recent activity uses reactive orders filtered by fund ID', () async {
+    final orderApi = _MemoryOrderApi();
+    final store = OrderStore(orderApi);
+    await store.append(_activityOrder('reliance', 'RELIANCE_EQ', 'open'));
+    await store.append(_activityOrder('tcs', 'TCS_EQ', 'executed'));
+    final bloc = FundDetailsBloc(
+      _FakeFundRepository(reliance),
+      _FakeFundWatchlistRepository(),
+      null,
+      store,
+    )..add(const FundDetailsStarted(fundId: 'RELIANCE_EQ'));
+    await bloc.stream.firstWhere(
+      (state) => state.status == FundDetailsStatus.loaded,
+    );
+
+    expect(bloc.state.fund!.recentActivity, hasLength(1));
+    expect(bloc.state.fund!.recentActivity.single.id, 'reliance');
+    expect(bloc.state.fund!.recentActivity.single.title, 'BUY · OPEN');
+
+    await store.replace(_activityOrder('reliance', 'RELIANCE_EQ', 'executed'));
+    await bloc.stream.firstWhere(
+      (state) => state.fund!.recentActivity.single.title.contains('EXECUTED'),
+    );
+    expect(
+      bloc.state.fund!.recentActivity.single.description,
+      contains('Bought 10'),
+    );
+    await bloc.close();
+  });
+}
+
+OrderDto _activityOrder(String id, String fundId, String status) => OrderDto(
+  id: id,
+  fundId: fundId,
+  symbol: fundId == 'RELIANCE_EQ' ? 'RELIANCE' : 'TCS',
+  companyName: 'Company',
+  exchange: 'nse',
+  instrumentType: 'equity',
+  side: 'buy',
+  orderType: 'limit',
+  productType: 'delivery',
+  status: status,
+  quantity: 10,
+  filledQuantity: status == 'executed' ? 10 : 0,
+  pendingQuantity: status == 'executed' ? 0 : 10,
+  ltp: 100,
+  averagePrice: status == 'executed' ? 100 : null,
+  limitPrice: 100,
+  orderValue: 1000,
+  validity: 'DAY',
+  createdAt: DateTime(2026),
+  updatedAt: status == 'executed' ? DateTime(2026, 1, 2) : DateTime(2026),
+);
+
+final class _MemoryOrderApi implements OrderBookLocalApi {
+  List<OrderDto> orders = const [];
+
+  @override
+  Future<List<OrderDto>> getOrders() async => orders;
+
+  @override
+  Future<void> saveOrders(List<OrderDto> orders) async {
+    this.orders = List.unmodifiable(orders);
+  }
 }
 
 final class _MemoryWatchlistApi implements WatchlistLocalApi {
@@ -187,7 +275,10 @@ final class _FakeFundRepository implements FundRepository {
   final FundDetails fund;
   int calls = 0;
   @override
-  Future<FundDetails> getFundById(String fundId) async {
+  Future<FundDetails> getFundById(
+    String fundId, {
+    TradeExchange exchange = TradeExchange.nse,
+  }) async {
     calls++;
     return fund;
   }

@@ -21,8 +21,6 @@ class WatchlistStockList extends StatelessWidget {
     }
 
     return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
       itemCount: stocks.length,
       separatorBuilder: (_, _) => const AppDivider(),
       itemBuilder: (context, index) {

@@ -1,3 +1,5 @@
+import 'package:core_data/core_data.dart';
+
 enum TradeSide { buy, sell }
 
 abstract interface class AppNavigator {
@@ -9,13 +11,20 @@ abstract interface class AppNavigator {
 
   void goToProfile();
 
-  Future<void> openOrders({required String fundId, TradeSide? side});
+  Future<void> openOrders({
+    required String fundId,
+    required TradeExchange exchange,
+    TradeSide? side,
+  });
 
   Future<void> openOrderBook();
 
   Future<void> openLicenceInformation();
 
-  Future<void> openFund({required String fundId});
+  Future<void> openFund({
+    required String fundId,
+    required TradeExchange exchange,
+  });
 
   Future<void> pop();
 }

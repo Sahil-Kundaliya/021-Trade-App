@@ -4,6 +4,9 @@ import 'price_history_point_dto.dart';
 import 'fund_activity_dto.dart';
 import 'fund_collateral_dto.dart';
 import 'fund_margin_dto.dart';
+import 'fund_exchange_listing_dto.dart';
+import 'market_depth_level_dto.dart';
+import '../../market/trade_exchange.dart';
 
 class FundDto {
   const FundDto({
@@ -37,6 +40,7 @@ class FundDto {
     required this.marginDetails,
     required this.collateralDetails,
     required this.recentActivity,
+    this.listings = const [],
   });
 
   factory FundDto.fromJson(Map<String, dynamic> json) {
@@ -152,4 +156,112 @@ class FundDto {
   final FundMarginDto marginDetails;
   final FundCollateralDto collateralDetails;
   final List<FundActivityDto> recentActivity;
+  final List<FundExchangeListingDto> listings;
+
+  List<TradeExchange> get availableExchanges => listings
+      .map((listing) => listing.exchange)
+      .toSet()
+      .toList(growable: false);
+
+  FundExchangeListingDto? listingFor(TradeExchange exchange) {
+    for (final listing in listings) {
+      if (listing.exchange == exchange) return listing;
+    }
+    return null;
+  }
+
+  FundDto withListings(List<FundExchangeListingDto> value) =>
+      _copy(listings: List<FundExchangeListingDto>.unmodifiable(value));
+
+  FundDto forExchange(TradeExchange value) {
+    final listing = listingFor(value);
+    if (listing == null) {
+      throw StateError('$id is not listed on ${value.code}.');
+    }
+    return _copy(
+      exchange: value.code,
+      ltp: listing.ltp,
+      previousClose: listing.previousClose,
+      change: listing.change,
+      changePercent: listing.changePercent,
+      open: listing.open,
+      high: listing.high,
+      low: listing.low,
+      volume: listing.volume,
+      tickSize: listing.tickSize,
+      marketDepth: _depthFor(listing),
+    );
+  }
+
+  MarketDepthDto _depthFor(FundExchangeListingDto listing) {
+    if (listing.exchange == TradeExchange.parse(exchange)) return marketDepth;
+    double shifted(double price) {
+      final raw = price + (listing.ltp - ltp);
+      return (raw / listing.tickSize).round() * listing.tickSize;
+    }
+
+    List<MarketDepthLevelDto> levels(List<MarketDepthLevelDto> source) => source
+        .map(
+          (level) => MarketDepthLevelDto(
+            price: shifted(level.price),
+            quantity: level.quantity,
+            orderCount: level.orderCount,
+          ),
+        )
+        .toList(growable: false);
+    return MarketDepthDto(
+      bids: levels(marketDepth.bids),
+      asks: levels(marketDepth.asks),
+      totalBidQuantity: marketDepth.totalBidQuantity,
+      totalAskQuantity: marketDepth.totalAskQuantity,
+      updatedAt: marketDepth.updatedAt,
+    );
+  }
+
+  FundDto _copy({
+    String? exchange,
+    double? ltp,
+    double? previousClose,
+    double? change,
+    double? changePercent,
+    double? open,
+    double? high,
+    double? low,
+    int? volume,
+    double? tickSize,
+    List<FundExchangeListingDto>? listings,
+    MarketDepthDto? marketDepth,
+  }) => FundDto(
+    id: id,
+    symbol: symbol,
+    companyName: companyName,
+    exchange: exchange ?? this.exchange,
+    category: category,
+    instrumentType: instrumentType,
+    currency: currency,
+    ltp: ltp ?? this.ltp,
+    previousClose: previousClose ?? this.previousClose,
+    change: change ?? this.change,
+    changePercent: changePercent ?? this.changePercent,
+    open: open ?? this.open,
+    high: high ?? this.high,
+    low: low ?? this.low,
+    volume: volume ?? this.volume,
+    tickSize: tickSize ?? this.tickSize,
+    lotSize: lotSize,
+    expiryDate: expiryDate,
+    strikePrice: strikePrice,
+    optionType: optionType,
+    underlyingSymbol: underlyingSymbol,
+    openInterest: openInterest,
+    impliedVolatility: impliedVolatility,
+    tags: tags,
+    marketDepth: marketDepth ?? this.marketDepth,
+    oneMonthPriceHistory: oneMonthPriceHistory,
+    threeMonthPriceHistory: threeMonthPriceHistory,
+    marginDetails: marginDetails,
+    collateralDetails: collateralDetails,
+    recentActivity: recentActivity,
+    listings: listings ?? this.listings,
+  );
 }

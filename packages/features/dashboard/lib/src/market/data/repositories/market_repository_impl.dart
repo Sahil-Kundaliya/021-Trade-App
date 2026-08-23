@@ -14,6 +14,13 @@ final class MarketRepositoryImpl implements MarketRepository {
   @override
   Future<List<MarketInstrument>> getFunds() async {
     final dtos = await _tradingLocalApi.getFunds();
-    return dtos.map(FundMarketMapper.toDomain).toList(growable: false);
+    return dtos
+        .expand((fund) {
+          return fund.listings.map(
+            (listing) =>
+                FundMarketMapper.toDomain(fund.forExchange(listing.exchange)),
+          );
+        })
+        .toList(growable: false);
   }
 }

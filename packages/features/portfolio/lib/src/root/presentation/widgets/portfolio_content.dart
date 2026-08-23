@@ -43,8 +43,10 @@ class PortfolioContent extends StatelessWidget {
                       HoldingsStatus.empty => const HoldingsList(holdings: []),
                       HoldingsStatus.loaded => _LoadedPortfolio(
                         state: state,
-                        onHoldingTap: (holding) =>
-                            navigator?.openFund(fundId: holding.fundId),
+                        onHoldingTap: (holding) => navigator?.openFund(
+                          fundId: holding.fundId,
+                          exchange: holding.tradeExchange,
+                        ),
                       ),
                     },
                   ],

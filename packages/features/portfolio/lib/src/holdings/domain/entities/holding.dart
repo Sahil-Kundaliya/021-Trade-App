@@ -30,6 +30,9 @@ class Holding {
   final String category;
   final String instrumentType;
   final String exchange;
+  TradeExchange get tradeExchange => TradeExchange.parse(exchange);
+  String get marketKey =>
+      MarketInstrumentKey(fundId: fundId, exchange: tradeExchange).value;
   final int quantity;
   final int? lots;
   final int lotSize;

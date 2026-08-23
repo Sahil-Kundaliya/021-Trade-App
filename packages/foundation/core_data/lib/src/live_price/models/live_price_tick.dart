@@ -25,21 +25,26 @@ class LivePriceTick {
       throw FormatException('Invalid live-price field: $key.');
     }
 
-    final directionName = value<String>('direction');
+    final ltpMinor = value<int>('ltpMinor');
+    final previousLtpMinor = value<int>('previousLtpMinor');
+    final previousCloseMinor = value<int>('previousCloseMinor');
+    if (ltpMinor <= 0 || previousCloseMinor <= 0) {
+      throw const FormatException('Live prices must be positive.');
+    }
+    final changeMinor = ltpMinor - previousCloseMinor;
     return LivePriceTick(
       instrumentId: value<String>('instrumentId'),
       symbol: value<String>('symbol'),
-      ltpMinor: value<int>('ltpMinor'),
-      previousLtpMinor: value<int>('previousLtpMinor'),
-      previousCloseMinor: value<int>('previousCloseMinor'),
-      changeMinor: value<int>('changeMinor'),
-      changePercent: value<num>('changePercent').toDouble(),
-      direction: LivePriceDirection.values.firstWhere(
-        (item) => item.name == directionName,
-        orElse: () => throw FormatException(
-          'Invalid live-price direction: $directionName.',
-        ),
-      ),
+      ltpMinor: ltpMinor,
+      previousLtpMinor: previousLtpMinor,
+      previousCloseMinor: previousCloseMinor,
+      changeMinor: changeMinor,
+      changePercent: changeMinor / previousCloseMinor * 100,
+      direction: ltpMinor > previousLtpMinor
+          ? LivePriceDirection.up
+          : ltpMinor < previousLtpMinor
+          ? LivePriceDirection.down
+          : LivePriceDirection.flat,
       timestamp: batchTimestamp,
       sequence: batchSequence,
     );
@@ -60,4 +65,17 @@ class LivePriceTick {
   double get previousLtp => previousLtpMinor / 100;
   double get previousClose => previousCloseMinor / 100;
   double get change => changeMinor / 100;
+
+  LivePriceTick withInstrumentId(String value) => LivePriceTick(
+    instrumentId: value,
+    symbol: symbol,
+    ltpMinor: ltpMinor,
+    previousLtpMinor: previousLtpMinor,
+    previousCloseMinor: previousCloseMinor,
+    changeMinor: changeMinor,
+    changePercent: changePercent,
+    direction: direction,
+    timestamp: timestamp,
+    sequence: sequence,
+  );
 }

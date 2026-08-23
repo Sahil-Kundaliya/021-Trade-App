@@ -10,19 +10,22 @@ import '../widgets/orders_content.dart';
 class OrdersScreen extends StatelessWidget {
   const OrdersScreen({
     required this.fundId,
+    required this.exchange,
     required this.navigator,
     this.side,
     super.key,
   });
   final String fundId;
+  final TradeExchange exchange;
   final TradeSide? side;
   final AppNavigator navigator;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
-    create: (_) =>
-        GetIt.instance<OrderPlacementBloc>()
-          ..add(OrderPlacementStarted(fundId: fundId, side: side)),
+    create: (_) => GetIt.instance<OrderPlacementBloc>()
+      ..add(
+        OrderPlacementStarted(fundId: fundId, exchange: exchange, side: side),
+      ),
     child: OrdersContent(navigator: navigator),
   );
 }

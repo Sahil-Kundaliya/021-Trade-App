@@ -65,8 +65,9 @@ class _PortfolioOverview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label:
-          'Portfolio value ${PortfolioNumberFormat.currency(summary.currentValue)}',
+      label: PrivacyModeScope.of(context)
+          ? 'Portfolio value hidden'
+          : 'Portfolio value ${PortfolioNumberFormat.currency(summary.currentValue)}',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -77,8 +78,9 @@ class _PortfolioOverview extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
-          Text(
+          SensitiveValueText(
             PortfolioNumberFormat.currency(summary.currentValue),
+            type: SensitiveValueType.currency,
             maxLines: 1,
             overflow: TextOverflow.fade,
             softWrap: false,
@@ -106,9 +108,9 @@ class _PortfolioPnl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label:
-          '$label, ${PortfolioNumberFormat.signedCurrency(summary.totalPnl)}, '
-          '${PortfolioNumberFormat.percentage(summary.totalPnlPercent)}',
+      label: PrivacyModeScope.of(context)
+          ? '$label, values hidden'
+          : '$label, ${PortfolioNumberFormat.signedCurrency(summary.totalPnl)}, ${PortfolioNumberFormat.percentage(summary.totalPnlPercent)}',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -116,14 +118,16 @@ class _PortfolioPnl extends StatelessWidget {
             spacing: AppSpacing.md,
             runSpacing: AppSpacing.xs,
             children: [
-              Text(
+              SensitiveValueText(
                 PortfolioNumberFormat.signedCurrency(summary.totalPnl),
+                type: SensitiveValueType.currency,
                 style: context.appTextStyles.marketValueMedium.copyWith(
                   color: color,
                 ),
               ),
-              Text(
+              SensitiveValueText(
                 PortfolioNumberFormat.percentage(summary.totalPnlPercent),
+                type: SensitiveValueType.percentage,
                 style: context.appTextStyles.percentageMedium.copyWith(
                   color: color,
                 ),
@@ -214,8 +218,9 @@ class _SummaryMetric extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        Text(
+        SensitiveValueText(
           value,
+          type: SensitiveValueType.currency,
           maxLines: 1,
           overflow: TextOverflow.fade,
           softWrap: false,

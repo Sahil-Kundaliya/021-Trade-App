@@ -1,3 +1,5 @@
+import 'package:core_data/core_data.dart';
+
 class MarketDisplayItem {
   const MarketDisplayItem({
     required this.id,
@@ -6,6 +8,7 @@ class MarketDisplayItem {
     required this.ltp,
     required this.change,
     required this.changePercent,
+    required this.exchange,
     this.expiry,
     this.strike,
     this.optionType,
@@ -18,6 +21,7 @@ class MarketDisplayItem {
   final String ltp;
   final String change;
   final double changePercent;
+  final TradeExchange exchange;
   final String? expiry;
   final String? strike;
   final String? optionType;

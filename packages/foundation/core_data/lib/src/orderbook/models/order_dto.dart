@@ -102,6 +102,39 @@ class OrderDto {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  OrderDto copyWith({
+    String? status,
+    int? filledQuantity,
+    int? pendingQuantity,
+    double? averagePrice,
+    double? orderValue,
+    DateTime? updatedAt,
+  }) => OrderDto(
+    id: id,
+    exchangeOrderId: exchangeOrderId,
+    fundId: fundId,
+    symbol: symbol,
+    companyName: companyName,
+    exchange: exchange,
+    instrumentType: instrumentType,
+    side: side,
+    orderType: orderType,
+    productType: productType,
+    status: status ?? this.status,
+    quantity: quantity,
+    filledQuantity: filledQuantity ?? this.filledQuantity,
+    pendingQuantity: pendingQuantity ?? this.pendingQuantity,
+    ltp: ltp,
+    averagePrice: averagePrice ?? this.averagePrice,
+    limitPrice: limitPrice,
+    triggerPrice: triggerPrice,
+    orderValue: orderValue ?? this.orderValue,
+    validity: validity,
+    rejectionReason: rejectionReason,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+
   Map<String, dynamic> toJson() => <String, dynamic>{
     'id': id,
     'exchangeOrderId': exchangeOrderId,

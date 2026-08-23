@@ -3,7 +3,8 @@ import Foundation
 
 final class LightTradeStreamer: NSObject, FlutterStreamHandler {
   private struct InstrumentState {
-    let instrumentId: String; let symbol: String
+    let marketKey: String; let fundId: String; let exchange: String
+    let assetType: String; let symbol: String
     var currentLtpMinor: Int64; var previousLtpMinor: Int64
     let previousCloseMinor: Int64; let tickSizeMinor: Int64
     var lastUpdatedAt: Int64 = 0; var sequence: Int64 = 0
@@ -44,19 +45,23 @@ final class LightTradeStreamer: NSObject, FlutterStreamHandler {
     }
     var seeds: [InstrumentState] = []
     for raw in rawSeeds {
-      guard let id = raw["instrumentId"] as? String, !id.isEmpty,
+      guard let id = (raw["marketKey"] ?? raw["instrumentId"]) as? String, !id.isEmpty,
         let symbol = raw["symbol"] as? String,
         let ltp = (raw["ltpMinor"] as? NSNumber)?.int64Value, ltp > 0,
         let close = (raw["previousCloseMinor"] as? NSNumber)?.int64Value, close > 0,
         let tick = (raw["tickSizeMinor"] as? NSNumber)?.int64Value, tick > 0 else {
         result(FlutterError(code: "invalid_subscription", message: "Invalid instrument seed.", details: nil)); return
       }
-      seeds.append(InstrumentState(instrumentId: id, symbol: symbol, currentLtpMinor: ltp,
+      let fundId = raw["fundId"] as? String ?? id
+      let exchange = raw["exchange"] as? String ?? "NSE"
+      let assetType = raw["assetType"] as? String ?? "equity"
+      seeds.append(InstrumentState(marketKey: id, fundId: fundId, exchange: exchange,
+        assetType: assetType, symbol: symbol, currentLtpMinor: ltp,
         previousLtpMinor: ltp, previousCloseMinor: close, tickSizeMinor: tick))
     }
     queue.async { [weak self] in
       guard let self else { return }
-      for seed in seeds { if self.sessionStates[seed.instrumentId] == nil { self.sessionStates[seed.instrumentId] = seed }; self.activeIds.insert(seed.instrumentId) }
+      for seed in seeds { if self.sessionStates[seed.marketKey] == nil { self.sessionStates[seed.marketKey] = seed }; self.activeIds.insert(seed.marketKey) }
       self.ensureTicker(); DispatchQueue.main.async { result(nil) }
     }
   }
@@ -93,12 +98,16 @@ final class LightTradeStreamer: NSObject, FlutterStreamHandler {
     var updates: [[String: Any]] = []
     for id in shuffled.prefix(count) {
       guard var state = sessionStates[id] else { continue }; let previous = state.currentLtpMinor
-      let roll = Int.random(in: 0..<100); let requested = state.tickSizeMinor * Int64.random(in: 1...8)
+      let roll = Int.random(in: 0..<100)
+      let maxTicks: Int64 = (state.assetType == "index" || state.assetType == "marketIndex") ? 4 : 8
+      let requested = state.tickSizeMinor * Int64.random(in: 1...maxTicks)
       let delta = min(requested, max(state.tickSizeMinor, previous / 200))
       let next = roll < 15 ? previous : (roll < 58 ? previous + delta : max(state.tickSizeMinor, previous - delta))
       state.previousLtpMinor = previous; state.currentLtpMinor = next; state.lastUpdatedAt = timestamp; state.sequence = sequence; sessionStates[id] = state
       let change = next - state.previousCloseMinor; let direction = next > previous ? "up" : (next < previous ? "down" : "flat")
-      updates.append(["instrumentId": state.instrumentId, "symbol": state.symbol, "ltpMinor": next,
+      updates.append(["marketKey": state.marketKey, "instrumentId": state.marketKey,
+        "fundId": state.fundId, "exchange": state.exchange, "assetType": state.assetType,
+        "symbol": state.symbol, "ltpMinor": next,
         "previousLtpMinor": previous, "previousCloseMinor": state.previousCloseMinor, "changeMinor": change,
         "changePercent": Double(change) / Double(state.previousCloseMinor) * 100, "direction": direction])
     }

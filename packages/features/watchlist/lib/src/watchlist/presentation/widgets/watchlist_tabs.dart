@@ -6,6 +6,7 @@ class WatchlistTabs extends StatelessWidget {
     required this.labels,
     required this.selectedIndex,
     required this.onSelected,
+    this.onLongPressed,
     this.onAddPressed,
     super.key,
   });
@@ -13,6 +14,7 @@ class WatchlistTabs extends StatelessWidget {
   final List<String> labels;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
+  final ValueChanged<int>? onLongPressed;
   final VoidCallback? onAddPressed;
 
   @override
@@ -32,6 +34,9 @@ class WatchlistTabs extends StatelessWidget {
             label: labels[index],
             selected: index == selectedIndex,
             onTap: () => onSelected(index),
+            onLongPress: onLongPressed == null
+                ? null
+                : () => onLongPressed!(index),
           );
         },
       ),
@@ -44,11 +49,13 @@ class _WatchlistTab extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.onLongPress,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +81,7 @@ class _WatchlistTab extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
+          onLongPress: onLongPress,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Center(
@@ -109,7 +117,7 @@ class _AddWatchlistButton extends StatelessWidget {
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: onPressed ?? _noOp,
+          onTap: onPressed,
           child: SizedBox.square(
             dimension: AppSizes.touchTarget,
             child: Icon(
@@ -123,5 +131,3 @@ class _AddWatchlistButton extends StatelessWidget {
     );
   }
 }
-
-void _noOp() {}

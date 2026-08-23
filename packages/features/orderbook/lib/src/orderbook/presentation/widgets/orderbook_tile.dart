@@ -53,6 +53,7 @@ class _CompactTile extends StatelessWidget {
             child: _Metric(
               label: 'Qty',
               value: '${order.filledQuantity} / ${order.quantity}',
+              sensitiveType: SensitiveValueType.quantity,
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -98,6 +99,7 @@ class _WideTile extends StatelessWidget {
         child: _Metric(
           label: 'Qty',
           value: '${order.filledQuantity} / ${order.quantity}',
+          sensitiveType: SensitiveValueType.quantity,
         ),
       ),
       Expanded(
@@ -225,6 +227,7 @@ class _Price extends StatelessWidget {
       value: value == null ? 'At market' : OrderFormat.currency(value),
       alignEnd: alignEnd,
       emphasize: true,
+      sensitiveType: value == null ? null : SensitiveValueType.currency,
     );
   }
 }
@@ -235,11 +238,13 @@ class _Metric extends StatelessWidget {
     required this.value,
     this.alignEnd = false,
     this.emphasize = false,
+    this.sensitiveType,
   });
   final String label;
   final String value;
   final bool alignEnd;
   final bool emphasize;
+  final SensitiveValueType? sensitiveType;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -254,15 +259,27 @@ class _Metric extends StatelessWidget {
         ),
       ),
       const SizedBox(height: AppSpacing.xs),
-      Text(
-        value,
-        maxLines: 1,
-        overflow: TextOverflow.fade,
-        softWrap: false,
-        style: emphasize
-            ? context.appTextStyles.orderValue
-            : context.appTextStyles.tableValue,
-      ),
+      if (sensitiveType == null)
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.fade,
+          softWrap: false,
+          style: emphasize
+              ? context.appTextStyles.orderValue
+              : context.appTextStyles.tableValue,
+        )
+      else
+        SensitiveValueText(
+          value,
+          type: sensitiveType!,
+          maxLines: 1,
+          overflow: TextOverflow.fade,
+          softWrap: false,
+          style: emphasize
+              ? context.appTextStyles.orderValue
+              : context.appTextStyles.tableValue,
+        ),
     ],
   );
 }

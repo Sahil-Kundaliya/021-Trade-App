@@ -9,6 +9,7 @@ import '../models/live_price_batch.dart';
 import '../models/live_price_tick.dart';
 import '../platform/live_price_platform_api.dart';
 import 'live_price_lease.dart';
+import '../../market/trade_exchange.dart';
 
 @lazySingleton
 class LivePriceStreamManager with WidgetsBindingObserver {
@@ -146,13 +147,16 @@ class LivePriceStreamManager with WidgetsBindingObserver {
       final batch = LivePriceBatch.fromMessage(raw);
       if (batch.sequence <= _lastSequence) return;
       _lastSequence = batch.sequence;
-      for (final tick in batch.updates) {
-        if (_referenceCounts.containsKey(tick.instrumentId)) {
+      final normalized = <LivePriceTick>[];
+      for (final rawTick in batch.updates) {
+        final tick = _normalizeLegacyTick(rawTick);
+        if (tick != null) {
           _latest[tick.instrumentId] = tick;
+          normalized.add(tick);
         }
       }
       for (final lease in _leases.values.toList(growable: false)) {
-        final filtered = batch.updates
+        final filtered = normalized
             .where((tick) => lease.seeds.containsKey(tick.instrumentId))
             .toList(growable: false);
         if (filtered.isNotEmpty) {
@@ -174,6 +178,19 @@ class LivePriceStreamManager with WidgetsBindingObserver {
         lease.addError(exception, stackTrace);
       }
     }
+  }
+
+  LivePriceTick? _normalizeLegacyTick(LivePriceTick tick) {
+    if (_referenceCounts.containsKey(tick.instrumentId)) return tick;
+    final candidates = _activeSeeds.values
+        .where(
+          (seed) =>
+              seed.fundId == tick.instrumentId &&
+              seed.exchange == TradeExchange.nse,
+        )
+        .toList(growable: false);
+    if (candidates.length != 1) return null;
+    return tick.withInstrumentId(candidates.single.marketKey);
   }
 
   @override

@@ -1,6 +1,7 @@
 import '../../domain/entities/available_watchlist.dart';
 import '../../domain/entities/fund_details.dart';
 import 'fund_details_event.dart';
+import 'package:core_data/core_data.dart';
 
 enum FundDetailsStatus { initial, loading, loaded, error }
 
@@ -25,6 +26,7 @@ class FundDetailsState {
   const FundDetailsState({
     this.status = FundDetailsStatus.initial,
     this.fundId,
+    this.exchange = TradeExchange.nse,
     this.fund,
     this.availableWatchlists = const [],
     this.selectedWatchlistId,
@@ -38,6 +40,7 @@ class FundDetailsState {
 
   final FundDetailsStatus status;
   final String? fundId;
+  final TradeExchange exchange;
   final FundDetails? fund;
   final List<AvailableWatchlist> availableWatchlists;
   final String? selectedWatchlistId;
@@ -93,6 +96,7 @@ class FundDetailsState {
   FundDetailsState copyWith({
     FundDetailsStatus? status,
     String? fundId,
+    TradeExchange? exchange,
     FundDetails? fund,
     List<AvailableWatchlist>? availableWatchlists,
     String? selectedWatchlistId,
@@ -108,6 +112,7 @@ class FundDetailsState {
   }) => FundDetailsState(
     status: status ?? this.status,
     fundId: fundId ?? this.fundId,
+    exchange: exchange ?? this.exchange,
     fund: fund ?? this.fund,
     availableWatchlists: availableWatchlists ?? this.availableWatchlists,
     selectedWatchlistId: clearSelectedWatchlist

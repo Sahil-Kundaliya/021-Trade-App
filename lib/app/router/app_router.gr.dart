@@ -79,12 +79,18 @@ class OrderBookRoute extends PageRouteInfo<void> {
 class OrdersRoute extends PageRouteInfo<OrdersRouteArgs> {
   OrdersRoute({
     required String fundId,
+    required TradeExchange exchange,
     TradeSide? side,
     Key? key,
     List<PageRouteInfo>? children,
   }) : super(
          OrdersRoute.name,
-         args: OrdersRouteArgs(fundId: fundId, side: side, key: key),
+         args: OrdersRouteArgs(
+           fundId: fundId,
+           exchange: exchange,
+           side: side,
+           key: key,
+         ),
          initialChildren: children,
        );
 
@@ -96,6 +102,7 @@ class OrdersRoute extends PageRouteInfo<OrdersRouteArgs> {
       final args = data.argsAs<OrdersRouteArgs>();
       return OrdersRoutePage(
         fundId: args.fundId,
+        exchange: args.exchange,
         side: args.side,
         key: args.key,
       );
@@ -104,9 +111,16 @@ class OrdersRoute extends PageRouteInfo<OrdersRouteArgs> {
 }
 
 class OrdersRouteArgs {
-  const OrdersRouteArgs({required this.fundId, this.side, this.key});
+  const OrdersRouteArgs({
+    required this.fundId,
+    required this.exchange,
+    this.side,
+    this.key,
+  });
 
   final String fundId;
+
+  final TradeExchange exchange;
 
   final TradeSide? side;
 
@@ -114,18 +128,22 @@ class OrdersRouteArgs {
 
   @override
   String toString() {
-    return 'OrdersRouteArgs{fundId: $fundId, side: $side, key: $key}';
+    return 'OrdersRouteArgs{fundId: $fundId, exchange: $exchange, side: $side, key: $key}';
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! OrdersRouteArgs) return false;
-    return fundId == other.fundId && side == other.side && key == other.key;
+    return fundId == other.fundId &&
+        exchange == other.exchange &&
+        side == other.side &&
+        key == other.key;
   }
 
   @override
-  int get hashCode => fundId.hashCode ^ side.hashCode ^ key.hashCode;
+  int get hashCode =>
+      fundId.hashCode ^ exchange.hashCode ^ side.hashCode ^ key.hashCode;
 }
 
 /// generated route for

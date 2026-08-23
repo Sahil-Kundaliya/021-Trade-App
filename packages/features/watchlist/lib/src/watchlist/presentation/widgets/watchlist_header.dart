@@ -1,27 +1,10 @@
 import 'package:core_ui/core_ui.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 class WatchlistHeader extends StatelessWidget {
-  const WatchlistHeader({this.onSettingsPressed, super.key});
-
-  final VoidCallback? onSettingsPressed;
+  const WatchlistHeader({super.key});
 
   @override
-  Widget build(BuildContext context) => AppSectionHeader(
-    title: 'Watchlist',
-    trailing: SizedBox.square(
-      dimension: AppSizes.iconSm,
-      child: AppIconButton(
-        tooltip: 'Watchlist settings',
-        onPressed: onSettingsPressed ?? _noOp,
-        icon: Icon(
-          Icons.settings_outlined,
-          size: AppSizes.iconSm,
-          color: context.appColors.textSecondary,
-        ),
-      ),
-    ),
-  );
+  Widget build(BuildContext context) =>
+      const AppSectionHeader(title: 'Watchlist');
 }
-
-void _noOp() {}

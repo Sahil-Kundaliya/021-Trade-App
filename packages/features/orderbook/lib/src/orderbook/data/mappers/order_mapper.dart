@@ -1,4 +1,4 @@
-import 'package:core_data/core_data.dart';
+import 'package:core_data/core_data.dart' hide TradeExchange;
 
 import '../../domain/entities/trade_order.dart';
 

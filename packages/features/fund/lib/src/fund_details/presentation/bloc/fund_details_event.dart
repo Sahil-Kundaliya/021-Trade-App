@@ -7,8 +7,12 @@ sealed class FundDetailsEvent {
 }
 
 final class FundDetailsStarted extends FundDetailsEvent {
-  const FundDetailsStarted({required this.fundId});
+  const FundDetailsStarted({
+    required this.fundId,
+    this.exchange = TradeExchange.nse,
+  });
   final String fundId;
+  final TradeExchange exchange;
 }
 
 final class FundDetailsRetryRequested extends FundDetailsEvent {
@@ -44,4 +48,13 @@ final class FundRemoveFromWatchlistRequested extends FundDetailsEvent {
 final class FundLivePricesReceived extends FundDetailsEvent {
   const FundLivePricesReceived(this.batch);
   final LivePriceBatch batch;
+}
+
+final class FundOrdersChanged extends FundDetailsEvent {
+  const FundOrdersChanged(this.orders);
+  final List<OrderDto> orders;
+}
+
+final class FundWatchlistsChanged extends FundDetailsEvent {
+  const FundWatchlistsChanged();
 }

@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/trade_order.dart';
 import 'order_details_bottom_sheet.dart';
 import 'orderbook_tile.dart';
+import '../bloc/orderbook_bloc.dart';
+import '../bloc/orderbook_event.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class OrderBookList extends StatelessWidget {
   const OrderBookList({required this.orders, super.key});
@@ -43,6 +46,11 @@ class OrderBookList extends StatelessWidget {
               onTap: () => OrderDetailsBottomSheet.show(
                 context,
                 groups[dates[dateIndex]]![index],
+                onCancel: () => context.read<OrderBookBloc>().add(
+                  OrderBookCancelRequested(
+                    groups[dates[dateIndex]]![index].orderId,
+                  ),
+                ),
               ),
             ),
             if (index < groups[dates[dateIndex]]!.length - 1)

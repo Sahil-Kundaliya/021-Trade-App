@@ -6,16 +6,24 @@ import '../formatters/order_format.dart';
 import 'order_status_badge.dart';
 
 class OrderDetailsBottomSheet extends StatelessWidget {
-  const OrderDetailsBottomSheet({required this.order, super.key});
+  const OrderDetailsBottomSheet({
+    required this.order,
+    this.onCancel,
+    super.key,
+  });
   final TradeOrder order;
+  final VoidCallback? onCancel;
 
-  static Future<void> show(BuildContext context, TradeOrder order) =>
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        builder: (_) => OrderDetailsBottomSheet(order: order),
-      );
+  static Future<void> show(
+    BuildContext context,
+    TradeOrder order, {
+    VoidCallback? onCancel,
+  }) => showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (_) => OrderDetailsBottomSheet(order: order, onCancel: onCancel),
+  );
 
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
@@ -88,29 +96,49 @@ class OrderDetailsBottomSheet extends StatelessWidget {
             ),
             _Row(label: 'Validity', value: order.validity),
             const AppDivider(),
-            _Row(label: 'Quantity', value: '${order.quantity}'),
-            _Row(label: 'Filled', value: '${order.filledQuantity}'),
-            _Row(label: 'Pending', value: '${order.pendingQuantity}'),
+            _Row(
+              label: 'Quantity',
+              value: '${order.quantity}',
+              sensitiveType: SensitiveValueType.quantity,
+            ),
+            _Row(
+              label: 'Filled',
+              value: '${order.filledQuantity}',
+              sensitiveType: SensitiveValueType.quantity,
+            ),
+            _Row(
+              label: 'Pending',
+              value: '${order.pendingQuantity}',
+              sensitiveType: SensitiveValueType.quantity,
+            ),
             if (order.averagePrice != null)
               _Row(
                 label: 'Average Price',
                 value: OrderFormat.currency(order.averagePrice!),
+                sensitiveType: SensitiveValueType.currency,
               ),
             if (order.limitPrice != null)
               _Row(
                 label: 'Limit Price',
                 value: OrderFormat.currency(order.limitPrice!),
+                sensitiveType: SensitiveValueType.currency,
               ),
             if (order.triggerPrice != null)
               _Row(
                 label: 'Trigger Price',
                 value: OrderFormat.currency(order.triggerPrice!),
+                sensitiveType: SensitiveValueType.currency,
               ),
-            _Row(label: 'LTP', value: OrderFormat.currency(order.ltp)),
+            _Row(
+              label: 'LTP',
+              value: OrderFormat.currency(order.ltp),
+              sensitiveType: SensitiveValueType.currency,
+            ),
             if (order.orderValue != null)
               _Row(
                 label: 'Order Value',
                 value: OrderFormat.currency(order.orderValue!),
+                sensitiveType: SensitiveValueType.currency,
               ),
             const AppDivider(),
             _Row(label: 'Status', value: OrderFormat.status(order.status)),
@@ -144,6 +172,16 @@ class OrderDetailsBottomSheet extends StatelessWidget {
                 ),
               ),
             ],
+            if (order.status.isOpen && onCancel != null) ...[
+              const SizedBox(height: AppSpacing.xl),
+              OutlinedButton(
+                onPressed: () {
+                  onCancel!();
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancel Order'),
+              ),
+            ],
           ],
         ),
       ),
@@ -152,9 +190,10 @@ class OrderDetailsBottomSheet extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
-  const _Row({required this.label, required this.value});
+  const _Row({required this.label, required this.value, this.sensitiveType});
   final String label;
   final String value;
+  final SensitiveValueType? sensitiveType;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -172,11 +211,18 @@ class _Row extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.lg),
         Flexible(
-          child: Text(
-            value,
-            textAlign: TextAlign.end,
-            style: context.appTextStyles.tableValue,
-          ),
+          child: sensitiveType == null
+              ? Text(
+                  value,
+                  textAlign: TextAlign.end,
+                  style: context.appTextStyles.tableValue,
+                )
+              : SensitiveValueText(
+                  value,
+                  type: sensitiveType!,
+                  textAlign: TextAlign.end,
+                  style: context.appTextStyles.tableValue,
+                ),
         ),
       ],
     ),

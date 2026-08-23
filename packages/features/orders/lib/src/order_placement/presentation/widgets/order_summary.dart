@@ -43,7 +43,16 @@ class OrderSummary extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text(row.$2, style: context.appTextStyles.tableValue),
+                  if (_sensitiveLabels.contains(row.$1))
+                    SensitiveValueText(
+                      row.$2,
+                      type: row.$1.contains('Price') || row.$1 == 'LTP'
+                          ? SensitiveValueType.currency
+                          : SensitiveValueType.quantity,
+                      style: context.appTextStyles.tableValue,
+                    )
+                  else
+                    Text(row.$2, style: context.appTextStyles.tableValue),
                 ],
               ),
             ),
@@ -59,8 +68,9 @@ class OrderSummary extends StatelessWidget {
                       : 'Order Value',
                 ),
               ),
-              Text(
+              SensitiveValueText(
                 _money(state.estimatedOrderValue),
+                type: SensitiveValueType.currency,
                 style: context.appTextStyles.orderValue,
               ),
             ],
@@ -79,3 +89,11 @@ class OrderSummary extends StatelessWidget {
     _ => _title(value),
   };
 }
+
+const _sensitiveLabels = <String>{
+  'Lots',
+  'Quantity',
+  'Limit Price',
+  'Trigger Price',
+  'LTP',
+};

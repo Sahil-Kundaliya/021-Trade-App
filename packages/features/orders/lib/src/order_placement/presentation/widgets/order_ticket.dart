@@ -208,7 +208,10 @@ class _MarketPrice extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Price · Market Price', style: context.textTheme.labelLarge),
-        Text('Current LTP ₹${ltp.toStringAsFixed(2)}'),
+        SensitiveValueText(
+          'Current LTP ₹${ltp.toStringAsFixed(2)}',
+          maskedValue: 'Current LTP ${PrivacyMask.currency}',
+        ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Market orders execute at the best available price. Actual execution may vary from the displayed LTP.',

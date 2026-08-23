@@ -11,10 +11,18 @@ final class AppPreferencesRepository {
 
   final AppPreferencesLocalApi _localApi;
   Future<void> _pendingWrite = Future.value();
+  final StreamController<AppPreferences> _changes =
+      StreamController<AppPreferences>.broadcast(sync: true);
+  AppPreferences? _current;
+
+  Stream<AppPreferences> get changes => _changes.stream;
+  AppPreferences? get current => _current;
 
   Future<AppPreferences> getPreferences() async {
     await _pendingWrite;
-    return await _localApi.read() ?? const AppPreferences();
+    final preferences = await _localApi.read() ?? const AppPreferences();
+    _current = preferences;
+    return preferences;
   }
 
   Future<AppPreferences> update(
@@ -26,6 +34,8 @@ final class AppPreferencesRepository {
         final current = await _localApi.read() ?? const AppPreferences();
         final updated = change(current);
         await _localApi.write(updated);
+        _current = updated;
+        _changes.add(updated);
         completer.complete(updated);
       } catch (error, stackTrace) {
         completer.completeError(error, stackTrace);

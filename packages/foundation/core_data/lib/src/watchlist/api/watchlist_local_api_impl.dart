@@ -16,6 +16,7 @@ final class WatchlistLocalApiImpl implements WatchlistLocalApi {
   static const _requestDelay = Duration(milliseconds: 800);
   static const _defaultWatchlistId = 'watchlist_default';
   static const _maximumUserWatchlists = 4;
+  static const _maximumNameLength = 30;
 
   final KeyValueStorage _storage;
   final StreamController<void> _watchlistChanges =
@@ -39,6 +40,7 @@ final class WatchlistLocalApiImpl implements WatchlistLocalApi {
         throw const FormatException('Invalid watchlist document.');
       }
       final defaultFundIds = _parseFundIds(decoded['defaultFundIds']);
+      final defaultName = _parseDefaultName(decoded['defaultName']);
       final userWatchlists = (decoded['watchlists'] as List)
           .map((value) {
             if (value is! Map<String, dynamic>) {
@@ -49,8 +51,9 @@ final class WatchlistLocalApiImpl implements WatchlistLocalApi {
           .where((watchlist) => watchlist.id != _defaultWatchlistId)
           .toList(growable: false);
       _validateUserWatchlists(userWatchlists);
+      _validateUniqueNames(defaultName, userWatchlists);
       return List<WatchlistDto>.unmodifiable(<WatchlistDto>[
-        _buildDefaultWatchlist(defaultFundIds),
+        _buildDefaultWatchlist(defaultFundIds, name: defaultName),
         ...userWatchlists,
       ]);
     } on WatchlistDataException {
@@ -78,7 +81,10 @@ final class WatchlistLocalApiImpl implements WatchlistLocalApi {
           .toList(growable: false);
       _validateFundIds(defaultWatchlist.fundIds);
       _validateUserWatchlists(userWatchlists);
+      final defaultName = _validateName(defaultWatchlist.name);
+      _validateUniqueNames(defaultName, userWatchlists);
       await _persist(
+        defaultName: defaultName,
         defaultFundIds: defaultWatchlist.fundIds,
         userWatchlists: userWatchlists,
       );
@@ -91,11 +97,13 @@ final class WatchlistLocalApiImpl implements WatchlistLocalApi {
   }
 
   Future<void> _persist({
+    required String defaultName,
     required List<String> defaultFundIds,
     required List<WatchlistDto> userWatchlists,
   }) => _storage.setString(
     _storageKey,
     jsonEncode(<String, dynamic>{
+      'defaultName': defaultName,
       'defaultFundIds': defaultFundIds,
       'watchlists': userWatchlists.map((item) => item.toJson()).toList(),
     }),
@@ -110,7 +118,7 @@ final class WatchlistLocalApiImpl implements WatchlistLocalApi {
     final ids = <String>{};
     final names = <String>{};
     for (final watchlist in watchlists) {
-      final normalizedName = watchlist.name.trim().toLowerCase();
+      final normalizedName = _validateName(watchlist.name).toLowerCase();
       if (watchlist.id == _defaultWatchlistId ||
           watchlist.id.trim().isEmpty ||
           normalizedName.isEmpty) {
@@ -124,6 +132,36 @@ final class WatchlistLocalApiImpl implements WatchlistLocalApi {
         );
       }
       _validateFundIds(watchlist.fundIds);
+    }
+  }
+
+  static String _parseDefaultName(Object? value) {
+    if (value == null) return 'Default';
+    if (value is! String) {
+      throw const FormatException('Invalid Default watchlist name.');
+    }
+    return _validateName(value);
+  }
+
+  static String _validateName(String value) {
+    final name = value.trim();
+    if (name.isEmpty || name.length > _maximumNameLength) {
+      throw const WatchlistDataException(
+        'Watchlist names must contain between 1 and 30 characters.',
+      );
+    }
+    return name;
+  }
+
+  static void _validateUniqueNames(
+    String defaultName,
+    List<WatchlistDto> userWatchlists,
+  ) {
+    final names = <String>{defaultName.toLowerCase()};
+    for (final watchlist in userWatchlists) {
+      if (!names.add(watchlist.name.trim().toLowerCase())) {
+        throw const WatchlistDataException('Watchlist names must be unique.');
+      }
     }
   }
 
@@ -147,11 +185,14 @@ final class WatchlistLocalApiImpl implements WatchlistLocalApi {
     }
   }
 
-  static WatchlistDto _buildDefaultWatchlist(List<String> fundIds) {
+  static WatchlistDto _buildDefaultWatchlist(
+    List<String> fundIds, {
+    String name = 'Default',
+  }) {
     final now = DateTime.now();
     return WatchlistDto(
       id: _defaultWatchlistId,
-      name: 'Default',
+      name: name,
       fundIds: fundIds,
       createdAt: now,
       updatedAt: now,

@@ -8,6 +8,8 @@ import '../../../watchlist/presentation/bloc/watchlist_event.dart';
 import '../../../watchlist/presentation/bloc/watchlist_state.dart';
 import '../../../watchlist/presentation/widgets/watchlist_header.dart';
 import '../../../watchlist/presentation/widgets/watchlist_section.dart';
+import '../../../watchlist/presentation/widgets/create_watchlist_sheet.dart';
+import '../../../watchlist/presentation/widgets/watchlist_management_sheet.dart';
 import 'watchlist_market_indices.dart';
 
 class WatchlistContent extends StatelessWidget {
@@ -17,51 +19,72 @@ class WatchlistContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const WatchlistHeader(),
-              const SizedBox(height: AppSpacing.lg),
-              const WatchlistMarketIndices(),
-              const SizedBox(height: AppSpacing.lg),
-              BlocConsumer<WatchlistBloc, WatchlistState>(
-                listenWhen: (previous, current) =>
-                    current.message != null &&
-                    current.message != previous.message,
-                listener: (context, state) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(state.message!)));
-                },
-                builder: (context, state) => switch (state.status) {
-                  WatchlistStatus.initial ||
-                  WatchlistStatus.loading => const _WatchlistLoading(),
-                  WatchlistStatus.error => _WatchlistError(
-                    onRetry: () => context.read<WatchlistBloc>().add(
-                      const WatchlistRetryRequested(),
-                    ),
+    return BlocListener<WatchlistBloc, WatchlistState>(
+      listenWhen: (previous, current) =>
+          current.message != null && current.message != previous.message,
+      listener: (context, state) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(state.message!)));
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const WatchlistHeader(),
+                const SizedBox(height: AppSpacing.lg),
+                const WatchlistMarketIndices(),
+                const SizedBox(height: AppSpacing.lg),
+                Expanded(
+                  child: BlocBuilder<WatchlistBloc, WatchlistState>(
+                    builder: (context, state) => switch (state.status) {
+                      WatchlistStatus.initial ||
+                      WatchlistStatus.loading => const _WatchlistLoading(),
+                      WatchlistStatus.error => _WatchlistError(
+                        onRetry: () => context.read<WatchlistBloc>().add(
+                          const WatchlistRetryRequested(),
+                        ),
+                      ),
+                      WatchlistStatus.empty => const WatchlistSection(
+                        watchlists: [],
+                        selectedWatchlistId: null,
+                        funds: [],
+                      ),
+                      WatchlistStatus.loaded => WatchlistSection(
+                        watchlists: state.watchlists,
+                        selectedWatchlistId: state.selectedWatchlistId,
+                        funds: state.visibleFunds,
+                        onSelected: (watchlistId) => context
+                            .read<WatchlistBloc>()
+                            .add(WatchlistSelected(watchlistId: watchlistId)),
+                        onLongPressed: (watchlist) =>
+                            showWatchlistManagementSheet(
+                              context,
+                              bloc: context.read<WatchlistBloc>(),
+                              watchlist: watchlist,
+                            ),
+                        onAddPressed:
+                            state.watchlists.length <
+                                    WatchlistBloc.maximumWatchlists &&
+                                !state.isSaving
+                            ? () => showCreateWatchlistSheet(
+                                context,
+                                context.read<WatchlistBloc>(),
+                              )
+                            : null,
+                        onStockTap: (fund) => navigator?.openFund(
+                          fundId: fund.id,
+                          exchange: fund.tradeExchange,
+                        ),
+                      ),
+                    },
                   ),
-                  WatchlistStatus.empty => const WatchlistSection(
-                    watchlists: [],
-                    selectedWatchlistId: null,
-                    funds: [],
-                  ),
-                  WatchlistStatus.loaded => WatchlistSection(
-                    watchlists: state.watchlists,
-                    selectedWatchlistId: state.selectedWatchlistId,
-                    funds: state.visibleFunds,
-                    onSelected: (watchlistId) => context
-                        .read<WatchlistBloc>()
-                        .add(WatchlistSelected(watchlistId: watchlistId)),
-                    onStockTap: (fund) => navigator?.openFund(fundId: fund.id),
-                  ),
-                },
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -73,10 +96,8 @@ class _WatchlistLoading extends StatelessWidget {
   const _WatchlistLoading();
 
   @override
-  Widget build(BuildContext context) => const SizedBox(
-    height: 260,
-    child: Center(child: CircularProgressIndicator()),
-  );
+  Widget build(BuildContext context) =>
+      const Center(child: CircularProgressIndicator());
 }
 
 class _WatchlistError extends StatelessWidget {

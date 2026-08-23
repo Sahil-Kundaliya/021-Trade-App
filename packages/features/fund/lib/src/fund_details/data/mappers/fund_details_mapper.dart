@@ -7,7 +7,7 @@ abstract final class FundDetailsMapper {
     id: dto.id,
     symbol: dto.symbol,
     companyName: dto.companyName,
-    exchange: dto.exchange,
+    exchange: TradeExchange.parse(dto.exchange),
     category: dto.category,
     instrumentType: switch (dto.instrumentType) {
       'EQUITY' => FundInstrumentType.equity,
@@ -82,16 +82,6 @@ abstract final class FundDetailsMapper {
       eligibleValue: dto.collateralDetails.eligibleValue,
       postHaircutValue: dto.collateralDetails.postHaircutValue,
     ),
-    recentActivity: dto.recentActivity
-        .map(
-          (activity) => FundActivity(
-            id: activity.id,
-            type: activity.type,
-            title: activity.title,
-            description: activity.description,
-            timestamp: activity.timestamp,
-          ),
-        )
-        .toList(),
+    recentActivity: const [],
   );
 }

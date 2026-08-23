@@ -17,7 +17,8 @@ import kotlin.math.max
 class LightTradeStreamer(messenger: BinaryMessenger, private val random: Random = Random()) :
     MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
     private data class InstrumentState(
-        val instrumentId: String, val symbol: String, var currentLtpMinor: Long,
+        val marketKey: String, val fundId: String, val exchange: String,
+        val assetType: String, val symbol: String, var currentLtpMinor: Long,
         var previousLtpMinor: Long, val previousCloseMinor: Long, val tickSizeMinor: Long,
         var lastUpdatedAt: Long = 0L, var sequence: Long = 0L,
     )
@@ -56,7 +57,10 @@ class LightTradeStreamer(messenger: BinaryMessenger, private val random: Random 
         if (raw == null) { result.error("invalid_subscription", "Missing instruments.", null); return }
         val seeds = mutableListOf<InstrumentState>()
         for (seed in raw) {
-            val id = seed["instrumentId"] as? String
+            val id = (seed["marketKey"] ?: seed["instrumentId"]) as? String
+            val fundId = seed["fundId"] as? String ?: id
+            val exchange = seed["exchange"] as? String ?: "NSE"
+            val assetType = seed["assetType"] as? String ?: "equity"
             val symbol = seed["symbol"] as? String
             val ltp = (seed["ltpMinor"] as? Number)?.toLong()
             val close = (seed["previousCloseMinor"] as? Number)?.toLong()
@@ -65,12 +69,12 @@ class LightTradeStreamer(messenger: BinaryMessenger, private val random: Random 
                 close == null || close <= 0 || tick == null || tick <= 0) {
                 result.error("invalid_subscription", "Invalid instrument seed.", id); return
             }
-            seeds += InstrumentState(id, symbol, ltp, ltp, close, tick)
+            seeds += InstrumentState(id, fundId.orEmpty(), exchange, assetType, symbol, ltp, ltp, close, tick)
         }
         worker.execute {
             for (seed in seeds) {
-                sessionStates.putIfAbsent(seed.instrumentId, seed)
-                activeIds += seed.instrumentId
+                sessionStates.putIfAbsent(seed.marketKey, seed)
+                activeIds += seed.marketKey
             }
             ensureTicker(); replySuccess(result)
         }
@@ -106,7 +110,8 @@ class LightTradeStreamer(messenger: BinaryMessenger, private val random: Random 
             val state = sessionStates[id] ?: continue
             val previous = state.currentLtpMinor
             val roll = random.nextInt(100)
-            val requestedDelta = state.tickSizeMinor * (1 + random.nextInt(8))
+            val maxTicks = if (state.assetType == "index" || state.assetType == "marketIndex") 4 else 8
+            val requestedDelta = state.tickSizeMinor * (1 + random.nextInt(maxTicks))
             val delta = minOf(requestedDelta, max(state.tickSizeMinor, previous / 200L))
             val next = when { roll < 15 -> previous; roll < 58 -> previous + delta; else -> max(state.tickSizeMinor, previous - delta) }
             state.previousLtpMinor = previous; state.currentLtpMinor = next
@@ -114,7 +119,9 @@ class LightTradeStreamer(messenger: BinaryMessenger, private val random: Random 
             val change = next - state.previousCloseMinor
             val direction = when { next > previous -> "up"; next < previous -> "down"; else -> "flat" }
             updates += mapOf(
-                "instrumentId" to state.instrumentId, "symbol" to state.symbol,
+                "marketKey" to state.marketKey, "instrumentId" to state.marketKey,
+                "fundId" to state.fundId, "exchange" to state.exchange,
+                "assetType" to state.assetType, "symbol" to state.symbol,
                 "ltpMinor" to next, "previousLtpMinor" to previous,
                 "previousCloseMinor" to state.previousCloseMinor, "changeMinor" to change,
                 "changePercent" to change.toDouble() / state.previousCloseMinor * 100.0,

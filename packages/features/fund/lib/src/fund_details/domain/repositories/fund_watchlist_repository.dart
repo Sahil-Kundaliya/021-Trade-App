@@ -13,6 +13,10 @@ abstract interface class FundWatchlistRepository {
   });
 }
 
+abstract interface class FundWatchlistChangeSource {
+  Stream<void> get watchlistChanges;
+}
+
 class FundAlreadyInWatchlistException implements Exception {
   const FundAlreadyInWatchlistException(this.watchlistName);
   final String watchlistName;

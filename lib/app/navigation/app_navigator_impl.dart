@@ -23,8 +23,13 @@ final class AppNavigatorImpl implements AppNavigator {
   void goToProfile() => _openTab(const ProfileRoute());
 
   @override
-  Future<void> openOrders({required String fundId, TradeSide? side}) =>
-      _router.push<void>(OrdersRoute(fundId: fundId, side: side));
+  Future<void> openOrders({
+    required String fundId,
+    required TradeExchange exchange,
+    TradeSide? side,
+  }) => _router.push<void>(
+    OrdersRoute(fundId: fundId, exchange: exchange, side: side),
+  );
 
   @override
   Future<void> openOrderBook() => _router.push<void>(const OrderBookRoute());
@@ -34,7 +39,10 @@ final class AppNavigatorImpl implements AppNavigator {
       _router.push<void>(const LicenceRoute());
 
   @override
-  Future<void> openFund({required String fundId}) async {
+  Future<void> openFund({
+    required String fundId,
+    required TradeExchange exchange,
+  }) async {
     final context = _router.navigatorKey.currentContext;
     if (context == null) return;
 
@@ -46,7 +54,8 @@ final class AppNavigatorImpl implements AppNavigator {
       enableDrag: true,
       showDragHandle: false,
       backgroundColor: context.appColors.surface.withValues(alpha: 0),
-      builder: (_) => FundSheet(fundId: fundId, navigator: this),
+      builder: (_) =>
+          FundSheet(fundId: fundId, exchange: exchange, navigator: this),
     );
   }
 

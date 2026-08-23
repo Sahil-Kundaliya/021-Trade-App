@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import '../exceptions/trading_data_exception.dart';
 import '../models/fund_dto.dart';
 import '../models/holding_dto.dart';
+import '../models/market_index_dto.dart';
 import '../parsing/trading_dataset_parser.dart';
 import 'trading_local_api.dart';
 
@@ -28,6 +29,13 @@ final class TradingLocalApiImpl implements TradingLocalApi {
     await Future<void>.delayed(_requestDelay);
     final dataset = await _loadDataset();
     return List<HoldingDto>.unmodifiable(dataset.holdings);
+  }
+
+  @override
+  Future<List<MarketIndexDto>> getMarketIndices() async {
+    await Future<void>.delayed(_requestDelay);
+    final dataset = await _loadDataset();
+    return List<MarketIndexDto>.unmodifiable(dataset.indices);
   }
 
   Future<TradingDataset> _loadDataset() {

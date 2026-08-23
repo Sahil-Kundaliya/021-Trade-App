@@ -61,16 +61,19 @@ class WatchlistStockTile extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
+                  SensitiveValueText(
                     _formatRupees(stock.ltp),
+                    type: SensitiveValueType.currency,
                     style: context.appTextStyles.priceSmall.copyWith(
                       color: context.appColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  Text(
+                  SensitiveValueText(
                     '${_formatSigned(stock.change)}  '
                     '${_formatSigned(stock.changePercent)}%',
+                    maskedValue:
+                        '${PrivacyMask.currency}  ${PrivacyMask.percentage}',
                     style: context.appTextStyles.percentageSmall.copyWith(
                       color: movementColor,
                     ),
