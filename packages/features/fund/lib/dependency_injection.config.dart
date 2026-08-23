@@ -40,6 +40,7 @@ _i174.GetIt configureFundDependencies(
     () => _i1055.FundDetailsBloc(
       gh<_i987.FundRepository>(),
       gh<_i87.FundWatchlistRepository>(),
+      gh<_i607.LivePriceStreamManager>(),
     ),
   );
   return getIt;

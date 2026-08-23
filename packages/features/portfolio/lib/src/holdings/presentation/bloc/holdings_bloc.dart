@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:core_data/core_data.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
@@ -10,13 +13,25 @@ import 'holdings_state.dart';
 
 @injectable
 class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
-  HoldingsBloc(this._repository) : super(const HoldingsState()) {
+  HoldingsBloc(this._repository, this._livePrices)
+    : super(const HoldingsState()) {
     on<HoldingsStarted>(_load);
     on<HoldingsRetryRequested>(_load);
     on<HoldingsSortChanged>(_changeSort);
+    on<HoldingsLivePricesReceived>(_applyLivePrices);
   }
 
   final HoldingsRepository _repository;
+  final LivePriceStreamManager _livePrices;
+  LivePriceLease? _lease;
+  StreamSubscription<LivePriceBatch>? _liveSubscription;
+
+  @override
+  Future<void> close() async {
+    await _liveSubscription?.cancel();
+    await _lease?.dispose();
+    return super.close();
+  }
 
   Future<void> _load(HoldingsEvent event, Emitter<HoldingsState> emit) async {
     emit(state.copyWith(status: HoldingsStatus.loading, clearError: true));
@@ -50,6 +65,7 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
           summary: summary,
         ),
       );
+      _watch(holdings);
     } on Object catch (error) {
       emit(
         state.copyWith(
@@ -87,5 +103,58 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
       ),
     });
     return List<Holding>.unmodifiable(holdings);
+  }
+
+  void _watch(List<Holding> holdings) {
+    final seeds = holdings.map(
+      (holding) => LiveInstrumentSeed.fromPrices(
+        instrumentId: holding.fundId,
+        symbol: holding.symbol,
+        ltp: holding.ltp,
+        previousClose: holding.previousClose,
+        tickSize: holding.tickSize,
+      ),
+    );
+    final acquired = _livePrices.acquire(instruments: seeds);
+    _lease = acquired;
+    _liveSubscription = acquired.stream.listen(
+      (batch) => add(HoldingsLivePricesReceived(batch)),
+    );
+  }
+
+  void _applyLivePrices(
+    HoldingsLivePricesReceived event,
+    Emitter<HoldingsState> emit,
+  ) {
+    if (state.status != HoldingsStatus.loaded) return;
+    final ticks = {
+      for (final tick in event.batch.updates) tick.instrumentId: tick,
+    };
+    final holdings = state.holdings
+        .map((holding) {
+          final tick = ticks[holding.fundId];
+          return tick == null ? holding : holding.withLivePrice(tick);
+        })
+        .toList(growable: false);
+    final totalInvested = holdings.fold<double>(
+      0,
+      (sum, item) => sum + item.investedValue,
+    );
+    final currentValue = holdings.fold<double>(
+      0,
+      (sum, item) => sum + item.currentValue,
+    );
+    final pnl = currentValue - totalInvested;
+    emit(
+      state.copyWith(
+        holdings: _sorted(holdings, state.sort),
+        summary: PortfolioSummary(
+          totalInvested: totalInvested,
+          currentValue: currentValue,
+          totalPnl: pnl,
+          totalPnlPercent: totalInvested == 0 ? 0 : pnl / totalInvested * 100,
+        ),
+      ),
+    );
   }
 }

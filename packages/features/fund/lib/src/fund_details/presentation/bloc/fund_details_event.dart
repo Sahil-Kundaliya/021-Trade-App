@@ -1,3 +1,5 @@
+import 'package:core_data/core_data.dart';
+
 enum FundHistoryPeriod { oneMonth, threeMonths }
 
 sealed class FundDetailsEvent {
@@ -37,4 +39,9 @@ final class FundAddToWatchlistRequested extends FundDetailsEvent {
 
 final class FundRemoveFromWatchlistRequested extends FundDetailsEvent {
   const FundRemoveFromWatchlistRequested();
+}
+
+final class FundLivePricesReceived extends FundDetailsEvent {
+  const FundLivePricesReceived(this.batch);
+  final LivePriceBatch batch;
 }

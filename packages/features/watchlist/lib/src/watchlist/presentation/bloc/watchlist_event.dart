@@ -1,3 +1,5 @@
+import 'package:core_data/core_data.dart';
+
 sealed class WatchlistEvent {
   const WatchlistEvent();
 }
@@ -65,4 +67,9 @@ final class WatchlistFundsReorderRequested extends WatchlistEvent {
   final String watchlistId;
   final int oldIndex;
   final int newIndex;
+}
+
+final class WatchlistLivePricesReceived extends WatchlistEvent {
+  const WatchlistLivePricesReceived(this.batch);
+  final LivePriceBatch batch;
 }

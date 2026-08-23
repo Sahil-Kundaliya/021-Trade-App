@@ -33,7 +33,10 @@ _i174.GetIt configureOrdersDependencies(
     ),
   );
   gh.factory<_i41.OrderPlacementBloc>(
-    () => _i41.OrderPlacementBloc(gh<_i326.OrderPlacementRepository>()),
+    () => _i41.OrderPlacementBloc(
+      gh<_i326.OrderPlacementRepository>(),
+      gh<_i607.LivePriceStreamManager>(),
+    ),
   );
   return getIt;
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:core_data/core_data.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
@@ -11,7 +12,8 @@ import 'watchlist_state.dart';
 
 @injectable
 class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
-  WatchlistBloc(this._repository) : super(WatchlistState()) {
+  WatchlistBloc(this._repository, [this._livePrices])
+    : super(WatchlistState()) {
     on<WatchlistStarted>(_load);
     on<WatchlistRetryRequested>(_load);
     on<WatchlistDataChanged>(_refresh);
@@ -22,6 +24,7 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     on<WatchlistFundAddRequested>(_addFund);
     on<WatchlistFundRemoveRequested>(_removeFund);
     on<WatchlistFundsReorderRequested>(_reorderFunds);
+    on<WatchlistLivePricesReceived>(_applyLivePrices);
     _watchlistChangesSubscription = _repository.watchlistChanges.listen((_) {
       if (!isClosed && !state.isSaving) add(const WatchlistDataChanged());
     });
@@ -31,11 +34,16 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
   static const defaultWatchlistId = 'watchlist_default';
 
   final WatchlistRepository _repository;
+  final LivePriceStreamManager? _livePrices;
   late final StreamSubscription<void> _watchlistChangesSubscription;
+  LivePriceLease? _lease;
+  StreamSubscription<LivePriceBatch>? _liveSubscription;
 
   @override
   Future<void> close() async {
     await _watchlistChangesSubscription.cancel();
+    await _liveSubscription?.cancel();
+    await _lease?.dispose();
     return super.close();
   }
 
@@ -62,6 +70,7 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
           visibleFunds: _resolve(watchlists, selected, funds),
         ),
       );
+      _watch(state.visibleFunds);
     } on Object catch (error) {
       emit(
         state.copyWith(
@@ -92,6 +101,7 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
           clearError: true,
         ),
       );
+      _watch(state.visibleFunds);
     } on Object catch (error) {
       emit(
         state.copyWith(
@@ -118,6 +128,7 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
         clearMessage: true,
       ),
     );
+    _watch(state.visibleFunds);
   }
 
   Future<void> _create(
@@ -321,6 +332,7 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
           visibleFunds: _resolve(next, selected, previous.allFunds),
         ),
       );
+      _watch(state.visibleFunds);
     } on Object catch (error) {
       emit(
         previous.copyWith(
@@ -351,5 +363,50 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     return List<WatchlistFund>.unmodifiable(
       selected.fundIds.map((id) => byId[id]).whereType<WatchlistFund>(),
     );
+  }
+
+  void _watch(List<WatchlistFund> funds) {
+    final manager = _livePrices;
+    if (manager == null) return;
+    final seeds = funds.map(
+      (fund) => LiveInstrumentSeed.fromPrices(
+        instrumentId: fund.id,
+        symbol: fund.symbol,
+        ltp: fund.ltp,
+        previousClose: fund.previousClose,
+        tickSize: fund.tickSize,
+      ),
+    );
+    final lease = _lease;
+    if (lease == null) {
+      final acquired = manager.acquire(instruments: seeds);
+      _lease = acquired;
+      _liveSubscription = acquired.stream.listen(
+        (batch) => add(WatchlistLivePricesReceived(batch)),
+      );
+    } else {
+      unawaited(lease.update(seeds));
+    }
+  }
+
+  void _applyLivePrices(
+    WatchlistLivePricesReceived event,
+    Emitter<WatchlistState> emit,
+  ) {
+    if (state.status != WatchlistStatus.loaded) return;
+    final ticks = {
+      for (final tick in event.batch.updates) tick.instrumentId: tick,
+    };
+    WatchlistFund updated(WatchlistFund fund) {
+      final tick = ticks[fund.id];
+      return tick == null ? fund : fund.withLivePrice(tick);
+    }
+
+    final all = state.allFunds.map(updated).toList(growable: false);
+    final byId = {for (final fund in all) fund.id: fund};
+    final visible = state.visibleFunds
+        .map((fund) => byId[fund.id]!)
+        .toList(growable: false);
+    emit(state.copyWith(allFunds: all, visibleFunds: visible));
   }
 }

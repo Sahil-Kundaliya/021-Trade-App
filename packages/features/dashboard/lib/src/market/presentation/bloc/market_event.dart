@@ -1,3 +1,5 @@
+import 'package:core_data/core_data.dart';
+
 import '../../domain/entities/market_category.dart';
 import '../../domain/entities/market_subcategory.dart';
 
@@ -23,4 +25,10 @@ final class MarketSubcategoryChanged extends MarketEvent {
 
 final class MarketRetryRequested extends MarketEvent {
   const MarketRetryRequested();
+}
+
+final class MarketLivePricesReceived extends MarketEvent {
+  const MarketLivePricesReceived(this.batch);
+
+  final LivePriceBatch batch;
 }

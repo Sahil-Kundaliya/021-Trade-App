@@ -30,7 +30,10 @@ _i174.GetIt configureDashboardDependencies(
     () => _i189.MarketRepositoryImpl(gh<_i607.TradingLocalApi>()),
   );
   gh.factory<_i338.MarketBloc>(
-    () => _i338.MarketBloc(gh<_i126.MarketRepository>()),
+    () => _i338.MarketBloc(
+      gh<_i126.MarketRepository>(),
+      gh<_i607.LivePriceStreamManager>(),
+    ),
   );
   return getIt;
 }

@@ -20,6 +20,8 @@ abstract final class FundMarketMapper {
     ltp: dto.ltp,
     change: dto.change,
     changePercent: dto.changePercent,
+    previousClose: dto.previousClose,
+    tickSize: dto.tickSize,
     volume: dto.volume,
     tags: List<String>.unmodifiable(dto.tags),
     expiryDate: dto.expiryDate,

@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:core_data/core_data.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:navigation_contract/navigation_contract.dart';
 
 import '../../domain/enums/order_enums.dart';
+import '../../domain/entities/order_instrument.dart';
 import '../../domain/repositories/order_placement_repository.dart';
 import 'order_placement_event.dart';
 import 'order_placement_state.dart';
@@ -12,7 +15,8 @@ import 'order_placement_state.dart';
 @injectable
 class OrderPlacementBloc
     extends Bloc<OrderPlacementEvent, OrderPlacementState> {
-  OrderPlacementBloc(this._repository) : super(const OrderPlacementState()) {
+  OrderPlacementBloc(this._repository, [this._livePrices])
+    : super(const OrderPlacementState()) {
     on<OrderPlacementStarted>(_start);
     on<OrderSideChanged>(
       (event, emit) => _edit(emit, state.copyWith(side: event.side)),
@@ -65,9 +69,20 @@ class OrderPlacementBloc
     );
     on<OrderPlacementConfirmed>(_confirm);
     on<OrderPlacementRetryRequested>(_confirm);
+    on<OrderLivePricesReceived>(_onLivePrices);
   }
 
   final OrderPlacementRepository _repository;
+  final LivePriceStreamManager? _livePrices;
+  LivePriceLease? _lease;
+  StreamSubscription<LivePriceBatch>? _liveSubscription;
+
+  @override
+  Future<void> close() async {
+    await _liveSubscription?.cancel();
+    await _lease?.dispose();
+    return super.close();
+  }
 
   Future<void> _start(
     OrderPlacementStarted event,
@@ -93,6 +108,7 @@ class OrderPlacementBloc
           triggerPrice: instrument.ltp,
         ),
       );
+      _watch(instrument);
     } on Object {
       emit(
         OrderPlacementState(
@@ -262,6 +278,37 @@ class OrderPlacementBloc
       if ((units - units.round()).abs() > 0.000001) {
         errors[key] =
             '$label must follow the ${tick.toStringAsFixed(2)} tick size.';
+      }
+    }
+  }
+
+  void _watch(OrderInstrument instrument) {
+    final manager = _livePrices;
+    if (manager == null) return;
+    final seed = LiveInstrumentSeed.fromPrices(
+      instrumentId: instrument.id,
+      symbol: instrument.symbol,
+      ltp: instrument.ltp,
+      previousClose: instrument.previousClose,
+      tickSize: instrument.tickSize,
+    );
+    final acquired = manager.acquire(instruments: [seed]);
+    _lease = acquired;
+    _liveSubscription = acquired.stream.listen(
+      (batch) => add(OrderLivePricesReceived(batch)),
+    );
+  }
+
+  void _onLivePrices(
+    OrderLivePricesReceived event,
+    Emitter<OrderPlacementState> emit,
+  ) {
+    final instrument = state.instrument;
+    if (instrument == null) return;
+    for (final tick in event.batch.updates) {
+      if (tick.instrumentId == instrument.id) {
+        emit(state.copyWith(instrument: instrument.withLivePrice(tick)));
+        return;
       }
     }
   }

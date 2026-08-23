@@ -27,6 +27,7 @@ abstract final class OrderInstrumentMapper {
       changePercent: dto.changePercent,
       lotSize: dto.lotSize < 1 ? 1 : dto.lotSize,
       tickSize: dto.tickSize,
+      previousClose: dto.previousClose,
       allowedOrderTypes: TradeOrderType.values,
       allowedProducts: type == OrderInstrumentType.equity
           ? const [TradeProduct.delivery, TradeProduct.intraday]

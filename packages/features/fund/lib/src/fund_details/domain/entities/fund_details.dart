@@ -1,3 +1,5 @@
+import 'package:core_data/core_data.dart';
+
 enum FundInstrumentType { equity, future, option }
 
 class FundDetails {
@@ -13,6 +15,7 @@ class FundDetails {
     required this.previousClose,
     required this.change,
     required this.changePercent,
+    required this.tickSize,
     required this.open,
     required this.high,
     required this.low,
@@ -44,6 +47,7 @@ class FundDetails {
   final double previousClose;
   final double change;
   final double changePercent;
+  final double tickSize;
   final double open;
   final double high;
   final double low;
@@ -61,6 +65,38 @@ class FundDetails {
   final FundMarginDetails marginDetails;
   final FundCollateralDetails collateralDetails;
   final List<FundActivity> recentActivity;
+
+  FundDetails withLivePrice(LivePriceTick tick) => FundDetails(
+    id: id,
+    symbol: symbol,
+    companyName: companyName,
+    exchange: exchange,
+    category: category,
+    instrumentType: instrumentType,
+    currency: currency,
+    ltp: tick.ltp,
+    previousClose: previousClose,
+    change: tick.change,
+    changePercent: tick.changePercent,
+    tickSize: tickSize,
+    open: open,
+    high: high,
+    low: low,
+    volume: volume,
+    lotSize: lotSize,
+    expiryDate: expiryDate,
+    strikePrice: strikePrice,
+    optionType: optionType,
+    underlyingSymbol: underlyingSymbol,
+    openInterest: openInterest,
+    impliedVolatility: impliedVolatility,
+    tags: tags,
+    marketDepth: marketDepth,
+    priceHistory: priceHistory,
+    marginDetails: marginDetails,
+    collateralDetails: collateralDetails,
+    recentActivity: recentActivity,
+  );
 }
 
 class FundMarketDepth {

@@ -1,3 +1,5 @@
+import 'package:core_data/core_data.dart';
+
 class Holding {
   const Holding({
     required this.id,
@@ -17,6 +19,8 @@ class Holding {
     required this.pnl,
     required this.pnlPercent,
     required this.marginBlocked,
+    required this.previousClose,
+    required this.tickSize,
   });
 
   final String id;
@@ -36,4 +40,32 @@ class Holding {
   final double pnl;
   final double pnlPercent;
   final double marginBlocked;
+  final double previousClose;
+  final double tickSize;
+
+  Holding withLivePrice(LivePriceTick tick) {
+    final nextCurrentValue = quantity * tick.ltp;
+    final nextPnl = nextCurrentValue - investedValue;
+    return Holding(
+      id: id,
+      fundId: fundId,
+      symbol: symbol,
+      companyName: companyName,
+      category: category,
+      instrumentType: instrumentType,
+      exchange: exchange,
+      quantity: quantity,
+      lots: lots,
+      lotSize: lotSize,
+      averageCost: averageCost,
+      ltp: tick.ltp,
+      investedValue: investedValue,
+      currentValue: nextCurrentValue,
+      pnl: nextPnl,
+      pnlPercent: investedValue == 0 ? 0 : nextPnl / investedValue * 100,
+      marginBlocked: marginBlocked,
+      previousClose: previousClose,
+      tickSize: tickSize,
+    );
+  }
 }

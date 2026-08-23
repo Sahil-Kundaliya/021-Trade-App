@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:core_data/core_data.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
@@ -10,14 +13,25 @@ import 'market_state.dart';
 
 @injectable
 class MarketBloc extends Bloc<MarketEvent, MarketState> {
-  MarketBloc(this._repository) : super(const MarketState()) {
+  MarketBloc(this._repository, this._livePrices) : super(const MarketState()) {
     on<MarketStarted>(_load);
     on<MarketRetryRequested>(_load);
     on<MarketCategoryChanged>(_changeCategory);
     on<MarketSubcategoryChanged>(_changeSubcategory);
+    on<MarketLivePricesReceived>(_applyLivePrices);
   }
 
   final MarketRepository _repository;
+  final LivePriceStreamManager _livePrices;
+  LivePriceLease? _lease;
+  StreamSubscription<LivePriceBatch>? _liveSubscription;
+
+  @override
+  Future<void> close() async {
+    await _liveSubscription?.cancel();
+    await _lease?.dispose();
+    return super.close();
+  }
 
   Future<void> _load(MarketEvent event, Emitter<MarketState> emit) async {
     emit(state.copyWith(status: MarketStatus.loading, clearError: true));
@@ -40,6 +54,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
           ),
         ),
       );
+      _watch(state.visibleFunds);
     } on Object catch (error) {
       emit(
         state.copyWith(
@@ -63,6 +78,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
         visibleFunds: _filter(state.allFunds, event.category, subcategory),
       ),
     );
+    _watch(state.visibleFunds);
   }
 
   void _changeSubcategory(
@@ -82,6 +98,56 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
           state.selectedCategory,
           event.subcategory,
         ),
+      ),
+    );
+    _watch(state.visibleFunds);
+  }
+
+  void _watch(List<MarketInstrument> funds) {
+    final seeds = funds.map(
+      (fund) => LiveInstrumentSeed.fromPrices(
+        instrumentId: fund.id,
+        symbol: fund.symbol,
+        ltp: fund.ltp,
+        previousClose: fund.previousClose,
+        tickSize: fund.tickSize,
+      ),
+    );
+    final lease = _lease;
+    if (lease == null) {
+      final acquired = _livePrices.acquire(instruments: seeds);
+      _lease = acquired;
+      _liveSubscription = acquired.stream.listen(
+        (batch) => add(MarketLivePricesReceived(batch)),
+      );
+    } else {
+      unawaited(lease.update(seeds));
+    }
+  }
+
+  void _applyLivePrices(
+    MarketLivePricesReceived event,
+    Emitter<MarketState> emit,
+  ) {
+    if (state.status != MarketStatus.loaded) return;
+    final ticks = {
+      for (final tick in event.batch.updates) tick.instrumentId: tick,
+    };
+    final visible = state.visibleFunds
+        .map(
+          (fund) => ticks[fund.id] == null
+              ? fund
+              : fund.withLivePrice(ticks[fund.id]!),
+        )
+        .toList(growable: false);
+    final byId = {for (final fund in visible) fund.id: fund};
+    final all = state.allFunds
+        .map((fund) => byId[fund.id] ?? fund)
+        .toList(growable: false);
+    emit(
+      state.copyWith(
+        allFunds: List.unmodifiable(all),
+        visibleFunds: List.unmodifiable(visible),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:core_data/core_data.dart';
 import 'package:navigation_contract/navigation_contract.dart';
 
 import '../../domain/enums/order_enums.dart';
@@ -74,4 +75,9 @@ final class OrderPlacementConfirmed extends OrderPlacementEvent {
 
 final class OrderPlacementRetryRequested extends OrderPlacementEvent {
   const OrderPlacementRetryRequested();
+}
+
+final class OrderLivePricesReceived extends OrderPlacementEvent {
+  const OrderLivePricesReceived(this.batch);
+  final LivePriceBatch batch;
 }

@@ -1,4 +1,11 @@
 export 'src/cache/key_value_storage.dart';
+export 'src/live_price/exceptions/live_price_exception.dart';
+export 'src/live_price/models/live_instrument_seed.dart';
+export 'src/live_price/models/live_price_batch.dart';
+export 'src/live_price/models/live_price_tick.dart';
+export 'src/live_price/platform/live_price_platform_api.dart';
+export 'src/live_price/stream/live_price_lease.dart';
+export 'src/live_price/stream/live_price_stream_manager.dart';
 export 'src/orderbook/api/orderbook_local_api.dart';
 export 'src/orderbook/exceptions/orderbook_data_exception.dart';
 export 'src/orderbook/models/order_dto.dart';

@@ -30,7 +30,10 @@ _i174.GetIt configurePortfolioDependencies(
     () => _i530.HoldingsRepositoryImpl(gh<_i607.TradingLocalApi>()),
   );
   gh.factory<_i485.HoldingsBloc>(
-    () => _i485.HoldingsBloc(gh<_i976.HoldingsRepository>()),
+    () => _i485.HoldingsBloc(
+      gh<_i976.HoldingsRepository>(),
+      gh<_i607.LivePriceStreamManager>(),
+    ),
   );
   return getIt;
 }

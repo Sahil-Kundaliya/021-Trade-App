@@ -29,6 +29,8 @@ abstract final class WatchlistMapper {
     ltp: dto.ltp,
     change: dto.change,
     changePercent: dto.changePercent,
+    previousClose: dto.previousClose,
+    tickSize: dto.tickSize,
     tags: dto.tags,
   );
 }

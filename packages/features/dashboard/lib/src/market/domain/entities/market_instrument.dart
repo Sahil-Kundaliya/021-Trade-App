@@ -1,3 +1,5 @@
+import 'package:core_data/core_data.dart';
+
 import 'market_category.dart';
 
 class MarketInstrument {
@@ -10,6 +12,8 @@ class MarketInstrument {
     required this.ltp,
     required this.change,
     required this.changePercent,
+    required this.previousClose,
+    required this.tickSize,
     required this.volume,
     required this.tags,
     required this.expiryDate,
@@ -26,10 +30,31 @@ class MarketInstrument {
   final double ltp;
   final double change;
   final double changePercent;
+  final double previousClose;
+  final double tickSize;
   final int volume;
   final List<String> tags;
   final DateTime? expiryDate;
   final double? strikePrice;
   final String? optionType;
   final String? underlyingSymbol;
+
+  MarketInstrument withLivePrice(LivePriceTick tick) => MarketInstrument(
+    id: id,
+    symbol: symbol,
+    companyName: companyName,
+    category: category,
+    exchange: exchange,
+    ltp: tick.ltp,
+    change: tick.change,
+    changePercent: tick.changePercent,
+    previousClose: previousClose,
+    tickSize: tickSize,
+    volume: volume,
+    tags: tags,
+    expiryDate: expiryDate,
+    strikePrice: strikePrice,
+    optionType: optionType,
+    underlyingSymbol: underlyingSymbol,
+  );
 }

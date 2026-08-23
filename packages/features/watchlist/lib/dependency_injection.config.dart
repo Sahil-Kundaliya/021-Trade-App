@@ -33,7 +33,10 @@ _i174.GetIt configureWatchlistDependencies(
     ),
   );
   gh.factory<_i426.WatchlistBloc>(
-    () => _i426.WatchlistBloc(gh<_i759.WatchlistRepository>()),
+    () => _i426.WatchlistBloc(
+      gh<_i759.WatchlistRepository>(),
+      gh<_i607.LivePriceStreamManager>(),
+    ),
   );
   return getIt;
 }

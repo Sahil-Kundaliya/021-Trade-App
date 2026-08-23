@@ -11,6 +11,12 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:core_data/src/cache/flutter_key_value_storage.dart' as _i572;
 import 'package:core_data/src/cache/key_value_storage.dart' as _i767;
+import 'package:core_data/src/live_price/platform/live_price_platform_api.dart'
+    as _i846;
+import 'package:core_data/src/live_price/platform/live_price_platform_api_impl.dart'
+    as _i578;
+import 'package:core_data/src/live_price/stream/live_price_stream_manager.dart'
+    as _i951;
 import 'package:core_data/src/orderbook/api/orderbook_local_api.dart' as _i871;
 import 'package:core_data/src/orderbook/api/orderbook_local_api_impl.dart'
     as _i196;
@@ -38,7 +44,13 @@ _i174.GetIt configureCoreDataDependencies(
   gh.lazySingleton<_i767.KeyValueStorage>(
     () => const _i572.FlutterKeyValueStorage(),
   );
+  gh.lazySingleton<_i846.LivePricePlatformApi>(
+    () => const _i578.LivePricePlatformApiImpl(),
+  );
   gh.lazySingleton<_i414.TradingLocalApi>(() => _i125.TradingLocalApiImpl());
+  gh.lazySingleton<_i951.LivePriceStreamManager>(
+    () => _i951.LivePriceStreamManager(gh<_i846.LivePricePlatformApi>()),
+  );
   gh.lazySingleton<_i871.OrderBookLocalApi>(
     () => _i196.OrderBookLocalApiImpl(gh<_i767.KeyValueStorage>()),
   );

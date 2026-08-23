@@ -22,6 +22,7 @@ abstract final class FundDetailsMapper {
     previousClose: dto.previousClose,
     change: dto.change,
     changePercent: dto.changePercent,
+    tickSize: dto.tickSize,
     open: dto.open,
     high: dto.high,
     low: dto.low,
