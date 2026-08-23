@@ -11,6 +11,8 @@ abstract interface class AppNavigator {
 
   Future<void> openOrders({String? fundId, TradeSide? side});
 
+  Future<void> openOrderBook();
+
   Future<void> openFund({required String fundId});
 
   Future<void> pop();

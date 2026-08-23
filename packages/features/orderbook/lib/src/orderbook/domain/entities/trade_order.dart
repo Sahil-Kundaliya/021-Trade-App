@@ -4,10 +4,15 @@ enum OrderStatus {
   open,
   pending,
   triggerPending,
-  executed,
   partiallyFilled,
+  executed,
   cancelled,
-  rejected,
+  rejected;
+
+  bool get isOpen => switch (this) {
+    open || pending || triggerPending || partiallyFilled => true,
+    executed || cancelled || rejected => false,
+  };
 }
 
 enum TradeOrderType { market, limit, stopLoss, stopLossMarket }
@@ -19,6 +24,7 @@ enum TradeExchange { nse, bse }
 class TradeOrder {
   const TradeOrder({
     required this.orderId,
+    required this.fundId,
     required this.symbol,
     required this.companyName,
     required this.exchange,
@@ -29,9 +35,11 @@ class TradeOrder {
     required this.status,
     required this.quantity,
     required this.filledQuantity,
+    required this.pendingQuantity,
     required this.ltp,
-    required this.orderTime,
     required this.validity,
+    required this.createdAt,
+    required this.updatedAt,
     this.exchangeOrderId,
     this.averagePrice,
     this.limitPrice,
@@ -42,6 +50,7 @@ class TradeOrder {
 
   final String orderId;
   final String? exchangeOrderId;
+  final String fundId;
   final String symbol;
   final String companyName;
   final TradeExchange exchange;
@@ -52,14 +61,14 @@ class TradeOrder {
   final OrderStatus status;
   final int quantity;
   final int filledQuantity;
+  final int pendingQuantity;
   final double ltp;
   final double? averagePrice;
   final double? limitPrice;
   final double? triggerPrice;
   final double? orderValue;
   final String validity;
-  final DateTime orderTime;
   final String? rejectionReason;
-
-  int get pendingQuantity => quantity - filledQuantity;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 }

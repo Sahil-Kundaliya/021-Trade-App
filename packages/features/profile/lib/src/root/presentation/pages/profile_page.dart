@@ -1,5 +1,6 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:navigation_contract/navigation_contract.dart';
 
 import '../../../account/data/mock_profile_data.dart';
 import '../../../account/presentation/widgets/logout_tile.dart';
@@ -10,7 +11,9 @@ import '../../../account/presentation/widgets/profile_toggle_tile.dart';
 import '../../../account/presentation/widgets/theme_setting_tile.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({this.navigator, super.key});
+
+  final AppNavigator? navigator;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -119,9 +122,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xxl),
-                  const ProfileSection(
+                  ProfileSection(
                     title: 'Trading & App',
                     children: [
+                      ProfileSettingTile(
+                        icon: Icons.receipt_long_outlined,
+                        title: 'Order Book',
+                        subtitle: 'Open and closed orders',
+                        onTap: widget.navigator?.openOrderBook,
+                      ),
                       ProfileSettingTile(
                         icon: Icons.tune_outlined,
                         title: 'Order Preferences',

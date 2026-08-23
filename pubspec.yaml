@@ -14,6 +14,8 @@ dependencies:
     path: packages/features/fund
   orders:
     path: packages/features/orders
+  orderbook:
+    path: packages/features/orderbook
   portfolio:
     path: packages/features/portfolio
   profile:

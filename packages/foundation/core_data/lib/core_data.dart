@@ -1,4 +1,7 @@
 export 'src/cache/key_value_storage.dart';
+export 'src/orderbook/api/orderbook_local_api.dart';
+export 'src/orderbook/exceptions/orderbook_data_exception.dart';
+export 'src/orderbook/models/order_dto.dart';
 export 'src/storage/flutter_secure_storage_impl.dart';
 export 'src/storage/secure_storage.dart';
 export 'src/trading/api/trading_local_api.dart';

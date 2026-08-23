@@ -1,6 +1,7 @@
 import 'package:fund/fund.dart';
 import 'package:flutter/material.dart';
 import 'package:orders/orders.dart';
+import 'package:orderbook/orderbook.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zero_two_one_trade_assignment/app/app.dart';
 
@@ -59,6 +60,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(OrdersPage), findsNothing);
 
+    app.navigator.openOrderBook();
+    await tester.pumpAndSettle();
+    expect(find.byType(OrderBookScreen), findsOneWidget);
+
+    await app.navigator.pop();
+    await tester.pumpAndSettle();
+    expect(find.byType(OrderBookScreen), findsNothing);
+
     app.navigator.openFund(fundId: 'RELIANCE_EQ');
     await tester.pumpAndSettle();
     expect(find.byType(FundSheet), findsOneWidget);
@@ -73,6 +82,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(FundSheet), findsNothing);
     expect(find.text('Dashboard'), findsExactly(2));
+  });
+
+  testWidgets('profile opens Order Book through the navigation contract', (
+    tester,
+  ) async {
+    final app = TradingApp();
+    await tester.pumpWidget(app);
+    await tester.pumpAndSettle();
+
+    app.navigator.goToProfile();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Order Book'));
+    await tester.tap(find.text('Order Book'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(OrderBookScreen), findsOneWidget);
+    expect(find.text('No open orders'), findsOneWidget);
   });
 
   testWidgets('all main feature entry points open the shared fund sheet', (

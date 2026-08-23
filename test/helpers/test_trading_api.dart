@@ -21,6 +21,20 @@ Future<void> installImmediateTradingApi() async {
     await getIt.unregister<WatchlistLocalApi>();
   }
   getIt.registerSingleton<WatchlistLocalApi>(_ImmediateWatchlistApi());
+  if (getIt.isRegistered<OrderBookLocalApi>()) {
+    await getIt.unregister<OrderBookLocalApi>();
+  }
+  getIt.registerSingleton<OrderBookLocalApi>(const _ImmediateOrderBookApi());
+}
+
+final class _ImmediateOrderBookApi implements OrderBookLocalApi {
+  const _ImmediateOrderBookApi();
+
+  @override
+  Future<List<OrderDto>> getOrders() async => const [];
+
+  @override
+  Future<void> saveOrders(List<OrderDto> orders) async {}
 }
 
 final class _ImmediateTradingApi implements TradingLocalApi {

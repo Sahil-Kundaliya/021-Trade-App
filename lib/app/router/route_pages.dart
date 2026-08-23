@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:dashboard/dashboard.dart';
 import 'package:orders/orders.dart';
+import 'package:orderbook/orderbook.dart';
 import 'package:portfolio/portfolio.dart';
 import 'package:profile/profile.dart';
 import 'package:watchlist/watchlist.dart';
@@ -39,7 +40,8 @@ class ProfileRoutePage extends StatelessWidget {
   const ProfileRoutePage({super.key});
 
   @override
-  Widget build(BuildContext context) => const ProfilePage();
+  Widget build(BuildContext context) =>
+      ProfilePage(navigator: AppNavigationScope.of(context));
 }
 
 @RoutePage(name: 'OrdersRoute')
@@ -48,4 +50,12 @@ class OrdersRoutePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const OrdersPage();
+}
+
+@RoutePage(name: 'OrderBookRoute')
+class OrderBookRoutePage extends StatelessWidget {
+  const OrderBookRoutePage({super.key});
+
+  @override
+  Widget build(BuildContext context) => const OrderBookScreen();
 }

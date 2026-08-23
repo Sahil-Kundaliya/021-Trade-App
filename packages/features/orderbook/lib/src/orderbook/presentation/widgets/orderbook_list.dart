@@ -3,40 +3,31 @@ import 'package:flutter/material.dart';
 
 import '../../domain/entities/trade_order.dart';
 import 'order_details_bottom_sheet.dart';
-import 'order_tile.dart';
-import 'orders_empty_state.dart';
+import 'orderbook_tile.dart';
 
-class OrdersList extends StatelessWidget {
-  const OrdersList({required this.orders, super.key});
-
+class OrderBookList extends StatelessWidget {
+  const OrderBookList({required this.orders, super.key});
   final List<TradeOrder> orders;
 
   @override
   Widget build(BuildContext context) {
-    if (orders.isEmpty) return const OrdersEmptyState();
-
     final groups = <DateTime, List<TradeOrder>>{};
     for (final order in orders) {
       final date = DateTime(
-        order.orderTime.year,
-        order.orderTime.month,
-        order.orderTime.day,
+        order.createdAt.year,
+        order.createdAt.month,
+        order.createdAt.day,
       );
-      groups.putIfAbsent(date, () => []).add(order);
+      groups.putIfAbsent(date, () => <TradeOrder>[]).add(order);
     }
     final dates = groups.keys.toList()..sort((a, b) => b.compareTo(a));
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (var dateIndex = 0; dateIndex < dates.length; dateIndex++) ...[
           if (dateIndex > 0) const SizedBox(height: AppSpacing.xxl),
           Text(
-            dateIndex == 0
-                ? 'TODAY'
-                : dateIndex == 1
-                ? 'YESTERDAY'
-                : _date(dates[dateIndex]),
+            _dateLabel(dates[dateIndex]),
             style: context.appTextStyles.tableHeader.copyWith(
               color: context.appColors.textSecondary,
             ),
@@ -47,7 +38,7 @@ class OrdersList extends StatelessWidget {
             index < groups[dates[dateIndex]]!.length;
             index++
           ) ...[
-            OrderTile(
+            OrderBookTile(
               order: groups[dates[dateIndex]]![index],
               onTap: () => OrderDetailsBottomSheet.show(
                 context,
@@ -63,7 +54,12 @@ class OrdersList extends StatelessWidget {
   }
 }
 
-String _date(DateTime value) {
+String _dateLabel(DateTime value) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final difference = today.difference(value).inDays;
+  if (difference == 0) return 'TODAY';
+  if (difference == 1) return 'YESTERDAY';
   const months = <String>[
     'Jan',
     'Feb',

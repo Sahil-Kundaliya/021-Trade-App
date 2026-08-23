@@ -50,6 +50,7 @@ void main() {
       'Two-Factor Authentication',
       'Change Password',
       'Active Sessions',
+      'Order Book',
       'Order Preferences',
       'Price Display Preferences',
       'App Information',

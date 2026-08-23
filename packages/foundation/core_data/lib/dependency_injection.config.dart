@@ -11,6 +11,9 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:core_data/src/cache/flutter_key_value_storage.dart' as _i572;
 import 'package:core_data/src/cache/key_value_storage.dart' as _i767;
+import 'package:core_data/src/orderbook/api/orderbook_local_api.dart' as _i871;
+import 'package:core_data/src/orderbook/api/orderbook_local_api_impl.dart'
+    as _i196;
 import 'package:core_data/src/trading/api/trading_local_api.dart' as _i414;
 import 'package:core_data/src/trading/api/trading_local_api_impl.dart' as _i125;
 import 'package:core_data/src/watchlist/api/watchlist_local_api.dart' as _i936;
@@ -30,6 +33,9 @@ _i174.GetIt configureCoreDataDependencies(
     () => const _i572.FlutterKeyValueStorage(),
   );
   gh.lazySingleton<_i414.TradingLocalApi>(() => _i125.TradingLocalApiImpl());
+  gh.lazySingleton<_i871.OrderBookLocalApi>(
+    () => _i196.OrderBookLocalApiImpl(gh<_i767.KeyValueStorage>()),
+  );
   gh.lazySingleton<_i936.WatchlistLocalApi>(
     () => _i668.WatchlistLocalApiImpl(gh<_i767.KeyValueStorage>()),
   );

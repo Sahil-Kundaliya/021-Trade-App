@@ -43,6 +43,22 @@ class MainShellRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [OrderBookRoutePage]
+class OrderBookRoute extends PageRouteInfo<void> {
+  const OrderBookRoute({List<PageRouteInfo>? children})
+    : super(OrderBookRoute.name, initialChildren: children);
+
+  static const String name = 'OrderBookRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const OrderBookRoutePage();
+    },
+  );
+}
+
+/// generated route for
 /// [OrdersRoutePage]
 class OrdersRoute extends PageRouteInfo<void> {
   const OrdersRoute({List<PageRouteInfo>? children})
