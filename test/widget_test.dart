@@ -64,6 +64,10 @@ void main() {
     expect(find.byType(FundSheet), findsOneWidget);
     expect(find.text('BUY'), findsOneWidget);
     expect(find.text('SELL'), findsOneWidget);
+    expect(
+      tester.widget<BottomSheet>(find.byType(BottomSheet)).showDragHandle,
+      isFalse,
+    );
 
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
@@ -82,7 +86,8 @@ void main() {
       await tester.tap(entryPoint);
       await tester.pumpAndSettle();
       expect(find.byType(FundSheet), findsOneWidget);
-      await tester.tap(find.byTooltip('Close fund details'));
+      expect(find.byTooltip('Close fund details'), findsNothing);
+      await tester.tapAt(const Offset(10, 10));
       await tester.pumpAndSettle();
       expect(find.byType(FundSheet), findsNothing);
     }
@@ -96,6 +101,40 @@ void main() {
     await tester.tap(find.text('Portfolio').last);
     await tester.pumpAndSettle();
     await openAndCloseFunds(find.text('RELIANCE'));
+  });
+
+  testWidgets('fund instrument details pin after the sheet fully expands', (
+    tester,
+  ) async {
+    final app = TradingApp();
+    await tester.pumpWidget(app);
+    await tester.pumpAndSettle();
+
+    app.navigator.openFund(fundId: 'RELIANCE_EQ');
+    await tester.pumpAndSettle();
+
+    final fundSheet = find.byType(FundSheet);
+    final scroller = find.descendant(
+      of: fundSheet,
+      matching: find.byType(CustomScrollView),
+    );
+    final stickyHeader = find.byKey(const Key('fund-instrument-sticky-header'));
+
+    await tester.drag(scroller, const Offset(0, -500));
+    await tester.pumpAndSettle();
+    await tester.drag(scroller, const Offset(0, -200));
+    await tester.pumpAndSettle();
+    final pinnedTop = tester.getTopLeft(stickyHeader).dy;
+    final scrollable = tester.state<ScrollableState>(
+      find.descendant(of: fundSheet, matching: find.byType(Scrollable)),
+    );
+    final firstOffset = scrollable.position.pixels;
+
+    await tester.drag(scroller, const Offset(0, -200));
+    await tester.pumpAndSettle();
+
+    expect(scrollable.position.pixels, greaterThan(firstOffset));
+    expect(tester.getTopLeft(stickyHeader).dy, closeTo(pinnedTop, 1));
   });
 
   testWidgets('fund buy and sell close the sheet before opening orders', (
@@ -167,7 +206,7 @@ void main() {
     expect(find.byTooltip('Remove from Watchlist'), findsOneWidget);
     expect(find.byIcon(Icons.bookmark), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Close fund details'));
+    await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
     app.navigator.openFund(fundId: 'AXISBANK_EQ');
     await tester.pumpAndSettle();

@@ -12,14 +12,12 @@ class FundContent extends StatelessWidget {
     required this.onBuy,
     required this.onSell,
     this.scrollController,
-    this.onClose,
     this.showDragHandle = false,
     super.key,
   });
   final VoidCallback onBuy;
   final VoidCallback onSell;
   final ScrollController? scrollController;
-  final VoidCallback? onClose;
   final bool showDragHandle;
 
   @override
@@ -31,54 +29,67 @@ class FundContent extends StatelessWidget {
         listener: (context, state) => ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(state.message!))),
-        builder: (context, state) => ListView(
+        builder: (context, state) => CustomScrollView(
           controller: scrollController,
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          children: [
-            if (showDragHandle) ...[
-              Center(
-                child: Container(
-                  width: AppSizes.buttonHeightSm,
-                  height: AppRadius.xs,
-                  decoration: BoxDecoration(
-                    color: context.appColors.border,
-                    borderRadius: AppRadius.pillBorderRadius,
-                  ),
-                ),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.lg,
+                0,
               ),
-              const SizedBox(height: AppSpacing.md),
-            ],
-            if (onClose != null)
-              Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  tooltip: 'Close fund details',
-                  onPressed: onClose,
-                  icon: const Icon(Icons.close),
-                ),
+              sliver: SliverList.list(
+                children: [
+                  if (showDragHandle) ...[
+                    Center(
+                      child: Container(
+                        width: AppSizes.buttonHeightSm,
+                        height: AppRadius.xs,
+                        decoration: BoxDecoration(
+                          color: context.appColors.border,
+                          borderRadius: AppRadius.pillBorderRadius,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
+                ],
               ),
+            ),
             switch (state.status) {
               FundDetailsStatus.initial ||
-              FundDetailsStatus.loading => const SizedBox(
-                height: 360,
-                child: Center(child: CircularProgressIndicator()),
+              FundDetailsStatus.loading => const SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 360,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
               ),
-              FundDetailsStatus.error => AppEmptyState(
-                title: 'Unable to load fund details',
-                description: state.errorMessage ?? 'Please try again.',
-                action: AppButton(
-                  label: 'Retry',
-                  onPressed: () => context.read<FundDetailsBloc>().add(
-                    const FundDetailsRetryRequested(),
+              FundDetailsStatus.error => SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                sliver: SliverToBoxAdapter(
+                  child: AppEmptyState(
+                    title: 'Unable to load fund details',
+                    description: state.errorMessage ?? 'Please try again.',
+                    action: AppButton(
+                      label: 'Retry',
+                      onPressed: () => context.read<FundDetailsBloc>().add(
+                        const FundDetailsRetryRequested(),
+                      ),
+                    ),
                   ),
                 ),
               ),
-              FundDetailsStatus.loaded => FundLoadedSections(
-                state: state,
-                onBuy: onBuy,
-                onSell: onSell,
+              FundDetailsStatus.loaded => SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                sliver: FundLoadedSections(
+                  state: state,
+                  onBuy: onBuy,
+                  onSell: onSell,
+                ),
               ),
             },
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
           ],
         ),
       );

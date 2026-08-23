@@ -23,36 +23,62 @@ class FundLoadedSections extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fund = state.fund!;
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 680),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _InstrumentHeader(fund: fund, state: state),
-            const SizedBox(height: AppSpacing.lg),
-            _TradeActions(onBuy: onBuy, onSell: onSell),
-            const SizedBox(height: AppSpacing.xxl),
-            _SectionCard(child: _MarketStats(fund: fund)),
-            const SizedBox(height: AppSpacing.xxl),
-            _SectionCard(child: _MarketDepth(depth: fund.marketDepth)),
-            const SizedBox(height: AppSpacing.xxl),
-            _SectionCard(child: _PriceHistory(state: state)),
-            const SizedBox(height: AppSpacing.xxl),
-            _SectionCard(child: _Margin(details: fund.marginDetails)),
-            const SizedBox(height: AppSpacing.xxl),
-            _SectionCard(child: _Collateral(details: fund.collateralDetails)),
-            const SizedBox(height: AppSpacing.xxl),
-            _SectionCard(
-              child: _RecentActivity(activities: fund.recentActivity),
+    return SliverMainAxisGroup(
+      slivers: [
+        PinnedHeaderSliver(
+          child: ColoredBox(
+            key: const Key('fund-instrument-sticky-header'),
+            color: context.appColors.surface,
+            child: _FundContentWidth(
+              child: _InstrumentHeader(fund: fund, state: state),
             ),
-            const SizedBox(height: AppSpacing.xxl),
-          ],
+          ),
         ),
-      ),
+        SliverToBoxAdapter(
+          child: _FundContentWidth(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: AppSpacing.lg),
+                _TradeActions(onBuy: onBuy, onSell: onSell),
+                const SizedBox(height: AppSpacing.xxl),
+                _SectionCard(child: _MarketStats(fund: fund)),
+                const SizedBox(height: AppSpacing.xxl),
+                _SectionCard(child: _MarketDepth(depth: fund.marketDepth)),
+                const SizedBox(height: AppSpacing.xxl),
+                _SectionCard(child: _PriceHistory(state: state)),
+                const SizedBox(height: AppSpacing.xxl),
+                _SectionCard(child: _Margin(details: fund.marginDetails)),
+                const SizedBox(height: AppSpacing.xxl),
+                _SectionCard(
+                  child: _Collateral(details: fund.collateralDetails),
+                ),
+                const SizedBox(height: AppSpacing.xxl),
+                _SectionCard(
+                  child: _RecentActivity(activities: fund.recentActivity),
+                ),
+                const SizedBox(height: AppSpacing.xxl),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
+}
+
+class _FundContentWidth extends StatelessWidget {
+  const _FundContentWidth({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.topCenter,
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 680),
+      child: child,
+    ),
+  );
 }
 
 class _InstrumentHeader extends StatelessWidget {

@@ -41,7 +41,6 @@ class FundSheet extends StatelessWidget {
               child: FundContent(
                 scrollController: scrollController,
                 showDragHandle: true,
-                onClose: navigator.pop,
                 onBuy: () => _openOrders(TradeSide.buy),
                 onSell: () => _openOrders(TradeSide.sell),
               ),

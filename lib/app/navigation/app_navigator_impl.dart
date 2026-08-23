@@ -37,6 +37,7 @@ final class AppNavigatorImpl implements AppNavigator {
       useSafeArea: true,
       isDismissible: true,
       enableDrag: true,
+      showDragHandle: false,
       backgroundColor: context.appColors.surface.withValues(alpha: 0),
       builder: (_) => FundSheet(fundId: fundId, navigator: this),
     );
