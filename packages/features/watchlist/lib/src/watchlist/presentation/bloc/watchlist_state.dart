@@ -1,5 +1,6 @@
 import '../../domain/entities/watchlist.dart';
 import '../../domain/entities/watchlist_fund.dart';
+import 'package:core_data/core_data.dart';
 
 enum WatchlistStatus { initial, loading, loaded, empty, error }
 
@@ -10,18 +11,21 @@ class WatchlistState {
     this.selectedWatchlistId,
     List<WatchlistFund> allFunds = const <WatchlistFund>[],
     List<WatchlistFund> visibleFunds = const <WatchlistFund>[],
+    Map<String, LivePriceTick> livePrices = const <String, LivePriceTick>{},
     this.isSaving = false,
     this.message,
     this.errorMessage,
   }) : watchlists = List<Watchlist>.unmodifiable(watchlists),
        allFunds = List<WatchlistFund>.unmodifiable(allFunds),
-       visibleFunds = List<WatchlistFund>.unmodifiable(visibleFunds);
+       visibleFunds = List<WatchlistFund>.unmodifiable(visibleFunds),
+       livePrices = Map<String, LivePriceTick>.unmodifiable(livePrices);
 
   final WatchlistStatus status;
   final List<Watchlist> watchlists;
   final String? selectedWatchlistId;
   final List<WatchlistFund> allFunds;
   final List<WatchlistFund> visibleFunds;
+  final Map<String, LivePriceTick> livePrices;
   final bool isSaving;
   final String? message;
   final String? errorMessage;
@@ -39,6 +43,7 @@ class WatchlistState {
     String? selectedWatchlistId,
     List<WatchlistFund>? allFunds,
     List<WatchlistFund>? visibleFunds,
+    Map<String, LivePriceTick>? livePrices,
     bool? isSaving,
     String? message,
     String? errorMessage,
@@ -50,6 +55,7 @@ class WatchlistState {
     selectedWatchlistId: selectedWatchlistId ?? this.selectedWatchlistId,
     allFunds: allFunds ?? this.allFunds,
     visibleFunds: visibleFunds ?? this.visibleFunds,
+    livePrices: livePrices ?? this.livePrices,
     isSaving: isSaving ?? this.isSaving,
     message: clearMessage ? null : message ?? this.message,
     errorMessage: clearError ? null : errorMessage ?? this.errorMessage,

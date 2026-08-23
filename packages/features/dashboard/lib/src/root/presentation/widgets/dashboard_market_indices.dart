@@ -45,7 +45,9 @@ class _DashboardMarketIndicesState extends State<DashboardMarketIndices> {
   void _onBatch(LivePriceBatch batch) {
     if (!mounted) return;
     for (final tick in batch.updates) {
-      _ticks[tick.instrumentId]?.value = tick;
+      final notifier = _ticks[tick.instrumentId];
+      if (notifier == null || notifier.value == tick) continue;
+      notifier.value = tick;
     }
   }
 
@@ -91,17 +93,10 @@ MarketIndexViewData _view(MarketIndexDto index, LivePriceTick? tick) {
       ? 0.0
       : change / index.previousClose * 100;
   return MarketIndexViewData(
+    id: index.id,
     name: index.symbol,
-    value: _number(value),
-    change: _signed(change),
-    changePercent: '${_signed(percent)}%',
-    isPositive: change >= 0,
+    ltp: value,
+    change: change,
+    changePercent: percent,
   );
 }
-
-String _signed(double value) =>
-    '${value >= 0 ? '+' : '-'}${_number(value.abs())}';
-
-String _number(double value) => value
-    .toStringAsFixed(2)
-    .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');

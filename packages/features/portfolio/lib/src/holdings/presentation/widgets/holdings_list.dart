@@ -27,6 +27,7 @@ class HoldingsList extends StatelessWidget {
           children: [
             for (var index = 0; index < holdings.length; index++) ...[
               HoldingTile(
+                key: ValueKey(holdings[index].marketKey),
                 holding: holdings[index],
                 onTap: onHoldingTap == null
                     ? null

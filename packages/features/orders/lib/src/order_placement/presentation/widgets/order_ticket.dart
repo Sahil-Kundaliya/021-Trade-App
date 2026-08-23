@@ -21,11 +21,11 @@ class OrderTicket extends StatelessWidget {
     final bloc = context.read<OrderPlacementBloc>();
     final instrument = state.instrument!;
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
         AppSpacing.lg,
         AppSpacing.lg,
-        AppSpacing.huge + MediaQuery.viewInsetsOf(context).bottom,
+        AppSpacing.huge,
       ),
       child: Center(
         child: ConstrainedBox(
@@ -114,7 +114,7 @@ class OrderTicket extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     if (state.orderType == TradeOrderType.market) ...[
-                      _MarketPrice(ltp: instrument.ltp),
+                      const _MarketPrice(),
                       const SizedBox(height: AppSpacing.md),
                     ],
                     if (state.showsTriggerPrice) ...[
@@ -208,32 +208,35 @@ class _TicketSection extends StatelessWidget {
 }
 
 class _MarketPrice extends StatelessWidget {
-  const _MarketPrice({required this.ltp});
-  final double ltp;
+  const _MarketPrice();
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(AppSpacing.md),
-    decoration: BoxDecoration(
-      color: context.appColors.infoContainer,
-      borderRadius: AppRadius.mdBorderRadius,
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Price · Market Price', style: context.textTheme.labelLarge),
-        SensitiveValueText(
-          'Current LTP ₹${ltp.toStringAsFixed(2)}',
-          maskedValue: 'Current LTP ${PrivacyMask.currency}',
+  Widget build(BuildContext context) =>
+      BlocSelector<OrderPlacementBloc, OrderPlacementState, double>(
+        selector: (state) => state.instrument?.ltp ?? 0,
+        builder: (context, ltp) => Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: context.appColors.infoContainer,
+            borderRadius: AppRadius.mdBorderRadius,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Price · Market Price', style: context.textTheme.labelLarge),
+              SensitiveValueText(
+                'Current LTP ${FinancialFormatter.price(ltp)}',
+                maskedValue: 'Current LTP ${PrivacyMask.currency}',
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Market orders execute at the best available price. Actual execution may vary from the displayed LTP.',
+                style: context.textTheme.bodySmall,
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          'Market orders execute at the best available price. Actual execution may vary from the displayed LTP.',
-          style: context.textTheme.bodySmall,
-        ),
-      ],
-    ),
-  );
+      );
 }
 
 class _AvailableQuantity extends StatelessWidget {

@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../domain/entities/fund_details.dart';
 import '../../../domain/entities/option_chain.dart';
+import '../../bloc/fund_details_bloc.dart';
+import '../../bloc/fund_details_state.dart';
 import '../../bloc/option_chain/option_chain_bloc.dart';
 import '../../bloc/option_chain/option_chain_state.dart';
 import '../fund_format.dart';
@@ -15,42 +17,45 @@ class FutureContractDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<OptionChainBloc, OptionChainState>(
-      buildWhen: (previous, current) =>
-          previous.underlyingLtpMinor != current.underlyingLtpMinor,
-      builder: (context, chain) {
-        final spot = chain.underlyingLtp;
-        final basis = spot == null ? null : fund.ltp - spot;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('CONTRACT DETAILS', style: context.appTextStyles.sectionTitle),
-            const SizedBox(height: AppSpacing.sm),
-            _kv(context, 'Underlying', fund.underlyingSymbol ?? '—'),
-            _kv(
-              context,
-              'Spot',
-              FundFormat.money(spot),
-              sensitive: true,
-            ),
-            _kv(context, 'Expiry', FundFormat.date(fund.expiryDate)),
-            _kv(context, 'Lot Size', FundFormat.integer(fund.lotSize)),
-            _kv(
-              context,
-              'Open Interest',
-              fund.openInterest == null
-                  ? '—'
-                  : FundFormat.integer(fund.openInterest),
-              sensitive: true,
-            ),
-            if (basis != null)
-              _kv(
-                context,
-                'Basis',
-                FundFormat.signedMoney(basis),
-                sensitive: true,
-              ),
-          ],
+    return BlocSelector<FundDetailsBloc, FundDetailsState, double>(
+      selector: (state) => state.liveTick?.ltp ?? fund.ltp,
+      builder: (context, liveLtp) {
+        return BlocBuilder<OptionChainBloc, OptionChainState>(
+          buildWhen: (previous, current) =>
+              previous.underlyingLtpMinor != current.underlyingLtpMinor,
+          builder: (context, chain) {
+            final spot = chain.underlyingLtp;
+            final basis = spot == null ? null : liveLtp - spot;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'CONTRACT DETAILS',
+                  style: context.appTextStyles.sectionTitle,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                _kv(context, 'Underlying', fund.underlyingSymbol ?? '—'),
+                _kv(context, 'Spot', FundFormat.money(spot), sensitive: true),
+                _kv(context, 'Expiry', FundFormat.date(fund.expiryDate)),
+                _kv(context, 'Lot Size', FundFormat.integer(fund.lotSize)),
+                _kv(
+                  context,
+                  'Open Interest',
+                  fund.openInterest == null
+                      ? '—'
+                      : FundFormat.integer(fund.openInterest),
+                  sensitive: true,
+                ),
+                if (basis != null)
+                  _kv(
+                    context,
+                    'Basis',
+                    FundFormat.signedMoney(basis),
+                    sensitive: true,
+                  ),
+              ],
+            );
+          },
         );
       },
     );
@@ -66,96 +71,101 @@ class OptionContractDetails extends StatelessWidget {
     final side = fund.optionType?.toUpperCase() == 'PE'
         ? OptionSide.put
         : OptionSide.call;
-    return BlocBuilder<OptionChainBloc, OptionChainState>(
-      buildWhen: (previous, current) =>
-          previous.underlyingLtpMinor != current.underlyingLtpMinor,
-      builder: (context, chain) {
-        final spotMinor = chain.underlyingLtpMinor;
-        final strikeMinor = fund.strikePrice == null
-            ? null
-            : (fund.strikePrice! * 100).round();
-        final intrinsicMinor = spotMinor == null || strikeMinor == null
-            ? null
-            : OptionChainAssembler.intrinsicMinor(
-                side: side,
-                strikeMinor: strikeMinor,
-                spotMinor: spotMinor,
-              );
-        final timeMinor = intrinsicMinor == null
-            ? null
-            : OptionChainAssembler.timeValueMinor(
-                optionLtpMinor: (fund.ltp * 100).round(),
-                intrinsicMinor: intrinsicMinor,
-              );
-        final moneyness = spotMinor == null || strikeMinor == null
-            ? null
-            : OptionChainAssembler.moneyness(
-                side: side,
-                strikeMinor: strikeMinor,
-                spotMinor: spotMinor,
-                atmMinor: chain.atmStrikeMinor,
-              );
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('OPTION DETAILS', style: context.appTextStyles.sectionTitle),
-            const SizedBox(height: AppSpacing.sm),
-            _kv(context, 'Underlying', fund.underlyingSymbol ?? '—'),
-            _kv(
-              context,
-              'Spot',
-              FundFormat.money(chain.underlyingLtp),
-              sensitive: true,
-            ),
-            _kv(context, 'Type', side == OptionSide.call ? 'CALL' : 'PUT'),
-            _kv(
-              context,
-              'Strike',
-              FundFormat.money(fund.strikePrice),
-              sensitive: true,
-            ),
-            _kv(context, 'Expiry', FundFormat.date(fund.expiryDate)),
-            _kv(context, 'Lot Size', FundFormat.integer(fund.lotSize)),
-            _kv(
-              context,
-              'Open Interest',
-              fund.openInterest == null
-                  ? '—'
-                  : FundFormat.integer(fund.openInterest),
-              sensitive: true,
-            ),
-            if (fund.impliedVolatility != null)
-              _kv(
-                context,
-                'IV',
-                '${fund.impliedVolatility!.toStringAsFixed(1)}%',
-                sensitive: true,
-              ),
-            if (moneyness != null)
-              _kv(
-                context,
-                'Moneyness',
-                switch (moneyness) {
-                  OptionMoneyness.itm => 'ITM',
-                  OptionMoneyness.atm => 'ATM',
-                  OptionMoneyness.otm => 'OTM',
-                },
-              ),
-            if (intrinsicMinor != null)
-              _kv(
-                context,
-                'Intrinsic',
-                FundFormat.money(intrinsicMinor / 100),
-                sensitive: true,
-              ),
-            if (timeMinor != null)
-              _kv(
-                context,
-                'Time Value',
-                FundFormat.money(timeMinor / 100),
-                sensitive: true,
-              ),
-          ],
+    return BlocSelector<FundDetailsBloc, FundDetailsState, double>(
+      selector: (state) => state.liveTick?.ltp ?? fund.ltp,
+      builder: (context, liveLtp) {
+        return BlocBuilder<OptionChainBloc, OptionChainState>(
+          buildWhen: (previous, current) =>
+              previous.underlyingLtpMinor != current.underlyingLtpMinor ||
+              previous.atmStrikeMinor != current.atmStrikeMinor,
+          builder: (context, chain) {
+            final spotMinor = chain.underlyingLtpMinor;
+            final strikeMinor = fund.strikePrice == null
+                ? null
+                : (fund.strikePrice! * 100).round();
+            final intrinsicMinor = spotMinor == null || strikeMinor == null
+                ? null
+                : OptionChainAssembler.intrinsicMinor(
+                    side: side,
+                    strikeMinor: strikeMinor,
+                    spotMinor: spotMinor,
+                  );
+            final timeMinor = intrinsicMinor == null
+                ? null
+                : OptionChainAssembler.timeValueMinor(
+                    optionLtpMinor: (liveLtp * 100).round(),
+                    intrinsicMinor: intrinsicMinor,
+                  );
+            final moneyness = spotMinor == null || strikeMinor == null
+                ? null
+                : OptionChainAssembler.moneyness(
+                    side: side,
+                    strikeMinor: strikeMinor,
+                    spotMinor: spotMinor,
+                    atmMinor: chain.atmStrikeMinor,
+                  );
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'OPTION DETAILS',
+                  style: context.appTextStyles.sectionTitle,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                _kv(context, 'Underlying', fund.underlyingSymbol ?? '—'),
+                _kv(
+                  context,
+                  'Spot',
+                  FundFormat.money(chain.underlyingLtp),
+                  sensitive: true,
+                ),
+                _kv(context, 'Type', side == OptionSide.call ? 'CALL' : 'PUT'),
+                _kv(
+                  context,
+                  'Strike',
+                  FundFormat.money(fund.strikePrice),
+                  sensitive: true,
+                ),
+                _kv(context, 'Expiry', FundFormat.date(fund.expiryDate)),
+                _kv(context, 'Lot Size', FundFormat.integer(fund.lotSize)),
+                _kv(
+                  context,
+                  'Open Interest',
+                  fund.openInterest == null
+                      ? '—'
+                      : FundFormat.integer(fund.openInterest),
+                  sensitive: true,
+                ),
+                if (fund.impliedVolatility != null)
+                  _kv(
+                    context,
+                    'Implied Volatility',
+                    '${fund.impliedVolatility!.toStringAsFixed(1)}%',
+                    sensitive: true,
+                  ),
+                if (moneyness != null)
+                  _kv(context, 'Moneyness', switch (moneyness) {
+                    OptionMoneyness.itm => 'ITM',
+                    OptionMoneyness.atm => 'ATM',
+                    OptionMoneyness.otm => 'OTM',
+                  }),
+                if (intrinsicMinor != null)
+                  _kv(
+                    context,
+                    'Intrinsic',
+                    FundFormat.money(intrinsicMinor / 100),
+                    sensitive: true,
+                  ),
+                if (timeMinor != null)
+                  _kv(
+                    context,
+                    'Time Value',
+                    FundFormat.money(timeMinor / 100),
+                    sensitive: true,
+                  ),
+              ],
+            );
+          },
         );
       },
     );
@@ -174,6 +184,12 @@ class EquityDerivativesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<OptionChainBloc, OptionChainState>(
+      buildWhen: (previous, current) =>
+          previous.status != current.status ||
+          previous.selectedExpiry != current.selectedExpiry ||
+          previous.nearestFuture != current.nearestFuture ||
+          previous.hasContracts != current.hasContracts ||
+          previous.atmStrikeMinor != current.atmStrikeMinor,
       builder: (context, state) {
         if (state.status == OptionChainStatus.idle) {
           return const SizedBox.shrink();
@@ -182,20 +198,14 @@ class EquityDerivativesSection extends StatelessWidget {
           return const OptionChainSkeleton();
         }
         if (!state.hasContracts) return const SizedBox.shrink();
-        return _CollapsedDerivatives(
-          state: state,
-          onOpenFund: onOpenFund,
-        );
+        return _CollapsedDerivatives(state: state, onOpenFund: onOpenFund);
       },
     );
   }
 }
 
 class _CollapsedDerivatives extends StatefulWidget {
-  const _CollapsedDerivatives({
-    required this.state,
-    required this.onOpenFund,
-  });
+  const _CollapsedDerivatives({required this.state, required this.onOpenFund});
   final OptionChainState state;
   final void Function(String fundId, TradeExchange exchange) onOpenFund;
 
@@ -216,11 +226,7 @@ class _CollapsedDerivativesState extends State<_CollapsedDerivatives> {
         const SizedBox(height: AppSpacing.sm),
         if (state.nearestFuture != null)
           _kv(context, 'Nearest Future', state.nearestFuture!.symbol),
-        _kv(
-          context,
-          'Nearest Expiry',
-          FundFormat.date(state.selectedExpiry),
-        ),
+        _kv(context, 'Nearest Expiry', FundFormat.date(state.selectedExpiry)),
         if (state.atmStrikeMinor != null)
           _kv(
             context,
@@ -298,11 +304,7 @@ class OptionChainSection extends StatelessWidget {
                         'Underlying ${state.underlyingSymbol}',
                         style: context.appTextStyles.bodySecondary,
                       ),
-                      SensitiveValueText(
-                        'Spot ${FundFormat.money(state.underlyingLtp)}',
-                        type: SensitiveValueType.currency,
-                        style: context.appTextStyles.financialCaption,
-                      ),
+                      const _OptionChainSpot(),
                     ],
                   ),
                 ),
@@ -346,11 +348,14 @@ class OptionChainTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<OptionChainBloc, OptionChainState>(
+      buildWhen: (previous, current) =>
+          !identical(previous.rows, current.rows) ||
+          previous.exchange != current.exchange,
       builder: (context, state) {
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 520),
+          child: SizedBox(
+            width: 640,
             child: Column(
               children: [
                 Row(
@@ -458,18 +463,26 @@ class _OptionChainRowView extends StatelessWidget {
     if (contract == null) {
       return Expanded(
         flex: flex,
-        child: Text('—', textAlign: align, style: context.appTextStyles.tableCell),
+        child: Text(
+          '—',
+          textAlign: align,
+          style: context.appTextStyles.tableCell,
+        ),
       );
     }
     return Expanded(
       flex: flex,
       child: InkWell(
         onTap: () => onOpenFund(contract.fundId, exchange),
-        child: SensitiveValueText(
-          FundFormat.money(contract.ltp),
-          type: SensitiveValueType.currency,
-          textAlign: align,
-          style: context.appTextStyles.tableCell,
+        child: BlocSelector<OptionChainBloc, OptionChainState, double>(
+          selector: (state) =>
+              state.livePrices[contract.marketKey]?.ltp ?? contract.ltp,
+          builder: (context, ltp) => SensitiveValueText(
+            FundFormat.money(ltp),
+            type: SensitiveValueType.currency,
+            textAlign: align,
+            style: context.appTextStyles.tableCell,
+          ),
         ),
       ),
     );
@@ -484,21 +497,45 @@ class _OptionChainRowView extends StatelessWidget {
     if (contract == null) {
       return Expanded(
         flex: flex,
-        child: Text('—', textAlign: align, style: context.appTextStyles.tableCell),
+        child: Text(
+          '—',
+          textAlign: align,
+          style: context.appTextStyles.tableCell,
+        ),
       );
     }
     return Expanded(
       flex: flex,
-      child: SensitiveValueText(
-        FundFormat.percent(contract.changePercent),
-        type: SensitiveValueType.percentage,
-        textAlign: align,
-        style: context.appTextStyles.tableCell.copyWith(
-          color: contract.changePercent >= 0
-              ? context.appColors.priceUp
-              : context.appColors.priceDown,
-        ),
-      ),
+      child:
+          BlocSelector<OptionChainBloc, OptionChainState, MarketQuoteViewData>(
+            selector: (state) {
+              final tick = state.livePrices[contract.marketKey];
+              if (tick != null) {
+                return MarketQuoteViewData(
+                  ltp: tick.ltp,
+                  change: tick.change,
+                  changePercent: tick.changePercent,
+                );
+              }
+              return MarketQuoteViewData(
+                ltp: contract.ltp,
+                change: contract.change,
+                changePercent: contract.changePercent,
+              );
+            },
+            builder: (context, quote) => FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: align == TextAlign.end
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
+              child: MarketPriceChange(
+                change: quote.change,
+                changePercent: quote.changePercent,
+                textAlign: align,
+                style: context.appTextStyles.tableCell,
+              ),
+            ),
+          ),
     );
   }
 
@@ -511,7 +548,11 @@ class _OptionChainRowView extends StatelessWidget {
     if (contract?.openInterest == null) {
       return Expanded(
         flex: flex,
-        child: Text('—', textAlign: align, style: context.appTextStyles.tableCell),
+        child: Text(
+          '—',
+          textAlign: align,
+          style: context.appTextStyles.tableCell,
+        ),
       );
     }
     return Expanded(
@@ -521,6 +562,22 @@ class _OptionChainRowView extends StatelessWidget {
         type: SensitiveValueType.quantity,
         textAlign: align,
         style: context.appTextStyles.tableCell,
+      ),
+    );
+  }
+}
+
+class _OptionChainSpot extends StatelessWidget {
+  const _OptionChainSpot();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<OptionChainBloc, OptionChainState, double?>(
+      selector: (state) => state.underlyingLtp,
+      builder: (context, spot) => SensitiveValueText(
+        'Spot ${FundFormat.money(spot)}',
+        type: SensitiveValueType.currency,
+        style: context.appTextStyles.financialCaption,
       ),
     );
   }
@@ -558,9 +615,7 @@ Widget _kv(
   padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
   child: Row(
     children: [
-      Expanded(
-        child: Text(label, style: context.appTextStyles.bodySecondary),
-      ),
+      Expanded(child: Text(label, style: context.appTextStyles.bodySecondary)),
       sensitive
           ? SensitiveValueText(
               value,

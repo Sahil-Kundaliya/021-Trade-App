@@ -27,12 +27,7 @@ final class FundChartRepositoryImpl implements FundChartRepository {
           symbol: resolved.symbol,
           instrumentType: resolved.instrumentType,
           intradayCandles: FundChartMapper.candles(resolved.intradayCandles),
-          oneMonthHistory: FundChartMapper.history(
-            resolved.oneMonthPriceHistory,
-          ),
-          threeMonthHistory: FundChartMapper.history(
-            resolved.threeMonthPriceHistory,
-          ),
+          dailyCandles: FundChartMapper.candles(resolved.dailyCandles),
           latestLtpMinor: (resolved.ltp * 100).round(),
           previousCloseMinor: (resolved.previousClose * 100).round(),
           tickSizeMinor: (resolved.tickSize * 100).round().clamp(1, 1 << 30),

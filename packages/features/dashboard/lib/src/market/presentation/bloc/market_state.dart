@@ -13,6 +13,7 @@ class MarketState {
     this.selectedSubcategory = MarketSubcategory.topGainers,
     this.selectedExchange = TradeExchange.nse,
     this.visibleFunds = const [],
+    this.livePrices = const {},
     this.errorMessage,
   });
 
@@ -22,6 +23,7 @@ class MarketState {
   final MarketSubcategory selectedSubcategory;
   final TradeExchange selectedExchange;
   final List<MarketInstrument> visibleFunds;
+  final Map<String, LivePriceTick> livePrices;
   final String? errorMessage;
 
   MarketState copyWith({
@@ -31,6 +33,7 @@ class MarketState {
     MarketSubcategory? selectedSubcategory,
     TradeExchange? selectedExchange,
     List<MarketInstrument>? visibleFunds,
+    Map<String, LivePriceTick>? livePrices,
     String? errorMessage,
     bool clearError = false,
   }) => MarketState(
@@ -40,6 +43,7 @@ class MarketState {
     selectedSubcategory: selectedSubcategory ?? this.selectedSubcategory,
     selectedExchange: selectedExchange ?? this.selectedExchange,
     visibleFunds: visibleFunds ?? this.visibleFunds,
+    livePrices: livePrices ?? this.livePrices,
     errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
   );
 }

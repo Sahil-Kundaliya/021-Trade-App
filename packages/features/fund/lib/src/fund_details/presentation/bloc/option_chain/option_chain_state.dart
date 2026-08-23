@@ -53,6 +53,7 @@ class OptionChainState {
     this.nearestFuture,
     this.liveUnavailable = false,
     this.errorMessage,
+    this.livePrices = const {},
   });
 
   final OptionChainStatus status;
@@ -68,6 +69,7 @@ class OptionChainState {
   final FutureOverview? nearestFuture;
   final bool liveUnavailable;
   final String? errorMessage;
+  final Map<String, LivePriceTick> livePrices;
 
   bool get hasContracts => rows.isNotEmpty;
   double? get underlyingLtp =>
@@ -88,6 +90,7 @@ class OptionChainState {
     bool? liveUnavailable,
     String? errorMessage,
     bool clearError = false,
+    Map<String, LivePriceTick>? livePrices,
   }) => OptionChainState(
     status: status ?? this.status,
     underlyingSymbol: underlyingSymbol ?? this.underlyingSymbol,
@@ -102,5 +105,6 @@ class OptionChainState {
     nearestFuture: nearestFuture ?? this.nearestFuture,
     liveUnavailable: liveUnavailable ?? this.liveUnavailable,
     errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
+    livePrices: livePrices ?? this.livePrices,
   );
 }

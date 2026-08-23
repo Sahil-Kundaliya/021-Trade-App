@@ -1,19 +1,30 @@
 import 'package:flutter/foundation.dart';
 
-/// Presentation-only data consumed by the shared market indices components.
 @immutable
 final class MarketIndexViewData {
   const MarketIndexViewData({
+    required this.id,
     required this.name,
-    required this.value,
+    required this.ltp,
     required this.change,
     required this.changePercent,
-    required this.isPositive,
   });
 
+  final String id;
   final String name;
-  final String value;
-  final String change;
-  final String changePercent;
-  final bool isPositive;
+  final double ltp;
+  final double change;
+  final double changePercent;
+
+  @override
+  bool operator ==(Object other) =>
+      other is MarketIndexViewData &&
+      other.id == id &&
+      other.name == name &&
+      other.ltp == ltp &&
+      other.change == change &&
+      other.changePercent == changePercent;
+
+  @override
+  int get hashCode => Object.hash(id, name, ltp, change, changePercent);
 }

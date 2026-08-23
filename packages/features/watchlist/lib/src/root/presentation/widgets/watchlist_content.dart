@@ -10,6 +10,7 @@ import '../../../watchlist/presentation/widgets/watchlist_header.dart';
 import '../../../watchlist/presentation/widgets/watchlist_section.dart';
 import '../../../watchlist/presentation/widgets/create_watchlist_sheet.dart';
 import '../../../watchlist/presentation/widgets/watchlist_management_sheet.dart';
+import '../../../watchlist/presentation/widgets/watchlist_settings_sheet.dart';
 import 'watchlist_market_indices.dart';
 import 'watchlist_skeleton.dart';
 
@@ -35,12 +36,26 @@ class WatchlistContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                WatchlistHeader(onSearch: navigator?.openSearch),
+                WatchlistHeader(
+                  onSearch: navigator?.openSearch,
+                  onSettings: () => showWatchlistSettingsSheet(
+                    context,
+                    context.read<WatchlistBloc>(),
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 const WatchlistMarketIndices(),
                 const SizedBox(height: AppSpacing.lg),
                 Expanded(
                   child: BlocBuilder<WatchlistBloc, WatchlistState>(
+                    buildWhen: (previous, current) =>
+                        previous.status != current.status ||
+                        previous.selectedWatchlistId !=
+                            current.selectedWatchlistId ||
+                        !identical(previous.watchlists, current.watchlists) ||
+                        !identical(previous.visibleFunds, current.visibleFunds) ||
+                        previous.isSaving != current.isSaving ||
+                        previous.errorMessage != current.errorMessage,
                     builder: (context, state) => switch (state.status) {
                       WatchlistStatus.initial ||
                       WatchlistStatus.loading => const WatchlistSkeleton(),

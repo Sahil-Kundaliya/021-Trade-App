@@ -29,7 +29,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Watchlist'), findsOneWidget);
-    expect(find.byIcon(Icons.settings_outlined), findsNothing);
+    expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
     expect(find.text('NIFTY 50'), findsOneWidget);
     expect(find.text('Default'), findsOneWidget);
     expect(find.text('Watchlist 2'), findsNothing);
@@ -38,7 +38,7 @@ void main() {
     expect(find.text('RELIANCE'), findsOneWidget);
     expect(find.text('TCS'), findsOneWidget);
     expect(find.text('\u20B91,316.00'), findsOneWidget);
-    expect(find.text('+2.80  +0.21%'), findsOneWidget);
+    expect(find.text('+2.80 (+0.21%)'), findsOneWidget);
     expect(find.text('Recommended'), findsWidgets);
     expect(find.text('Top Loser'), findsWidgets);
     expect(find.text('Equity'), findsNothing);
@@ -131,5 +131,28 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Banks'), findsNothing);
     expect(find.text('Default'), findsOneWidget);
+  });
+
+  testWidgets('settings lists Default pinned and reorderable user watchlists', (
+    tester,
+  ) async {
+    await pumpWatchlist(tester);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('watchlist-name-field')),
+      'Banking',
+    );
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+    expect(find.text('WATCHLIST SETTINGS'), findsOneWidget);
+    expect(find.text('Pinned'), findsOneWidget);
+    expect(find.byIcon(Icons.drag_handle), findsOneWidget);
+    expect(find.byIcon(Icons.push_pin_outlined), findsOneWidget);
   });
 }

@@ -66,6 +66,32 @@ class LivePriceTick {
   double get previousClose => previousCloseMinor / 100;
   double get change => changeMinor / 100;
 
+  static Map<String, LivePriceTick> merge(
+    Map<String, LivePriceTick> current,
+    Iterable<LivePriceTick> updates,
+  ) {
+    final next = Map<String, LivePriceTick>.of(current);
+    var changed = false;
+    for (final tick in updates) {
+      if (next[tick.instrumentId] == tick) continue;
+      next[tick.instrumentId] = tick;
+      changed = true;
+    }
+    return changed ? Map<String, LivePriceTick>.unmodifiable(next) : current;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is LivePriceTick &&
+      other.instrumentId == instrumentId &&
+      other.ltpMinor == ltpMinor &&
+      other.changeMinor == changeMinor &&
+      other.changePercent == changePercent;
+
+  @override
+  int get hashCode =>
+      Object.hash(instrumentId, ltpMinor, changeMinor, changePercent);
+
   LivePriceTick withInstrumentId(String value) => LivePriceTick(
     instrumentId: value,
     symbol: symbol,

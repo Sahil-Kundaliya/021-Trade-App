@@ -66,17 +66,17 @@ void main() {
 
     await tester.tap(find.text('Options'));
     await tester.pumpAndSettle();
-    expect(find.text('HDFCBANK 730 CE'), findsOneWidget);
+    expect(find.text('HDFCBANK 730.00 CE'), findsOneWidget);
     expect(find.text('Call Movers'), findsOneWidget);
     expect(find.text('Put Movers'), findsOneWidget);
 
     await tester.tap(find.text('Call Movers'));
     await tester.pumpAndSettle();
-    expect(find.text('HDFCBANK 730 CE'), findsOneWidget);
+    expect(find.text('HDFCBANK 730.00 CE'), findsOneWidget);
 
     await tester.tap(find.text('Put Movers'));
     await tester.pumpAndSettle();
-    expect(find.text('ITC 270 PE'), findsOneWidget);
+    expect(find.text('ITC 270.00 PE'), findsOneWidget);
   });
 
   testWidgets('renders with the dark core_ui theme', (tester) async {

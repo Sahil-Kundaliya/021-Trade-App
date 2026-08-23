@@ -1,7 +1,10 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/watchlist_fund.dart';
+import '../bloc/watchlist_bloc.dart';
+import '../bloc/watchlist_state.dart';
 
 class WatchlistStockTile extends StatelessWidget {
   const WatchlistStockTile({required this.stock, this.onTap, super.key});
@@ -11,10 +14,18 @@ class WatchlistStockTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final movementColor = stock.changePercent >= 0
-        ? context.appColors.positive
-        : context.appColors.negative;
+    return _TileBody(stock: stock, onTap: onTap);
+  }
+}
 
+class _TileBody extends StatelessWidget {
+  const _TileBody({required this.stock, this.onTap});
+
+  final WatchlistFund stock;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
     return Semantics(
       button: onTap != null,
       child: InkWell(
@@ -57,31 +68,35 @@ class WatchlistStockTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  SensitiveValueText(
-                    _formatRupees(stock.ltp),
-                    type: SensitiveValueType.currency,
-                    style: context.appTextStyles.priceSmall.copyWith(
-                      color: context.appColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  SensitiveValueText(
-                    '${_formatSigned(stock.change)}  '
-                    '${_formatSigned(stock.changePercent)}%',
-                    maskedValue:
-                        '${PrivacyMask.currency}  ${PrivacyMask.percentage}',
-                    style: context.appTextStyles.percentageSmall.copyWith(
-                      color: movementColor,
-                    ),
-                  ),
-                ],
-              ),
+              _WatchlistLiveQuote(stock: stock),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _WatchlistLiveQuote extends StatelessWidget {
+  const _WatchlistLiveQuote({required this.stock});
+
+  final WatchlistFund stock;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<WatchlistBloc, WatchlistState, MarketQuoteViewData>(
+      selector: (state) {
+        final tick = state.livePrices[stock.marketKey];
+        return MarketQuoteViewData(
+          ltp: tick?.ltp ?? stock.ltp,
+          change: tick?.change ?? stock.change,
+          changePercent: tick?.changePercent ?? stock.changePercent,
+        );
+      },
+      builder: (context, quote) => MarketQuote(
+        ltp: quote.ltp,
+        change: quote.change,
+        changePercent: quote.changePercent,
       ),
     );
   }
@@ -113,26 +128,4 @@ class _StockTag extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatRupees(double value) => '\u20B9${_formatNumber(value)}';
-
-String _formatSigned(double value) {
-  final sign = value >= 0 ? '+' : '-';
-  return '$sign${_formatNumber(value.abs())}';
-}
-
-String _formatNumber(double value) {
-  final parts = value.toStringAsFixed(2).split('.');
-  final whole = parts.first;
-
-  if (whole.length <= 3) return '$whole.${parts.last}';
-
-  final lastThree = whole.substring(whole.length - 3);
-  final leading = whole.substring(0, whole.length - 3);
-  final groupedLeading = leading.replaceAllMapped(
-    RegExp(r'\B(?=(\d{2})+(?!\d))'),
-    (_) => ',',
-  );
-  return '$groupedLeading,$lastThree.${parts.last}';
 }

@@ -37,18 +37,19 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     emit(state.copyWith(status: SearchStatus.loading, clearError: true));
     try {
       final loaded = await (_loadFuture ??= _repository.getFunds());
-      final funds = List<SearchableFund>.unmodifiable(
-        loaded.map((fund) {
-          final cached = _livePrices.latestFor(fund.marketKey);
-          return cached == null ? fund : fund.withLivePrice(cached);
-        }),
-      );
+      final livePrices = <String, LivePriceTick>{};
+      for (final fund in loaded) {
+        final cached = _livePrices.latestFor(fund.marketKey);
+        if (cached != null) livePrices[fund.marketKey] = cached;
+      }
+      final funds = List<SearchableFund>.unmodifiable(loaded);
       final visible = _filter(funds, state.query, state.selectedCategory);
       emit(
         state.copyWith(
           status: SearchStatus.loaded,
           allFunds: funds,
           visibleFunds: visible,
+          livePrices: Map<String, LivePriceTick>.unmodifiable(livePrices),
         ),
       );
       _watch(visible);
@@ -121,22 +122,9 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     Emitter<SearchState> emit,
   ) {
     if (state.status != SearchStatus.loaded) return;
-    final ticks = {
-      for (final tick in event.batch.updates) tick.instrumentId: tick,
-    };
-    final all = List<SearchableFund>.unmodifiable(
-      state.allFunds.map(
-        (fund) => ticks[fund.marketKey] == null
-            ? fund
-            : fund.withLivePrice(ticks[fund.marketKey]!),
-      ),
-    );
-    emit(
-      state.copyWith(
-        allFunds: all,
-        visibleFunds: _filter(all, state.query, state.selectedCategory),
-      ),
-    );
+    final next = LivePriceTick.merge(state.livePrices, event.batch.updates);
+    if (identical(next, state.livePrices)) return;
+    emit(state.copyWith(livePrices: next));
   }
 
   static List<SearchableFund> _filter(

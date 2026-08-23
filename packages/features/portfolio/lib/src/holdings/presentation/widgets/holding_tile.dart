@@ -1,11 +1,34 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/holding.dart';
+import '../bloc/holdings_bloc.dart';
+import '../bloc/holdings_state.dart';
 import '../formatters/portfolio_number_format.dart';
 
 class HoldingTile extends StatelessWidget {
   const HoldingTile({required this.holding, this.onTap, super.key});
+
+  final Holding holding;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<HoldingsBloc, HoldingsState, Holding>(
+      selector: (state) {
+        for (final item in state.holdings) {
+          if (item.marketKey == holding.marketKey) return item;
+        }
+        return holding;
+      },
+      builder: (context, live) => _HoldingBody(holding: live, onTap: onTap),
+    );
+  }
+}
+
+class _HoldingBody extends StatelessWidget {
+  const _HoldingBody({required this.holding, this.onTap});
 
   final Holding holding;
   final VoidCallback? onTap;
@@ -90,13 +113,7 @@ class _CompactHoldingLayout extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: _ValueMetric(
-                label: 'LTP',
-                value: PortfolioNumberFormat.currency(holding.ltp),
-                isSensitive: false,
-              ),
-            ),
+            Expanded(child: _LtpMetric(holding: holding)),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _ValueMetric(
@@ -136,14 +153,7 @@ class _WideHoldingLayout extends StatelessWidget {
             value: PortfolioNumberFormat.currency(holding.averageCost),
           ),
         ),
-        Expanded(
-          flex: 2,
-          child: _ValueMetric(
-            label: 'LTP',
-            value: PortfolioNumberFormat.currency(holding.ltp),
-            isSensitive: false,
-          ),
-        ),
+        Expanded(flex: 2, child: _LtpMetric(holding: holding)),
         Expanded(
           flex: 2,
           child: _ValueMetric(
@@ -271,20 +281,52 @@ class _InlineMetric extends StatelessWidget {
   }
 }
 
+class _LtpMetric extends StatelessWidget {
+  const _LtpMetric({required this.holding});
+
+  final Holding holding;
+
+  @override
+  Widget build(BuildContext context) {
+    final change = holding.ltp - holding.previousClose;
+    final changePercent = holding.previousClose == 0
+        ? 0.0
+        : change / holding.previousClose * 100;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'LTP',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: context.appTextStyles.tableHeader.copyWith(
+            color: context.appColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        MarketQuote(
+          ltp: holding.ltp,
+          change: change,
+          changePercent: changePercent,
+          alignment: CrossAxisAlignment.start,
+        ),
+      ],
+    );
+  }
+}
+
 class _ValueMetric extends StatelessWidget {
   const _ValueMetric({
     required this.label,
     required this.value,
     this.crossAxisAlignment = CrossAxisAlignment.start,
     this.textAlign = TextAlign.start,
-    this.isSensitive = true,
   });
 
   final String label;
   final String value;
   final CrossAxisAlignment crossAxisAlignment;
   final TextAlign textAlign;
-  final bool isSensitive;
 
   @override
   Widget build(BuildContext context) {
@@ -300,31 +342,19 @@ class _ValueMetric extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        if (isSensitive)
-          SensitiveValueText(
-            value,
-            type: label == 'Qty'
-                ? SensitiveValueType.quantity
-                : SensitiveValueType.currency,
-            maxLines: 1,
-            overflow: TextOverflow.fade,
-            softWrap: false,
-            textAlign: textAlign,
-            style: context.appTextStyles.tableValue.copyWith(
-              color: context.appColors.textPrimary,
-            ),
-          )
-        else
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.fade,
-            softWrap: false,
-            textAlign: textAlign,
-            style: context.appTextStyles.tableValue.copyWith(
-              color: context.appColors.textPrimary,
-            ),
+        SensitiveValueText(
+          value,
+          type: label == 'Qty'
+              ? SensitiveValueType.quantity
+              : SensitiveValueType.currency,
+          maxLines: 1,
+          overflow: TextOverflow.fade,
+          softWrap: false,
+          textAlign: textAlign,
+          style: context.appTextStyles.tableValue.copyWith(
+            color: context.appColors.textPrimary,
           ),
+        ),
       ],
     );
   }

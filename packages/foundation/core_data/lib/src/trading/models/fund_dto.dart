@@ -43,6 +43,7 @@ class FundDto {
     required this.recentActivity,
     this.listings = const [],
     this.intradayCandles = const [],
+    this.dailyCandles = const [],
   });
 
   factory FundDto.fromJson(Map<String, dynamic> json) {
@@ -125,18 +126,8 @@ class FundDto {
             ),
           )
           .toList(growable: false),
-      intradayCandles: JsonValueReader.optionalList(json, 'intradayCandles')
-          .asMap()
-          .entries
-          .map(
-            (entry) => PriceCandleDto.fromJson(
-              JsonValueReader.listObject(
-                entry.value,
-                'intradayCandles[${entry.key}]',
-              ),
-            ),
-          )
-          .toList(growable: false),
+      intradayCandles: PriceCandleDto.listFrom(json, 'intradayCandles'),
+      dailyCandles: PriceCandleDto.listFrom(json, 'dailyCandles'),
     );
   }
 
@@ -172,6 +163,7 @@ class FundDto {
   final List<FundActivityDto> recentActivity;
   final List<FundExchangeListingDto> listings;
   final List<PriceCandleDto> intradayCandles;
+  final List<PriceCandleDto> dailyCandles;
 
   List<TradeExchange> get availableExchanges => listings
       .map((listing) => listing.exchange)
@@ -206,6 +198,7 @@ class FundDto {
       tickSize: listing.tickSize,
       marketDepth: _depthFor(listing),
       intradayCandles: listing.intradayCandles,
+      dailyCandles: listing.dailyCandles,
     );
   }
 
@@ -248,6 +241,7 @@ class FundDto {
     List<FundExchangeListingDto>? listings,
     MarketDepthDto? marketDepth,
     List<PriceCandleDto>? intradayCandles,
+    List<PriceCandleDto>? dailyCandles,
   }) => FundDto(
     id: id,
     symbol: symbol,
@@ -281,5 +275,6 @@ class FundDto {
     recentActivity: recentActivity,
     listings: listings ?? this.listings,
     intradayCandles: intradayCandles ?? this.intradayCandles,
+    dailyCandles: dailyCandles ?? this.dailyCandles,
   );
 }

@@ -29,7 +29,12 @@ class WatchlistStockList extends StatelessWidget {
     if (onReorder != null) {
       return ReorderableListView.builder(
         itemCount: stocks.length,
-        onReorderItem: onReorder!,
+        onReorderItem: (oldIndex, newIndex) {
+          onReorder!(
+            oldIndex,
+            newIndex >= oldIndex ? newIndex + 1 : newIndex,
+          );
+        },
         proxyDecorator: (child, index, animation) => AnimatedBuilder(
           animation: animation,
           builder: (context, _) => Material(
@@ -60,6 +65,7 @@ class WatchlistStockList extends StatelessWidget {
       itemBuilder: (context, index) {
         final stock = stocks[index];
         return WatchlistStockTile(
+          key: ValueKey(stock.marketKey),
           stock: stock,
           onTap: onStockTap == null ? null : () => onStockTap!(stock),
         );

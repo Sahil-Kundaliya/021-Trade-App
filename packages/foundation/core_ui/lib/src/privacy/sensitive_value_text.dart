@@ -26,6 +26,7 @@ class SensitiveValueText extends StatelessWidget {
     this.value, {
     this.type = SensitiveValueType.number,
     this.maskedValue,
+    this.isMasked,
     this.style,
     this.textAlign,
     this.maxLines,
@@ -37,6 +38,7 @@ class SensitiveValueText extends StatelessWidget {
   final String value;
   final SensitiveValueType type;
   final String? maskedValue;
+  final bool? isMasked;
   final TextStyle? style;
   final TextAlign? textAlign;
   final int? maxLines;
@@ -45,7 +47,7 @@ class SensitiveValueText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final masked = PrivacyModeScope.of(context);
+    final masked = isMasked ?? PrivacyModeScope.of(context);
     return Text(
       masked ? maskedValue ?? PrivacyMask.value(type) : value,
       style: style,

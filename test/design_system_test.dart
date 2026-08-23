@@ -51,6 +51,7 @@ void main() {
     });
 
     test('compact sizing and motion tokens preserve accessible targets', () {
+      expect(AppSizes.iconTiny, 14);
       expect(AppSizes.buttonHeightMd, 44);
       expect(AppSizes.inputHeight, 44);
       expect(AppSizes.touchTarget, 48);

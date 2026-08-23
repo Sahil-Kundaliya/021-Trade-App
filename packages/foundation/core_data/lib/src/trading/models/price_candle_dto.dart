@@ -17,6 +17,19 @@ class PriceCandleDto {
     close: JsonValueReader.number(json, 'close'),
   );
 
+  static List<PriceCandleDto> listFrom(
+    Map<String, dynamic> json,
+    String key,
+  ) => JsonValueReader.optionalList(json, key)
+      .asMap()
+      .entries
+      .map(
+        (entry) => PriceCandleDto.fromJson(
+          JsonValueReader.listObject(entry.value, '$key[${entry.key}]'),
+        ),
+      )
+      .toList(growable: false);
+
   final DateTime startedAt;
   final double open;
   final double high;

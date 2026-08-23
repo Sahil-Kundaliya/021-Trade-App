@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inject exchange-aware 1-minute OHLC candles and extra RELIANCE option contracts."""
+"""Inject exchange-aware 1-minute and daily OHLC candles plus extra RELIANCE options."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import copy
 import hashlib
 import json
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,6 +15,8 @@ DATASET = ROOT / "packages/foundation/core_data/assets/mock/trading_mock_dataset
 IST = timezone(timedelta(hours=5, minutes=30))
 START = datetime(2026, 8, 23, 9, 15, tzinfo=IST)
 CANDLE_COUNT = 75
+DAILY_START = date(2026, 5, 25)
+DAILY_END = date(2026, 8, 21)
 
 
 def stable_seed(value: str) -> int:
@@ -69,6 +71,96 @@ def generate_candles(
         )
         previous = close_px
     return candles
+
+
+def weekdays(start: date, end: date) -> list[date]:
+    days: list[date] = []
+    cursor = start
+    while cursor <= end:
+        if cursor.weekday() < 5:
+            days.append(cursor)
+        cursor += timedelta(days=1)
+    return days
+
+
+def parse_history_date(value: str) -> date:
+    return date.fromisoformat(value[:10])
+
+
+def lerp_anchors(anchors: list[tuple[date, float]], day: date) -> float:
+    if day <= anchors[0][0]:
+        return anchors[0][1]
+    if day >= anchors[-1][0]:
+        return anchors[-1][1]
+    for index in range(1, len(anchors)):
+        start_day, start_value = anchors[index - 1]
+        end_day, end_value = anchors[index]
+        if start_day <= day <= end_day:
+            span = (end_day - start_day).days or 1
+            progress = (day - start_day).days / span
+            return start_value + (end_value - start_value) * progress
+    return anchors[-1][1]
+
+
+def generate_daily_candles(
+    *,
+    anchors: list[tuple[date, float]],
+    last_open: float,
+    last_high: float,
+    last_low: float,
+    last_close: float,
+    tick: float,
+    seed: int,
+) -> list[dict]:
+    rng = random.Random(seed)
+    days = weekdays(DAILY_START, DAILY_END)
+    floor = min(value for _, value in anchors) * 0.97
+    ceiling = max(value for _, value in anchors) * 1.03
+    closes: list[float] = []
+    for day in days:
+        target = lerp_anchors(anchors, day)
+        noise = rng.uniform(-1, 1) * max(abs(target) * 0.006, tick * 4)
+        closes.append(min(ceiling, max(floor, target + noise)))
+    closes[-1] = last_close
+
+    candles: list[dict] = []
+    previous = anchors[0][1]
+    for day, close_px in zip(days, closes):
+        opened = previous
+        wick = max(abs(close_px) * 0.004, tick * 2)
+        high_px = min(ceiling, max(opened, close_px) + rng.uniform(0, wick))
+        low_px = max(floor, min(opened, close_px) - rng.uniform(0, wick))
+        candles.append(
+            {
+                "startedAt": datetime(
+                    day.year, day.month, day.day, 9, 15, tzinfo=IST
+                ).isoformat(),
+                "open": round_tick(opened, tick),
+                "high": round_tick(high_px, tick),
+                "low": round_tick(low_px, tick),
+                "close": round_tick(close_px, tick),
+            }
+        )
+        previous = close_px
+
+    candles[-1] = {
+        "startedAt": datetime(
+            DAILY_END.year, DAILY_END.month, DAILY_END.day, 9, 15, tzinfo=IST
+        ).isoformat(),
+        "open": round_tick(last_open, tick),
+        "high": round_tick(max(last_open, last_high, last_close), tick),
+        "low": round_tick(min(last_open, last_low, last_close), tick),
+        "close": round_tick(last_close, tick),
+    }
+    return candles
+
+
+def history_anchors(fund: dict, delta: float = 0.0) -> list[tuple[date, float]]:
+    points = fund["priceHistory"]["threeMonths"]
+    return [
+        (parse_history_date(point["date"]), float(point["value"]) + delta)
+        for point in points
+    ]
 
 
 def shift_depth(depth: dict, delta: float, tick: float) -> dict:
@@ -154,6 +246,7 @@ def main() -> None:
             funds.append(option)
             existing_ids.add(option["id"])
 
+    funds_by_id = {fund["id"]: fund for fund in funds}
     for fund in funds:
         tick = float(fund.get("tickSize") or 0.05)
         fund["intradayCandles"] = generate_candles(
@@ -163,6 +256,15 @@ def main() -> None:
             close=float(fund["ltp"]),
             tick=tick,
             seed=stable_seed(fund["id"]),
+        )
+        fund["dailyCandles"] = generate_daily_candles(
+            anchors=history_anchors(fund),
+            last_open=float(fund["open"]),
+            last_high=float(fund["high"]),
+            last_low=float(fund["low"]),
+            last_close=float(fund["ltp"]),
+            tick=tick,
+            seed=stable_seed(f"{fund['id']}:daily"),
         )
 
     for listing in payload.get("marketListings", []):
@@ -175,6 +277,23 @@ def main() -> None:
             tick=tick,
             seed=stable_seed(f"{listing['fundId']}:{listing['exchange']}"),
         )
+        fund = funds_by_id[listing["fundId"]]
+        delta = float(listing["ltp"]) - float(fund["ltp"])
+        listing["dailyCandles"] = generate_daily_candles(
+            anchors=history_anchors(fund, delta),
+            last_open=float(listing["open"]),
+            last_high=float(listing["high"]),
+            last_low=float(listing["low"]),
+            last_close=float(listing["ltp"]),
+            tick=tick,
+            seed=stable_seed(f"{listing['fundId']}:{listing['exchange']}:daily"),
+        )
+
+    history_meta = payload.setdefault("metadata", {}).setdefault("history", {})
+    history_meta["intraday"] = "75 one-minute OHLC candles"
+    history_meta["daily"] = "weekday OHLC candles from 2026-05-25 to 2026-08-21"
+    history_meta["oneMonth"] = "last 22 daily OHLC candles"
+    history_meta["threeMonths"] = "full daily OHLC candle series"
 
     counts = payload.setdefault("metadata", {}).setdefault("counts", {})
     counts["funds"] = len(funds)

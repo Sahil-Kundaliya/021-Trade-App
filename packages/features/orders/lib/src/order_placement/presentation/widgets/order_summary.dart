@@ -1,6 +1,8 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../bloc/order_placement_bloc.dart';
 import '../bloc/order_placement_state.dart';
 import '../../domain/enums/order_enums.dart';
 
@@ -19,10 +21,10 @@ class OrderSummary extends StatelessWidget {
       if (instrument.isDerivative)
         ('Lots', '${state.quantity ~/ instrument.lotSize}'),
       ('Quantity', '${state.quantity}'),
-      if (state.showsLimitPrice) ('Limit Price', _money(state.limitPrice ?? 0)),
+      if (state.showsLimitPrice)
+        ('Limit Price', FinancialFormatter.price(state.limitPrice ?? 0)),
       if (state.showsTriggerPrice)
-        ('Trigger Price', _money(state.triggerPrice ?? 0)),
-      ('LTP', _money(instrument.ltp)),
+        ('Trigger Price', FinancialFormatter.price(state.triggerPrice ?? 0)),
     ];
     return AppCard(
       child: Column(
@@ -57,30 +59,33 @@ class OrderSummary extends StatelessWidget {
               ),
             ),
           ),
+          _LiveSummaryRow(label: 'LTP'),
           const AppDivider(),
           const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  state.orderType.usesEstimatedMarketPrice
-                      ? 'Estimated Value'
-                      : 'Order Value',
+          BlocSelector<OrderPlacementBloc, OrderPlacementState, (bool, double)>(
+            selector: (value) => (
+              value.orderType.usesEstimatedMarketPrice,
+              value.estimatedOrderValue,
+            ),
+            builder: (context, data) => Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    data.$1 ? 'Estimated Value' : 'Order Value',
+                  ),
                 ),
-              ),
-              SensitiveValueText(
-                _money(state.estimatedOrderValue),
-                type: SensitiveValueType.currency,
-                style: context.appTextStyles.orderValue,
-              ),
-            ],
+                SensitiveValueText(
+                  FinancialFormatter.price(data.$2),
+                  type: SensitiveValueType.currency,
+                  style: context.appTextStyles.orderValue,
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
-
-  static String _money(double value) => '₹${value.toStringAsFixed(2)}';
   static String _title(String value) =>
       '${value[0].toUpperCase()}${value.substring(1)}';
   static String _orderType(String value) => switch (value) {
@@ -88,6 +93,36 @@ class OrderSummary extends StatelessWidget {
     'stopLossMarket' => 'SL-M',
     _ => _title(value),
   };
+}
+
+class _LiveSummaryRow extends StatelessWidget {
+  const _LiveSummaryRow({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: context.textTheme.bodySmall?.copyWith(
+              color: context.appColors.textSecondary,
+            ),
+          ),
+        ),
+        BlocSelector<OrderPlacementBloc, OrderPlacementState, double>(
+          selector: (state) => state.instrument?.ltp ?? 0,
+          builder: (context, ltp) => SensitiveValueText(
+            FinancialFormatter.price(ltp),
+            type: SensitiveValueType.currency,
+            style: context.appTextStyles.tableValue,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 const _sensitiveLabels = <String>{

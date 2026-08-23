@@ -100,4 +100,46 @@ void main() {
       isTrue,
     );
   });
+
+  test('daily bucket updates the same candle across minute ticks', () {
+    final day = DateTime(2026, 8, 21, 9, 15);
+    var historical = <PriceCandle>[];
+    var active = candle(open: 10000, high: 10100, low: 9900, close: 10050, at: day);
+    for (var i = 0; i < 120; i++) {
+      final update = CandleAggregator.apply(
+        historical: historical,
+        active: active,
+        ltpMinor: 10050 + i,
+        timestamp: day.add(Duration(minutes: i)),
+        bucket: CandleBucket.day,
+      );
+      historical = update.historical;
+      active = update.active;
+    }
+    expect(historical, isEmpty);
+    expect(active.startedAt, DateTime(2026, 8, 21, 9, 15));
+    expect(active.openMinor, 10000);
+    expect(active.closeMinor, 10169);
+    expect(active.highMinor, 10169);
+  });
+
+  test('daily bucket opens a new candle on the next day', () {
+    final update = CandleAggregator.apply(
+      historical: const [],
+      active: candle(
+        open: 10000,
+        high: 10200,
+        low: 9900,
+        close: 10100,
+        at: DateTime(2026, 8, 21, 9, 15),
+      ),
+      ltpMinor: 10400,
+      timestamp: DateTime(2026, 8, 24, 10, 15),
+      bucket: CandleBucket.day,
+    );
+    expect(update.historical, hasLength(1));
+    expect(update.historical.single.closeMinor, 10100);
+    expect(update.active.startedAt, DateTime(2026, 8, 24));
+    expect(update.active.openMinor, 10400);
+  });
 }

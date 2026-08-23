@@ -1,4 +1,5 @@
 abstract final class AppSizes {
+  static const double iconTiny = 14;
   static const double iconXs = 16;
   static const double iconSm = 20;
   static const double iconMd = 24;

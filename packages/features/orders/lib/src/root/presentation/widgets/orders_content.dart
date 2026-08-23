@@ -6,7 +6,7 @@ import 'package:navigation_contract/navigation_contract.dart';
 import '../../../order_placement/presentation/bloc/order_placement_bloc.dart';
 import '../../../order_placement/presentation/bloc/order_placement_event.dart';
 import '../../../order_placement/presentation/bloc/order_placement_state.dart';
-import '../../../order_placement/domain/enums/order_enums.dart';
+import '../../../order_placement/presentation/widgets/order_action_bar.dart';
 import '../../../order_placement/presentation/widgets/order_confirmation.dart';
 import '../../../order_placement/presentation/widgets/order_instrument_header.dart';
 import '../../../order_placement/presentation/widgets/order_review.dart';
@@ -18,73 +18,94 @@ class OrdersContent extends StatelessWidget {
   final AppNavigator navigator;
 
   @override
-  Widget build(BuildContext context) =>
-      BlocBuilder<OrderPlacementBloc, OrderPlacementState>(
-        builder: (context, state) => Scaffold(
-          body: Column(
-            children: [
-              _OrdersHeader(state: state, onBack: navigator.pop),
-              const AppDivider(),
-              Expanded(
-                child: SafeArea(
-                  top: false,
-                  child: Builder(
-                    builder: (context) {
-                      if (state.status == OrderPlacementStatus.loading ||
-                          state.status == OrderPlacementStatus.initial) {
-                        return const OrderPlacementSkeleton();
-                      }
-                      if (state.status == OrderPlacementStatus.success) {
-                        return OrderConfirmation(
-                          order: state.placedOrder!,
-                          onViewOrderBook: navigator.openOrderBook,
-                          onDone: navigator.pop,
-                        );
-                      }
-                      if (state.instrument == null) {
-                        return AppErrorState(
-                          title: 'Unable to load instrument',
-                          description:
-                              state.errorMessage ??
-                              'Please close this page and try again.',
-                          actionLabel: 'Done',
-                          onRetry: navigator.pop,
-                        );
-                      }
-                      if (state.status == OrderPlacementStatus.review ||
-                          state.status == OrderPlacementStatus.placing ||
-                          state.status == OrderPlacementStatus.error) {
-                        return OrderReview(
-                          state: state,
-                          onCancel: () => context
-                              .read<OrderPlacementBloc>()
-                              .add(const OrderReviewCancelled()),
-                          onConfirm: state.isPlacingOrder
-                              ? null
-                              : () => context.read<OrderPlacementBloc>().add(
-                                  state.status == OrderPlacementStatus.error
-                                      ? const OrderPlacementRetryRequested()
-                                      : const OrderPlacementConfirmed(),
-                                ),
-                        );
-                      }
-                      return OrderTicket(state: state);
-                    },
-                  ),
-                ),
-              ),
-            ],
+  Widget build(BuildContext context) => Scaffold(
+    body: Column(
+      children: [
+        _OrdersHeader(onBack: navigator.pop),
+        const AppDivider(),
+        Expanded(
+          child: SafeArea(
+            top: false,
+            child: BlocBuilder<OrderPlacementBloc, OrderPlacementState>(
+              buildWhen: _bodyShouldRebuild,
+              builder: (context, state) {
+                if (state.status == OrderPlacementStatus.loading ||
+                    state.status == OrderPlacementStatus.initial) {
+                  return const OrderPlacementSkeleton();
+                }
+                if (state.status == OrderPlacementStatus.success) {
+                  return OrderConfirmation(
+                    order: state.placedOrder!,
+                    onViewOrderBook: navigator.openOrderBook,
+                    onDone: navigator.pop,
+                  );
+                }
+                if (state.instrument == null) {
+                  return AppErrorState(
+                    title: 'Unable to load instrument',
+                    description:
+                        state.errorMessage ??
+                        'Please close this page and try again.',
+                    actionLabel: 'Done',
+                    onRetry: navigator.pop,
+                  );
+                }
+                if (state.status == OrderPlacementStatus.review ||
+                    state.status == OrderPlacementStatus.placing ||
+                    state.status == OrderPlacementStatus.error) {
+                  return OrderReview(
+                    state: state,
+                    onCancel: () => context.read<OrderPlacementBloc>().add(
+                      const OrderReviewCancelled(),
+                    ),
+                    onConfirm: state.isPlacingOrder
+                        ? null
+                        : () => context.read<OrderPlacementBloc>().add(
+                            state.status == OrderPlacementStatus.error
+                                ? const OrderPlacementRetryRequested()
+                                : const OrderPlacementConfirmed(),
+                          ),
+                  );
+                }
+                return OrderTicket(state: state);
+              },
+            ),
           ),
-          bottomNavigationBar: state.status == OrderPlacementStatus.ready
-              ? _ReviewOrderBar(state: state)
-              : null,
         ),
-      );
+      ],
+    ),
+    bottomNavigationBar: const OrderActionBar(),
+  );
+}
+
+bool _bodyShouldRebuild(
+  OrderPlacementState previous,
+  OrderPlacementState current,
+) {
+  if (previous.status != current.status) return true;
+  if (previous.side != current.side) return true;
+  if (previous.quantity != current.quantity) return true;
+  if (previous.orderType != current.orderType) return true;
+  if (previous.product != current.product) return true;
+  if (previous.exchange != current.exchange) return true;
+  if (previous.limitPrice != current.limitPrice) return true;
+  if (previous.triggerPrice != current.triggerPrice) return true;
+  if (previous.validity != current.validity) return true;
+  if (previous.availableSellQuantity != current.availableSellQuantity) {
+    return true;
+  }
+  if (previous.fieldErrors != current.fieldErrors) return true;
+  if (previous.errorMessage != current.errorMessage) return true;
+  if (previous.placedOrder?.id != current.placedOrder?.id) return true;
+  if (previous.instrument?.id != current.instrument?.id) return true;
+  if (previous.instrument?.exchange != current.instrument?.exchange) {
+    return true;
+  }
+  return false;
 }
 
 class _OrdersHeader extends StatelessWidget {
-  const _OrdersHeader({required this.state, required this.onBack});
-  final OrderPlacementState state;
+  const _OrdersHeader({required this.onBack});
   final VoidCallback onBack;
 
   @override
@@ -105,57 +126,9 @@ class _OrdersHeader extends StatelessWidget {
             tooltip: 'Back',
           ),
           const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: state.instrument == null
-                ? Text('Order', style: context.textTheme.titleLarge)
-                : OrderInstrumentHeader(instrument: state.instrument!),
-          ),
+          const Expanded(child: OrderInstrumentHeader()),
         ],
       ),
     ),
   );
-}
-
-class _ReviewOrderBar extends StatelessWidget {
-  const _ReviewOrderBar({required this.state});
-  final OrderPlacementState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final buy = state.side == OrderSide.buy;
-    final actionColor = buy ? context.appColors.buy : context.appColors.sell;
-    return Material(
-      color: context.appColors.surface,
-      child: SafeArea(
-        top: false,
-        minimum: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.md,
-          AppSpacing.lg,
-          AppSpacing.md,
-        ),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: context.appColors.divider)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.md),
-            child: SizedBox(
-              height: AppSizes.buttonHeightLg,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: actionColor,
-                  foregroundColor: context.appColors.textInverse,
-                ),
-                onPressed: () => context.read<OrderPlacementBloc>().add(
-                  const OrderReviewRequested(),
-                ),
-                child: Text('Review ${buy ? 'Buy' : 'Sell'} Order'),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }

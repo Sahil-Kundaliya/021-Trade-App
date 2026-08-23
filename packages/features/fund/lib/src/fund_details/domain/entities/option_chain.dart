@@ -69,6 +69,7 @@ class OptionContractViewData {
     required this.symbol,
     required this.side,
     required this.ltpMinor,
+    required this.previousCloseMinor,
     required this.changePercent,
     this.openInterest,
   });
@@ -78,10 +79,13 @@ class OptionContractViewData {
   final String symbol;
   final OptionSide side;
   final int ltpMinor;
+  final int previousCloseMinor;
   final double changePercent;
   final int? openInterest;
 
   double get ltp => ltpMinor / 100;
+  double get previousClose => previousCloseMinor / 100;
+  double get change => ltp - previousClose;
 }
 
 class OptionChainRow {
@@ -274,6 +278,7 @@ abstract final class OptionChainAssembler {
       symbol: contract.symbol,
       side: contract.side,
       ltpMinor: contract.ltpMinor,
+      previousCloseMinor: contract.previousCloseMinor,
       changePercent: contract.changePercent,
       openInterest: contract.openInterest,
     );

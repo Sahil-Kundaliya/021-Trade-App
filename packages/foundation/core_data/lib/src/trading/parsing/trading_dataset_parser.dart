@@ -51,6 +51,7 @@ abstract final class TradingDatasetParser {
               volume: fund.volume,
               tickSize: fund.tickSize,
               intradayCandles: fund.intradayCandles,
+              dailyCandles: fund.dailyCandles,
             );
             final listings = <FundExchangeListingDto>[
               primary,

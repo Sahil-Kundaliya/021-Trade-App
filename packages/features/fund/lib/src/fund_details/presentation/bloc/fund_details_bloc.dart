@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:core_data/core_data.dart';
+import 'package:core_ui/core_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
@@ -304,7 +305,8 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
     if (fund == null) return;
     for (final tick in event.batch.updates) {
       if (tick.instrumentId == fund.marketKey) {
-        emit(state.copyWith(fund: fund.withLivePrice(tick)));
+        if (state.liveTick == tick) return;
+        emit(state.copyWith(liveTick: tick));
         return;
       }
     }
@@ -375,11 +377,11 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
         final description = switch (order.status) {
           'executed' =>
             '${order.side == 'buy' ? 'Bought' : 'Sold'} ${order.filledQuantity}\n'
-                '₹${(order.averagePrice ?? order.ltp).toStringAsFixed(2)}',
+                '${FinancialFormatter.price(order.averagePrice ?? order.ltp)}',
           'triggerPending' =>
-            '${order.quantity} Qty\nTrigger ₹${order.triggerPrice?.toStringAsFixed(2) ?? '—'}',
+            '${order.quantity} Qty\nTrigger ${order.triggerPrice == null ? '—' : FinancialFormatter.price(order.triggerPrice)}',
           _ when order.limitPrice != null =>
-            '${order.quantity} Qty\nLimit ₹${order.limitPrice!.toStringAsFixed(2)}',
+            '${order.quantity} Qty\nLimit ${FinancialFormatter.price(order.limitPrice)}',
           _ => '${order.quantity} Qty',
         };
         return FundActivity(

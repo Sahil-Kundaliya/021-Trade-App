@@ -81,26 +81,26 @@ class OptionChainBloc extends Bloc<OptionChainEvent, OptionChainState> {
     Emitter<OptionChainState> emit,
   ) {
     if (state.status != OptionChainStatus.loaded) return;
-    var contracts = List<OptionContract>.from(_allContracts);
+    final livePrices = LivePriceTick.merge(
+      state.livePrices,
+      event.batch.updates,
+    );
     var underlyingLtp = state.underlyingLtpMinor;
-    var changed = false;
+    var spotChanged = false;
     for (final tick in event.batch.updates) {
       if (_underlyingSeed != null &&
-          tick.instrumentId == _underlyingSeed!.instrumentId) {
+          tick.instrumentId == _underlyingSeed!.instrumentId &&
+          underlyingLtp != tick.ltpMinor) {
         underlyingLtp = tick.ltpMinor;
-        changed = true;
-        continue;
+        spotChanged = true;
       }
-      final index = contracts.indexWhere(
-        (contract) => contract.marketKey == tick.instrumentId,
-      );
-      if (index < 0) continue;
-      contracts[index] = contracts[index].withLtpMinor(tick.ltpMinor);
-      changed = true;
     }
-    if (!changed) return;
-    _allContracts = contracts;
-    emit(_rebuild(spotMinor: underlyingLtp));
+    if (!spotChanged && identical(livePrices, state.livePrices)) return;
+    if (spotChanged) {
+      emit(_rebuild(spotMinor: underlyingLtp, livePrices: livePrices));
+      return;
+    }
+    emit(state.copyWith(livePrices: livePrices));
   }
 
   Future<void> _load(Emitter<OptionChainState> emit) async {
@@ -150,6 +150,7 @@ class OptionChainBloc extends Bloc<OptionChainEvent, OptionChainState> {
     int? spotMinor,
     List<DateTime>? availableExpiries,
     FutureOverview? nearestFuture,
+    Map<String, LivePriceTick>? livePrices,
   }) {
     final selectedExpiry = expiry ?? state.selectedExpiry;
     final spot = spotMinor ?? state.underlyingLtpMinor;
@@ -179,6 +180,7 @@ class OptionChainBloc extends Bloc<OptionChainEvent, OptionChainState> {
         spotMinor: spot ?? 0,
       ),
       nearestFuture: nearestFuture ?? state.nearestFuture,
+      livePrices: livePrices ?? state.livePrices,
       liveUnavailable: false,
       clearError: true,
     );
@@ -186,7 +188,7 @@ class OptionChainBloc extends Bloc<OptionChainEvent, OptionChainState> {
 
   Future<void> _syncLease() async {
     final seeds = <LiveInstrumentSeed>[
-      if (_underlyingSeed != null) _underlyingSeed!,
+      ?_underlyingSeed,
       for (final contract in state.contracts)
         OptionChainMapper.seedFor(contract),
     ];

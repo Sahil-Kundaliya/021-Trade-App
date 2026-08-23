@@ -180,12 +180,18 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
     final ticks = {
       for (final tick in event.batch.updates) tick.instrumentId: tick,
     };
-    final holdings = state.holdings
-        .map((holding) {
-          final tick = ticks[holding.marketKey];
-          return tick == null ? holding : holding.withLivePrice(tick);
-        })
-        .toList(growable: false);
+    var changed = false;
+    final holdings = <Holding>[];
+    for (final holding in state.holdings) {
+      final tick = ticks[holding.marketKey];
+      if (tick == null) {
+        holdings.add(holding);
+        continue;
+      }
+      changed = true;
+      holdings.add(holding.withLivePrice(tick));
+    }
+    if (!changed) return;
     emit(
       state.copyWith(
         holdings: _sorted(holdings, state.sort),

@@ -308,6 +308,48 @@ void main() {
       'RELIANCE_EQ',
     ]);
   });
+
+  test('reorders user watchlists and keeps Default first', () async {
+    final created = bloc.stream.firstWhere(
+      (state) => state.watchlists.length == 3,
+    );
+    bloc.add(const WatchlistCreateRequested(name: 'Banks'));
+    await created;
+    final beforeIds = bloc.state.watchlists.map((item) => item.id).toList();
+    final banks = bloc.state.watchlists.last;
+    expect(beforeIds.first, 'watchlist_default');
+
+    final reordered = bloc.stream.firstWhere(
+      (state) =>
+          state.watchlists.length == 3 &&
+          state.watchlists[1].id == banks.id,
+    );
+    bloc.add(const WatchlistsReorderRequested(oldIndex: 1, newIndex: 0));
+    await reordered;
+
+    expect(bloc.state.watchlists.map((item) => item.id), [
+      'watchlist_default',
+      banks.id,
+      'watchlist_2',
+    ]);
+    expect(bloc.state.watchlists[1].fundIds, banks.fundIds);
+    expect(repository.saveCount, 2);
+  });
+
+  test('restore previous order when watchlist reorder save fails', () async {
+    final created = bloc.stream.firstWhere(
+      (state) => state.watchlists.length == 3,
+    );
+    bloc.add(const WatchlistCreateRequested(name: 'Banks'));
+    await created;
+    final previous = bloc.state.watchlists.map((item) => item.id).toList();
+    repository.failSaves = true;
+    final rejected = bloc.stream.firstWhere((state) => state.message != null);
+    bloc.add(const WatchlistsReorderRequested(oldIndex: 1, newIndex: 0));
+    await rejected;
+    expect(bloc.state.message, 'Unable to reorder watchlists.');
+    expect(bloc.state.watchlists.map((item) => item.id), previous);
+  });
 }
 
 final class _FakeRepository implements WatchlistRepository {

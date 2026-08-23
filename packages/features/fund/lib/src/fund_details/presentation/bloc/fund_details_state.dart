@@ -36,6 +36,7 @@ class FundDetailsState {
     this.message,
     this.messageVersion = 0,
     this.errorMessage,
+    this.liveTick,
   });
 
   final FundDetailsStatus status;
@@ -50,6 +51,7 @@ class FundDetailsState {
   final String? message;
   final int messageVersion;
   final String? errorMessage;
+  final LivePriceTick? liveTick;
 
   AvailableWatchlist? get watchlistContainingFund {
     final details = fund;
@@ -109,6 +111,8 @@ class FundDetailsState {
     int? messageVersion,
     String? errorMessage,
     bool clearError = false,
+    LivePriceTick? liveTick,
+    bool clearLiveTick = false,
   }) => FundDetailsState(
     status: status ?? this.status,
     fundId: fundId ?? this.fundId,
@@ -124,5 +128,6 @@ class FundDetailsState {
     message: clearMessage ? null : message ?? this.message,
     messageVersion: messageVersion ?? this.messageVersion,
     errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
+    liveTick: clearLiveTick ? null : liveTick ?? this.liveTick,
   );
 }

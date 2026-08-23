@@ -1,4 +1,5 @@
 import '../../domain/entities/searchable_fund.dart';
+import 'package:core_data/core_data.dart';
 
 enum SearchStatus { initial, loading, loaded, error }
 
@@ -9,6 +10,7 @@ class SearchState {
     this.query = '',
     this.selectedCategory = SearchCategory.all,
     this.visibleFunds = const [],
+    this.livePrices = const {},
     this.errorMessage,
   });
 
@@ -17,6 +19,7 @@ class SearchState {
   final String query;
   final SearchCategory selectedCategory;
   final List<SearchableFund> visibleFunds;
+  final Map<String, LivePriceTick> livePrices;
   final String? errorMessage;
 
   String get normalizedQuery => query.trim().toLowerCase();
@@ -28,6 +31,7 @@ class SearchState {
     String? query,
     SearchCategory? selectedCategory,
     List<SearchableFund>? visibleFunds,
+    Map<String, LivePriceTick>? livePrices,
     String? errorMessage,
     bool clearError = false,
   }) => SearchState(
@@ -36,6 +40,7 @@ class SearchState {
     query: query ?? this.query,
     selectedCategory: selectedCategory ?? this.selectedCategory,
     visibleFunds: visibleFunds ?? this.visibleFunds,
+    livePrices: livePrices ?? this.livePrices,
     errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
   );
 }

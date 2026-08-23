@@ -69,6 +69,15 @@ final class WatchlistFundsReorderRequested extends WatchlistEvent {
   final int newIndex;
 }
 
+final class WatchlistsReorderRequested extends WatchlistEvent {
+  const WatchlistsReorderRequested({
+    required this.oldIndex,
+    required this.newIndex,
+  });
+  final int oldIndex;
+  final int newIndex;
+}
+
 final class WatchlistLivePricesReceived extends WatchlistEvent {
   const WatchlistLivePricesReceived(this.batch);
   final LivePriceBatch batch;

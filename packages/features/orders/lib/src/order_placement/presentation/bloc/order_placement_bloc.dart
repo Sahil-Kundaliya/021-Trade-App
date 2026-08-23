@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:core_data/core_data.dart';
+import 'package:core_ui/core_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:navigation_contract/navigation_contract.dart';
@@ -371,7 +372,7 @@ class OrderPlacementBloc
       final units = value / tick;
       if ((units - units.round()).abs() > 0.000001) {
         errors[key] =
-            '$label must follow the ${tick.toStringAsFixed(2)} tick size.';
+            '$label must follow the ${FinancialFormatter.decimals(tick)} tick size.';
       }
     }
   }

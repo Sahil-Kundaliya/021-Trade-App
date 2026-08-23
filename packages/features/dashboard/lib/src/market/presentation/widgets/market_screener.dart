@@ -1,11 +1,14 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:core_data/core_data.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/market_category.dart';
 import '../../domain/entities/market_display_item.dart';
 import '../../domain/entities/market_instrument.dart';
 import '../../domain/entities/market_subcategory.dart';
+import '../bloc/market_bloc.dart';
+import '../bloc/market_state.dart';
 
 class MarketScreener extends StatelessWidget {
   const MarketScreener({
@@ -101,30 +104,26 @@ class MarketScreener extends StatelessWidget {
     final expiry = instrument.expiryDate;
     return MarketDisplayItem(
       id: instrument.id,
+      marketKey: instrument.marketKey,
       symbol: instrument.category == MarketCategory.options
           ? instrument.underlyingSymbol ?? instrument.symbol
           : instrument.symbol,
       title: instrument.companyName,
       exchange: instrument.exchange,
-      ltp: _currency(instrument.ltp),
-      change: _signedCurrency(instrument.change),
+      ltp: instrument.ltp,
+      change: instrument.change,
       changePercent: instrument.changePercent,
       expiry: expiry == null
           ? null
           : '${expiry.day.toString().padLeft(2, '0')}/'
                 '${expiry.month.toString().padLeft(2, '0')}/'
                 '${expiry.year}',
-      strike: instrument.strikePrice?.toStringAsFixed(0),
+      strike: instrument.strikePrice == null
+          ? null
+          : FinancialFormatter.price(instrument.strikePrice, symbol: false),
       optionType: instrument.optionType,
       volume: _compactVolume(instrument.volume),
     );
-  }
-
-  String _currency(double value) => '₹${value.toStringAsFixed(2)}';
-
-  String _signedCurrency(double value) {
-    final sign = value >= 0 ? '+' : '-';
-    return '$sign₹${value.abs().toStringAsFixed(2)}';
   }
 
   String _compactVolume(int value) {
@@ -306,7 +305,11 @@ class MarketList extends StatelessWidget {
               button: onItemTap != null,
               child: InkWell(
                 onTap: onItemTap == null ? null : () => onItemTap!(item),
-                child: MarketListItem(category: category, item: item),
+                child: MarketListItem(
+                  key: ValueKey(item.marketKey),
+                  category: category,
+                  item: item,
+                ),
               ),
             ),
             if (index < visibleItems.length - 1) const AppDivider(),
@@ -395,13 +398,6 @@ class _MarketRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final movementColor = item.changePercent >= 0
-        ? context.appColors.positive
-        : context.appColors.negative;
-    final percentage =
-        '${item.changePercent >= 0 ? '+' : ''}'
-        '${item.changePercent.toStringAsFixed(2)}%';
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       child: Row(
@@ -432,29 +428,33 @@ class _MarketRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.md),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              SensitiveValueText(
-                item.ltp,
-                type: SensitiveValueType.currency,
-                style: context.appTextStyles.priceSmall.copyWith(
-                  color: context.appColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              SensitiveValueText(
-                '${item.change}  $percentage',
-                type: SensitiveValueType.number,
-                maskedValue:
-                    '${PrivacyMask.currency}  ${PrivacyMask.percentage}',
-                style: context.appTextStyles.percentageSmall.copyWith(
-                  color: movementColor,
-                ),
-              ),
-            ],
-          ),
+          _LiveMarketQuote(item: item),
         ],
+      ),
+    );
+  }
+}
+
+class _LiveMarketQuote extends StatelessWidget {
+  const _LiveMarketQuote({required this.item});
+
+  final MarketDisplayItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<MarketBloc, MarketState, MarketQuoteViewData>(
+      selector: (state) {
+        final tick = state.livePrices[item.marketKey];
+        return MarketQuoteViewData(
+          ltp: tick?.ltp ?? item.ltp,
+          change: tick?.change ?? item.change,
+          changePercent: tick?.changePercent ?? item.changePercent,
+        );
+      },
+      builder: (context, quote) => MarketQuote(
+        ltp: quote.ltp,
+        change: quote.change,
+        changePercent: quote.changePercent,
       ),
     );
   }

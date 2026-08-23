@@ -59,6 +59,15 @@ class FundContent extends StatelessWidget {
             }
           }
         },
+        buildWhen: (previous, current) =>
+            previous.status != current.status ||
+            previous.fund?.id != current.fund?.id ||
+            previous.errorMessage != current.errorMessage ||
+            previous.isWatchlistPickerOpen != current.isWatchlistPickerOpen ||
+            previous.isFundInWatchlist != current.isFundInWatchlist ||
+            previous.selectedWatchlistId != current.selectedWatchlistId ||
+            previous.isAddingToWatchlist != current.isAddingToWatchlist ||
+            previous.availableWatchlists != current.availableWatchlists,
         builder: (context, state) => CustomScrollView(
           controller: scrollController,
           slivers: [

@@ -48,7 +48,9 @@ void main() {
     await pumpOrders(tester, side: TradeSide.sell);
     expect(find.text('RELIANCE'), findsOneWidget);
     expect(find.text('Reliance Industries'), findsOneWidget);
-    expect(find.text('Review Sell Order'), findsOneWidget);
+    expect(find.text('SELL'), findsWidgets);
+    expect(find.text('Estimated Value'), findsWidgets);
+    expect(find.text('₹1,316.00'), findsWidgets);
     expect(find.text('Order Book'), findsNothing);
   });
 
@@ -61,8 +63,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Limit Price'), findsWidgets);
 
-    await tester.ensureVisible(find.text('Review Buy Order'));
-    await tester.tap(find.text('Review Buy Order'));
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'BUY').last);
+    await tester.tap(find.widgetWithText(FilledButton, 'BUY').last);
     await tester.pumpAndSettle();
     expect(find.text('REVIEW ORDER'), findsOneWidget);
     expect(repository.placed, isEmpty);

@@ -14,6 +14,7 @@ class FundExchangeListingDto {
     required this.volume,
     required this.tickSize,
     this.intradayCandles = const [],
+    this.dailyCandles = const [],
   });
 
   factory FundExchangeListingDto.fromJson(Map<String, dynamic> json) =>
@@ -27,18 +28,8 @@ class FundExchangeListingDto {
         low: JsonValueReader.number(json, 'low'),
         volume: JsonValueReader.integer(json, 'volume'),
         tickSize: JsonValueReader.number(json, 'tickSize'),
-        intradayCandles: JsonValueReader.optionalList(json, 'intradayCandles')
-            .asMap()
-            .entries
-            .map(
-              (entry) => PriceCandleDto.fromJson(
-                JsonValueReader.listObject(
-                  entry.value,
-                  'intradayCandles[${entry.key}]',
-                ),
-              ),
-            )
-            .toList(growable: false),
+        intradayCandles: PriceCandleDto.listFrom(json, 'intradayCandles'),
+        dailyCandles: PriceCandleDto.listFrom(json, 'dailyCandles'),
       );
 
   final String fundId;
@@ -51,6 +42,7 @@ class FundExchangeListingDto {
   final int volume;
   final double tickSize;
   final List<PriceCandleDto> intradayCandles;
+  final List<PriceCandleDto> dailyCandles;
 
   double get change => ltp - previousClose;
   double get changePercent =>

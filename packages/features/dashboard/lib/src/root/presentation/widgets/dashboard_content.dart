@@ -20,6 +20,13 @@ class DashboardContent extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: BlocBuilder<MarketBloc, MarketState>(
+          buildWhen: (previous, current) =>
+              previous.status != current.status ||
+              previous.selectedCategory != current.selectedCategory ||
+              previous.selectedSubcategory != current.selectedSubcategory ||
+              previous.selectedExchange != current.selectedExchange ||
+              !identical(previous.visibleFunds, current.visibleFunds) ||
+              previous.errorMessage != current.errorMessage,
           builder: (context, state) => SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child:

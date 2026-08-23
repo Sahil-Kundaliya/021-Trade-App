@@ -39,29 +39,37 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
     emit(state.copyWith(status: MarketStatus.loading, clearError: true));
     try {
       final loaded = await _repository.getFunds();
-      var funds = List<MarketInstrument>.unmodifiable(
-        loaded.map((fund) {
-          final cached = _livePrices.latestFor(fund.marketKey);
-          return cached == null ? fund : fund.withLivePrice(cached);
-        }),
-      );
-      funds = List<MarketInstrument>.unmodifiable(
+      final livePrices = <String, LivePriceTick>{};
+      for (final fund in loaded) {
+        final cached = _livePrices.latestFor(fund.marketKey);
+        if (cached != null) livePrices[fund.marketKey] = cached;
+      }
+      final tagged = List<MarketInstrument>.unmodifiable(
         _applyDynamicTags(
-          funds,
+          loaded,
+          livePrices,
           state.selectedCategory,
           state.selectedExchange,
         ),
       );
-      if (funds.isEmpty) {
-        emit(state.copyWith(status: MarketStatus.empty, allFunds: funds));
+      if (tagged.isEmpty) {
+        emit(
+          state.copyWith(
+            status: MarketStatus.empty,
+            allFunds: tagged,
+            livePrices: livePrices,
+          ),
+        );
         return;
       }
       emit(
         state.copyWith(
           status: MarketStatus.loaded,
-          allFunds: funds,
+          allFunds: tagged,
+          livePrices: Map<String, LivePriceTick>.unmodifiable(livePrices),
           visibleFunds: _filter(
-            funds,
+            tagged,
+            livePrices,
             state.selectedCategory,
             state.selectedSubcategory,
             state.selectedExchange,
@@ -69,7 +77,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
         ),
       );
       _watch(
-        _categoryFunds(funds, state.selectedCategory, state.selectedExchange),
+        _categoryFunds(tagged, state.selectedCategory, state.selectedExchange),
       );
     } on Object catch (error) {
       emit(
@@ -97,6 +105,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
         selectedExchange: exchange,
         visibleFunds: _filter(
           state.allFunds,
+          state.livePrices,
           event.category,
           subcategory,
           exchange,
@@ -120,6 +129,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
         selectedSubcategory: event.subcategory,
         visibleFunds: _filter(
           state.allFunds,
+          state.livePrices,
           state.selectedCategory,
           event.subcategory,
           state.selectedExchange,
@@ -136,6 +146,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
     }
     final all = _applyDynamicTags(
       state.allFunds,
+      state.livePrices,
       state.selectedCategory,
       event.exchange,
     );
@@ -145,6 +156,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
         selectedExchange: event.exchange,
         visibleFunds: _filter(
           all,
+          state.livePrices,
           state.selectedCategory,
           state.selectedSubcategory,
           event.exchange,
@@ -188,32 +200,68 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
     Emitter<MarketState> emit,
   ) {
     if (state.status != MarketStatus.loaded) return;
-    final ticks = {
-      for (final tick in event.batch.updates) tick.instrumentId: tick,
-    };
-    var all = state.allFunds
-        .map(
-          (fund) => ticks[fund.marketKey] == null
-              ? fund
-              : fund.withLivePrice(ticks[fund.marketKey]!),
-        )
-        .toList(growable: false);
-    all = _applyDynamicTags(
-      all,
+    final livePrices = LivePriceTick.merge(
+      state.livePrices,
+      event.batch.updates,
+    );
+    if (identical(livePrices, state.livePrices)) return;
+    final tagged = _applyDynamicTags(
+      state.allFunds,
+      livePrices,
       state.selectedCategory,
       state.selectedExchange,
     );
+    final visible = _filter(
+      tagged,
+      livePrices,
+      state.selectedCategory,
+      state.selectedSubcategory,
+      state.selectedExchange,
+    );
+    final rankingChanged =
+        !_sameKeys(state.visibleFunds, visible) ||
+        !_sameTags(state.visibleFunds, visible);
     emit(
       state.copyWith(
-        allFunds: List.unmodifiable(all),
-        visibleFunds: _filter(
-          all,
-          state.selectedCategory,
-          state.selectedSubcategory,
-          state.selectedExchange,
-        ),
+        livePrices: livePrices,
+        allFunds: rankingChanged
+            ? List<MarketInstrument>.unmodifiable(tagged)
+            : state.allFunds,
+        visibleFunds: rankingChanged
+            ? visible
+            : state.visibleFunds,
       ),
     );
+  }
+
+  static bool _sameKeys(
+    List<MarketInstrument> left,
+    List<MarketInstrument> right,
+  ) {
+    if (left.length != right.length) return false;
+    for (var index = 0; index < left.length; index++) {
+      if (left[index].marketKey != right[index].marketKey) return false;
+    }
+    return true;
+  }
+
+  static bool _sameTags(
+    List<MarketInstrument> left,
+    List<MarketInstrument> right,
+  ) {
+    if (left.length != right.length) return false;
+    for (var index = 0; index < left.length; index++) {
+      if (!_sameStringList(left[index].tags, right[index].tags)) return false;
+    }
+    return true;
+  }
+
+  static bool _sameStringList(List<String> left, List<String> right) {
+    if (left.length != right.length) return false;
+    for (var index = 0; index < left.length; index++) {
+      if (left[index] != right[index]) return false;
+    }
+    return true;
   }
 
   static List<MarketInstrument> _categoryFunds(
@@ -226,14 +274,27 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
 
   static List<MarketInstrument> _applyDynamicTags(
     List<MarketInstrument> funds,
+    Map<String, LivePriceTick> livePrices,
     MarketCategory category,
     TradeExchange exchange,
   ) {
     final candidates = _categoryFunds(funds, category, exchange);
-    final gainers = candidates.where((fund) => fund.changePercent > 0).toList()
-      ..sort((a, b) => b.changePercent.compareTo(a.changePercent));
-    final losers = candidates.where((fund) => fund.changePercent < 0).toList()
-      ..sort((a, b) => a.changePercent.compareTo(b.changePercent));
+    final gainers =
+        candidates.where((fund) => _changePercent(fund, livePrices) > 0).toList()
+          ..sort(
+            (a, b) => _changePercent(
+              b,
+              livePrices,
+            ).compareTo(_changePercent(a, livePrices)),
+          );
+    final losers =
+        candidates.where((fund) => _changePercent(fund, livePrices) < 0).toList()
+          ..sort(
+            (a, b) => _changePercent(
+              a,
+              livePrices,
+            ).compareTo(_changePercent(b, livePrices)),
+          );
     final gainerIds = gainers.take(3).map((fund) => fund.marketKey).toSet();
     final loserIds = losers.take(3).map((fund) => fund.marketKey).toSet();
     return funds
@@ -253,6 +314,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
 
   static List<MarketInstrument> _filter(
     List<MarketInstrument> allFunds,
+    Map<String, LivePriceTick> livePrices,
     MarketCategory category,
     MarketSubcategory subcategory,
     TradeExchange exchange,
@@ -269,7 +331,12 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
           categoryFunds
               .where((fund) => fund.optionType == optionType)
               .toList(growable: true)
-            ..sort((a, b) => b.changePercent.compareTo(a.changePercent));
+            ..sort(
+              (a, b) => _changePercent(
+                b,
+                livePrices,
+              ).compareTo(_changePercent(a, livePrices)),
+            );
       return List<MarketInstrument>.unmodifiable(options.take(5));
     }
 
@@ -277,24 +344,34 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
     switch (subcategory) {
       case MarketSubcategory.topGainers:
         final positive = ranked
-            .where((fund) => fund.changePercent > 0)
+            .where((fund) => _changePercent(fund, livePrices) > 0)
             .toList(growable: false);
         if (positive.isNotEmpty) {
           ranked
             ..clear()
             ..addAll(positive);
         }
-        ranked.sort((a, b) => b.changePercent.compareTo(a.changePercent));
+        ranked.sort(
+          (a, b) => _changePercent(
+            b,
+            livePrices,
+          ).compareTo(_changePercent(a, livePrices)),
+        );
       case MarketSubcategory.topLosers:
         final negative = ranked
-            .where((fund) => fund.changePercent < 0)
+            .where((fund) => _changePercent(fund, livePrices) < 0)
             .toList(growable: false);
         if (negative.isNotEmpty) {
           ranked
             ..clear()
             ..addAll(negative);
         }
-        ranked.sort((a, b) => a.changePercent.compareTo(b.changePercent));
+        ranked.sort(
+          (a, b) => _changePercent(
+            a,
+            livePrices,
+          ).compareTo(_changePercent(b, livePrices)),
+        );
       case MarketSubcategory.mostActive:
         ranked.sort((a, b) => b.volume.compareTo(a.volume));
       case MarketSubcategory.callMovers || MarketSubcategory.putMovers:
@@ -302,4 +379,9 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
     }
     return List<MarketInstrument>.unmodifiable(ranked.take(5));
   }
+
+  static double _changePercent(
+    MarketInstrument fund,
+    Map<String, LivePriceTick> livePrices,
+  ) => livePrices[fund.marketKey]?.changePercent ?? fund.changePercent;
 }

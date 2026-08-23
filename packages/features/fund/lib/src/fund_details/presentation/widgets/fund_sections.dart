@@ -12,6 +12,7 @@ import '../bloc/fund_details_event.dart';
 import '../bloc/fund_details_state.dart';
 import 'chart/fund_live_chart.dart';
 import 'derivatives/option_chain_section.dart';
+import 'fund_format.dart';
 
 class FundLoadedSections extends StatelessWidget {
   const FundLoadedSections({
@@ -117,10 +118,6 @@ class _InstrumentHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final positive = fund.change >= 0;
-    final movementColor = positive
-        ? context.appColors.positive
-        : context.appColors.negative;
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -151,25 +148,7 @@ class _InstrumentHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  SensitiveValueText(
-                    _money(fund.ltp),
-                    type: SensitiveValueType.currency,
-                    style: context.appTextStyles.priceSmall,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  SensitiveValueText(
-                    '${_signedMoney(fund.change)} ${_signedPercent(fund.changePercent)}',
-                    maskedValue:
-                        '${PrivacyMask.currency} ${PrivacyMask.percentage}',
-                    style: context.appTextStyles.percentageSmall.copyWith(
-                      color: movementColor,
-                    ),
-                  ),
-                ],
-              ),
+              const _FundLiveQuote(),
               const SizedBox(width: AppSpacing.xs),
               IconButton(
                 visualDensity: VisualDensity.compact,
@@ -209,6 +188,38 @@ class _InstrumentHeader extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _FundLiveQuote extends StatelessWidget {
+  const _FundLiveQuote();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<
+      FundDetailsBloc,
+      FundDetailsState,
+      MarketQuoteViewData?
+    >(
+      selector: (state) {
+        final fund = state.fund;
+        if (fund == null) return null;
+        final tick = state.liveTick;
+        return MarketQuoteViewData(
+          ltp: tick?.ltp ?? fund.ltp,
+          change: tick?.change ?? fund.change,
+          changePercent: tick?.changePercent ?? fund.changePercent,
+        );
+      },
+      builder: (context, quote) {
+        if (quote == null) return const SizedBox.shrink();
+        return MarketQuote(
+          ltp: quote.ltp,
+          change: quote.change,
+          changePercent: quote.changePercent,
+        );
+      },
     );
   }
 }
@@ -699,31 +710,8 @@ const _structuralValueLabels = <String>{
   'Eligible',
 };
 
-String _money(num? value) =>
-    value == null ? '—' : '₹${_group(value.toStringAsFixed(2))}';
-String _signedMoney(double value) =>
-    '${value >= 0 ? '+' : '-'}₹${_group(value.abs().toStringAsFixed(2))}';
-String _signedPercent(double value) =>
-    '${value >= 0 ? '+' : ''}${value.toStringAsFixed(2)}%';
-String _integer(int? value) => value == null ? '—' : _group(value.toString());
-String _group(String source) {
-  final parts = source.split('.');
-  var whole = parts.first;
-  final negative = whole.startsWith('-');
-  if (negative) whole = whole.substring(1);
-  if (whole.length > 3) {
-    final end = whole.substring(whole.length - 3);
-    var start = whole.substring(0, whole.length - 3);
-    final groups = <String>[];
-    while (start.length > 2) {
-      groups.insert(0, start.substring(start.length - 2));
-      start = start.substring(0, start.length - 2);
-    }
-    if (start.isNotEmpty) groups.insert(0, start);
-    whole = '${groups.join(',')},$end';
-  }
-  return '${negative ? '-' : ''}$whole${parts.length > 1 ? '.${parts[1]}' : ''}';
-}
+String _money(num? value) => FundFormat.money(value);
+String _integer(int? value) => FundFormat.integer(value);
 
 String _compact(int value) => value >= 1000000
     ? '${(value / 1000000).toStringAsFixed(2)}M'

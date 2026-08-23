@@ -1,7 +1,10 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/searchable_fund.dart';
+import '../bloc/search_bloc.dart';
+import '../bloc/search_state.dart';
 
 class SearchFundTile extends StatelessWidget {
   const SearchFundTile({required this.fund, this.onTap, super.key});
@@ -11,9 +14,6 @@ class SearchFundTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final movementColor = fund.changePercent >= 0
-        ? context.appColors.positive
-        : context.appColors.negative;
     return Semantics(
       button: onTap != null,
       label: '${fund.symbol}, ${fund.exchange.code}, ${fund.category.label}',
@@ -52,30 +52,35 @@ class SearchFundTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  SensitiveValueText(
-                    '₹${fund.ltp.toStringAsFixed(2)}',
-                    type: SensitiveValueType.currency,
-                    style: context.appTextStyles.priceSmall.copyWith(
-                      color: context.appColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  SensitiveValueText(
-                    '${fund.changePercent >= 0 ? '+' : ''}'
-                    '${fund.changePercent.toStringAsFixed(2)}%',
-                    type: SensitiveValueType.percentage,
-                    style: context.appTextStyles.percentageSmall.copyWith(
-                      color: movementColor,
-                    ),
-                  ),
-                ],
-              ),
+              _SearchLiveQuote(fund: fund),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SearchLiveQuote extends StatelessWidget {
+  const _SearchLiveQuote({required this.fund});
+
+  final SearchableFund fund;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<SearchBloc, SearchState, MarketQuoteViewData>(
+      selector: (state) {
+        final tick = state.livePrices[fund.marketKey];
+        return MarketQuoteViewData(
+          ltp: tick?.ltp ?? fund.ltp,
+          change: tick?.change ?? fund.change,
+          changePercent: tick?.changePercent ?? fund.changePercent,
+        );
+      },
+      builder: (context, quote) => MarketQuote(
+        ltp: quote.ltp,
+        change: quote.change,
+        changePercent: quote.changePercent,
       ),
     );
   }

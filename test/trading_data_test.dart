@@ -56,5 +56,16 @@ void main() {
       funds.every((fund) => fund.oneMonthPriceHistory.length == 5),
       isTrue,
     );
+    expect(funds.every((fund) => fund.intradayCandles.length == 75), isTrue);
+    expect(funds.every((fund) => fund.dailyCandles.length >= 60), isTrue);
+    final reliance = funds.firstWhere((fund) => fund.id == 'RELIANCE_EQ');
+    expect(reliance.dailyCandles.last.close, reliance.ltp);
+    final bse = reliance.listingFor(TradeExchange.bse)!;
+    expect(bse.dailyCandles, isNotEmpty);
+    expect(bse.dailyCandles.last.close, bse.ltp);
+    expect(
+      reliance.forExchange(TradeExchange.bse).dailyCandles.last.close,
+      bse.ltp,
+    );
   });
 }

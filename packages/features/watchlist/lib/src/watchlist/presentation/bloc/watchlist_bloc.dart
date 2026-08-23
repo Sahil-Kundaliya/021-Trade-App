@@ -24,6 +24,7 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     on<WatchlistFundAddRequested>(_addFund);
     on<WatchlistFundRemoveRequested>(_removeFund);
     on<WatchlistFundsReorderRequested>(_reorderFunds);
+    on<WatchlistsReorderRequested>(_reorderWatchlists);
     on<WatchlistLivePricesReceived>(_applyLivePrices);
     _watchlistChangesSubscription = _repository.watchlistChanges.listen((_) {
       if (!isClosed && !state.isSaving) add(const WatchlistDataChanged());
@@ -91,19 +92,23 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     try {
       final watchlists = await _repository.getWatchlists();
       final previousSelected = state.selectedWatchlistId;
+      final previousKeys = state.visibleFunds.map((fund) => fund.marketKey);
       final selected = watchlists.any((item) => item.id == previousSelected)
           ? previousSelected!
           : defaultWatchlistId;
+      final visible = _resolve(watchlists, selected, state.allFunds);
       emit(
         state.copyWith(
           watchlists: watchlists,
           selectedWatchlistId: selected,
-          visibleFunds: _resolve(watchlists, selected, state.allFunds),
+          visibleFunds: visible,
           clearMessage: true,
           clearError: true,
         ),
       );
-      _watch(state.visibleFunds);
+      if (!_sameKeys(previousKeys, visible.map((fund) => fund.marketKey))) {
+        _watch(state.visibleFunds);
+      }
     } on Object catch (error) {
       emit(
         state.copyWith(
@@ -304,6 +309,45 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     await _save(next, emit);
   }
 
+  Future<void> _reorderWatchlists(
+    WatchlistsReorderRequested event,
+    Emitter<WatchlistState> emit,
+  ) async {
+    if (!_canWrite(emit)) return;
+    final pinned = <Watchlist>[];
+    final userWatchlists = <Watchlist>[];
+    for (final watchlist in state.watchlists) {
+      if (watchlist.id == defaultWatchlistId) {
+        pinned.add(watchlist);
+      } else {
+        userWatchlists.add(watchlist);
+      }
+    }
+    if (pinned.length != 1) {
+      _reject(emit, 'Unable to reorder watchlists.');
+      return;
+    }
+    if (event.oldIndex < 0 ||
+        event.oldIndex >= userWatchlists.length ||
+        event.newIndex < 0 ||
+        event.newIndex > userWatchlists.length) {
+      _reject(emit, 'Unable to reorder watchlists.');
+      return;
+    }
+    var insertionIndex = event.newIndex;
+    if (insertionIndex > event.oldIndex) insertionIndex -= 1;
+    if (insertionIndex == event.oldIndex) return;
+    final moved = userWatchlists.removeAt(event.oldIndex);
+    userWatchlists.insert(insertionIndex, moved);
+    final next = <Watchlist>[...pinned, ...userWatchlists];
+    await _save(
+      next,
+      emit,
+      failureMessage: 'Unable to reorder watchlists.',
+      resubscribe: false,
+    );
+  }
+
   bool _canWrite(Emitter<WatchlistState> emit) {
     if (state.status != WatchlistStatus.loaded || state.isSaving) return false;
     return true;
@@ -323,6 +367,8 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     List<Watchlist> next,
     Emitter<WatchlistState> emit, {
     String? selectedId,
+    String failureMessage = 'Unable to save watchlist changes.',
+    bool resubscribe = true,
   }) async {
     final previous = state;
     emit(
@@ -332,25 +378,43 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
       await _repository.saveWatchlists(next);
       final selected =
           selectedId ?? previous.selectedWatchlistId ?? next.first.id;
+      final visible = _resolve(next, selected, previous.allFunds);
       emit(
         WatchlistState(
           status: WatchlistStatus.loaded,
           watchlists: next,
           selectedWatchlistId: selected,
           allFunds: previous.allFunds,
-          visibleFunds: _resolve(next, selected, previous.allFunds),
+          visibleFunds: visible,
+          livePrices: previous.livePrices,
         ),
       );
-      _watch(state.visibleFunds);
+      if (resubscribe) {
+        final previousKeys = previous.visibleFunds.map((fund) => fund.marketKey);
+        final nextKeys = visible.map((fund) => fund.marketKey);
+        if (!_sameKeys(previousKeys, nextKeys)) {
+          _watch(state.visibleFunds);
+        }
+      }
     } on Object catch (error) {
       emit(
         previous.copyWith(
           isSaving: false,
-          message: 'Unable to save watchlist changes.',
+          message: failureMessage,
           errorMessage: error.toString(),
         ),
       );
     }
+  }
+
+  static bool _sameKeys(Iterable<String> left, Iterable<String> right) {
+    final first = left.toList(growable: false);
+    final second = right.toList(growable: false);
+    if (first.length != second.length) return false;
+    for (var index = 0; index < first.length; index++) {
+      if (first[index] != second[index]) return false;
+    }
+    return true;
   }
 
   static List<WatchlistFund> _resolve(
@@ -428,19 +492,8 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     Emitter<WatchlistState> emit,
   ) {
     if (state.status != WatchlistStatus.loaded) return;
-    final ticks = {
-      for (final tick in event.batch.updates) tick.instrumentId: tick,
-    };
-    WatchlistFund updated(WatchlistFund fund) {
-      final tick = ticks[fund.marketKey];
-      return tick == null ? fund : fund.withLivePrice(tick);
-    }
-
-    final all = state.allFunds.map(updated).toList(growable: false);
-    final byId = {for (final fund in all) fund.id: fund};
-    final visible = state.visibleFunds
-        .map((fund) => byId[fund.id]!)
-        .toList(growable: false);
-    emit(state.copyWith(allFunds: all, visibleFunds: visible));
+    final next = LivePriceTick.merge(state.livePrices, event.batch.updates);
+    if (identical(next, state.livePrices)) return;
+    emit(state.copyWith(livePrices: next));
   }
 }

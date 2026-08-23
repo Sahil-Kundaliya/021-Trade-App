@@ -1,6 +1,5 @@
 import 'package:core_data/core_data.dart';
 
-import '../entities/fund_details.dart';
 import '../entities/price_candle.dart';
 
 class FundChartSnapshot {
@@ -10,8 +9,7 @@ class FundChartSnapshot {
     required this.symbol,
     required this.instrumentType,
     required this.intradayCandles,
-    required this.oneMonthHistory,
-    required this.threeMonthHistory,
+    required this.dailyCandles,
     required this.latestLtpMinor,
     required this.previousCloseMinor,
     required this.tickSizeMinor,
@@ -22,8 +20,7 @@ class FundChartSnapshot {
   final String symbol;
   final String instrumentType;
   final List<PriceCandle> intradayCandles;
-  final List<FundHistoryPoint> oneMonthHistory;
-  final List<FundHistoryPoint> threeMonthHistory;
+  final List<PriceCandle> dailyCandles;
   final int latestLtpMinor;
   final int previousCloseMinor;
   final int tickSizeMinor;

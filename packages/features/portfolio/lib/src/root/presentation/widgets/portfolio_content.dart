@@ -11,6 +11,7 @@ import '../../../holdings/presentation/widgets/holdings_empty_state.dart';
 import '../../../holdings/presentation/widgets/holdings_list.dart';
 import '../../../holdings/presentation/widgets/portfolio_summary_card.dart';
 import '../../../holdings/domain/entities/holding.dart';
+import '../../../holdings/domain/entities/portfolio_summary.dart';
 import 'package:core_data/core_data.dart';
 import 'portfolio_skeleton.dart';
 
@@ -24,6 +25,13 @@ class PortfolioContent extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: BlocBuilder<HoldingsBloc, HoldingsState>(
+          buildWhen: (previous, current) =>
+              previous.status != current.status ||
+              previous.sort != current.sort ||
+              previous.selectedCategory != current.selectedCategory ||
+              previous.availableCategories != current.availableCategories ||
+              previous.errorMessage != current.errorMessage ||
+              !_sameHoldingKeys(previous, current),
           builder: (context, state) => CustomScrollView(
             slivers: [
               SliverPadding(
@@ -147,7 +155,12 @@ class _LoadedPortfolio extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      PortfolioSummaryCard(summary: state.summary!),
+      BlocSelector<HoldingsBloc, HoldingsState, PortfolioSummary?>(
+        selector: (state) => state.summary,
+        builder: (context, summary) => summary == null
+            ? const SizedBox.shrink()
+            : PortfolioSummaryCard(summary: summary),
+      ),
       const SizedBox(height: AppSpacing.lg),
       _PortfolioCategoryTabs(state: state),
       const SizedBox(height: AppSpacing.lg),
@@ -218,4 +231,14 @@ class _HoldingsError extends StatelessWidget {
     description: 'Please try loading your portfolio again.',
     onRetry: onRetry,
   );
+}
+
+bool _sameHoldingKeys(HoldingsState previous, HoldingsState current) {
+  final left = previous.visibleHoldings;
+  final right = current.visibleHoldings;
+  if (left.length != right.length) return false;
+  for (var index = 0; index < left.length; index++) {
+    if (left[index].marketKey != right[index].marketKey) return false;
+  }
+  return true;
 }

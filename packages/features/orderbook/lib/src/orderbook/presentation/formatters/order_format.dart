@@ -1,20 +1,12 @@
+import 'package:core_ui/core_ui.dart';
+
 import '../../domain/entities/trade_order.dart';
 
 abstract final class OrderFormat {
-  static String currency(double value) => '₹${number(value)}';
+  static String currency(double value) => FinancialFormatter.price(value);
 
-  static String number(double value) {
-    final parts = value.toStringAsFixed(2).split('.');
-    final whole = parts.first;
-    if (whole.length <= 3) return '$whole.${parts.last}';
-    final lastThree = whole.substring(whole.length - 3);
-    final leading = whole.substring(0, whole.length - 3);
-    final grouped = leading.replaceAllMapped(
-      RegExp(r'\B(?=(\d{2})+(?!\d))'),
-      (_) => ',',
-    );
-    return '$grouped,$lastThree.${parts.last}';
-  }
+  static String number(double value) =>
+      FinancialFormatter.group(FinancialFormatter.decimals(value.abs()));
 
   static String time(DateTime value, {bool includeSeconds = false}) {
     final hour = value.hour % 12 == 0 ? 12 : value.hour % 12;

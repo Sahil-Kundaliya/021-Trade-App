@@ -140,5 +140,5 @@ class OrderConfirmation extends StatelessWidget {
       ],
     ),
   );
-  static String _money(double value) => '₹${value.toStringAsFixed(2)}';
+  static String _money(double value) => FinancialFormatter.price(value);
 }
