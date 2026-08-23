@@ -115,6 +115,15 @@ final class _FakeOrderPlacementRepository implements OrderPlacementRepository {
   final placed = <OrderDraft>[];
 
   @override
+  Stream<void> get positionChanges => const Stream.empty();
+
+  @override
+  Future<int> getAvailableSellQuantity({
+    required String fundId,
+    required TradeExchange exchange,
+  }) async => 100000;
+
+  @override
   Future<OrderInstrument> getInstrument(String fundId) async => instrument;
 
   @override

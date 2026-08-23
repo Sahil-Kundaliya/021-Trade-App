@@ -47,9 +47,46 @@ void main() {
     await bloc.close();
     await platform.close();
   });
+
+  test('categories are dynamic and invalid selection falls back', () async {
+    final repository = _ReactiveRepository([
+      _holding('A', 10, 100),
+      _holding('OPT', 750, 10, category: PortfolioCategory.options),
+    ]);
+    final platform = _PricePlatform();
+    final bloc = HoldingsBloc(repository, LivePriceStreamManager(platform))
+      ..add(const HoldingsStarted());
+    await bloc.stream.firstWhere(
+      (state) => state.status == HoldingsStatus.loaded,
+    );
+    expect(bloc.state.availableCategories, [
+      PortfolioCategory.equity,
+      PortfolioCategory.options,
+    ]);
+
+    bloc.add(const HoldingsCategoryChanged(PortfolioCategory.options));
+    await bloc.stream.firstWhere(
+      (state) => state.selectedCategory == PortfolioCategory.options,
+    );
+    expect(bloc.state.visibleHoldings.single.fundId, 'OPT');
+
+    repository.emit([_holding('A', 10, 100)]);
+    await bloc.stream.firstWhere(
+      (state) =>
+          state.availableCategories.length == 1 &&
+          state.selectedCategory == PortfolioCategory.equity,
+    );
+    expect(bloc.state.visibleHoldings.single.fundId, 'A');
+    await bloc.close();
+    await repository.close();
+    await platform.close();
+  });
 }
 
 final class _Repository implements HoldingsRepository {
+  @override
+  Stream<List<Holding>> get holdingChanges => const Stream.empty();
+
   @override
   Future<List<Holding>> getHoldings() async => [
     _holding('A', 10, 100),
@@ -57,12 +94,35 @@ final class _Repository implements HoldingsRepository {
   ];
 }
 
-Holding _holding(String id, int quantity, double price) => Holding(
+final class _ReactiveRepository implements HoldingsRepository {
+  _ReactiveRepository(this.current);
+  List<Holding> current;
+  final _controller = StreamController<List<Holding>>.broadcast();
+
+  @override
+  Stream<List<Holding>> get holdingChanges => _controller.stream;
+  @override
+  Future<List<Holding>> getHoldings() async => current;
+
+  void emit(List<Holding> holdings) {
+    current = holdings;
+    _controller.add(holdings);
+  }
+
+  Future<void> close() => _controller.close();
+}
+
+Holding _holding(
+  String id,
+  int quantity,
+  double price, {
+  PortfolioCategory category = PortfolioCategory.equity,
+}) => Holding(
   id: id,
   fundId: id,
   symbol: id,
   companyName: id,
-  category: 'Equity',
+  category: category,
   instrumentType: 'EQUITY',
   exchange: 'NSE',
   quantity: quantity,

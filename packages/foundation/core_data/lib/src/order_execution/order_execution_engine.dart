@@ -12,16 +12,24 @@ import '../market/trade_exchange.dart';
 import '../orderbook/models/order_dto.dart';
 import '../orderbook/store/order_book_change.dart';
 import '../orderbook/store/order_store.dart';
+import '../positions/exceptions/position_exception.dart';
+import '../positions/position_service.dart';
 import '../trading/api/trading_local_api.dart';
 import '../trading/models/fund_dto.dart';
 
 @lazySingleton
 class OrderExecutionEngine {
-  OrderExecutionEngine(this._orders, this._prices, this._tradingApi);
+  OrderExecutionEngine(
+    this._orders,
+    this._prices,
+    this._tradingApi,
+    this._positions,
+  );
 
   final OrderStore _orders;
   final LivePriceStreamManager _prices;
   final TradingLocalApi _tradingApi;
+  final PositionService _positions;
   final Set<String> _processingOrderIds = <String>{};
   Map<String, FundDto> _funds = const {};
   StreamSubscription<OrderBookChange>? _orderSubscription;
@@ -162,22 +170,50 @@ class OrderExecutionEngine {
   }
 
   Future<void> _execute(OrderDto order, double ltp) async {
-    final current = _orders.current
-        .where((item) => item.id == order.id)
-        .firstOrNull;
-    if (current == null || !_isActive(current.status)) return;
-    final executed = current.copyWith(
-      status: 'executed',
-      filledQuantity: current.quantity,
-      pendingQuantity: 0,
-      averagePrice: ltp,
-      orderValue: current.quantity * ltp,
-      updatedAt: DateTime.now(),
-    );
-    await _orders.replace(executed);
-    _log(
-      '${current.side} ${current.orderType} ${current.id}: EXECUTED at $ltp',
-    );
+    var outcome = '';
+    await _orders.mutate((orders) {
+      final current = orders.where((item) => item.id == order.id).firstOrNull;
+      if (current == null || !_isActive(current.status)) return orders;
+      var replacement = current.copyWith(
+        status: 'executed',
+        filledQuantity: current.quantity,
+        pendingQuantity: 0,
+        averagePrice: ltp,
+        orderValue: current.quantity * ltp,
+        updatedAt: DateTime.now(),
+      );
+      if (current.side == 'sell') {
+        try {
+          final owned = _positions.ownedQuantityFromOrders(
+            orders,
+            fundId: current.fundId,
+            exchange: TradeExchange.parse(current.exchange),
+          );
+          if (current.quantity > owned) {
+            replacement = current.copyWith(
+              status: 'rejected',
+              rejectionReason: 'Insufficient holding quantity.',
+              updatedAt: DateTime.now(),
+            );
+            outcome = 'REJECTED: insufficient holding quantity';
+          }
+        } on PositionDataException {
+          replacement = current.copyWith(
+            status: 'rejected',
+            rejectionReason: 'Insufficient holding quantity.',
+            updatedAt: DateTime.now(),
+          );
+          outcome = 'REJECTED: inconsistent position history';
+        }
+      }
+      outcome = outcome.isEmpty ? 'EXECUTED at $ltp' : outcome;
+      return orders
+          .map((item) => item.id == current.id ? replacement : item)
+          .toList(growable: false);
+    });
+    if (outcome.isNotEmpty) {
+      _log('${order.side} ${order.orderType} ${order.id}: $outcome');
+    }
   }
 
   List<OrderDto> _activeOrders() => _orders.current

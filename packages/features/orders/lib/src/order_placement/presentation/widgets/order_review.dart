@@ -46,6 +46,10 @@ class OrderReview extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xl),
               OrderSummary(state: state),
+              if (!buy) ...[
+                const SizedBox(height: AppSpacing.md),
+                _SellAvailability(state: state),
+              ],
               if (state.errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(top: AppSpacing.md),
@@ -87,4 +91,39 @@ class OrderReview extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SellAvailability extends StatelessWidget {
+  const _SellAvailability({required this.state});
+
+  final OrderPlacementState state;
+
+  @override
+  Widget build(BuildContext context) => AppCard(
+    child: Column(
+      children: [
+        _row(context, 'Available quantity', state.availableSellQuantity),
+        const SizedBox(height: AppSpacing.sm),
+        _row(context, 'Sell quantity', state.quantity),
+        const SizedBox(height: AppSpacing.sm),
+        _row(
+          context,
+          'Remaining',
+          state.availableSellQuantity - state.quantity,
+        ),
+      ],
+    ),
+  );
+
+  Widget _row(BuildContext context, String label, int value) => Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(label, style: context.textTheme.bodySmall),
+      SensitiveValueText(
+        '$value',
+        type: SensitiveValueType.quantity,
+        style: context.textTheme.labelMedium,
+      ),
+    ],
+  );
 }

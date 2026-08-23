@@ -35,6 +35,12 @@ void main() {
   });
 
   testWidgets('navigator opens and pops standalone routes', (tester) async {
+    Future<void> pumpNavigation() async {
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump();
+    }
+
     final app = TradingApp();
     await tester.pumpWidget(app);
     await tester.pumpAndSettle();
@@ -44,38 +50,38 @@ void main() {
     expect(find.text('Watchlist'), findsExactly(2));
 
     app.navigator.goToPortfolio();
-    await tester.pumpAndSettle();
+    await pumpNavigation();
     expect(find.text('Portfolio'), findsExactly(2));
 
     app.navigator.goToProfile();
-    await tester.pumpAndSettle();
+    await pumpNavigation();
     expect(find.text('Profile'), findsExactly(2));
 
     app.navigator.goToDashboard();
-    await tester.pumpAndSettle();
+    await pumpNavigation();
     expect(find.text('Dashboard'), findsExactly(2));
 
     app.navigator.openOrders(
       fundId: 'RELIANCE_EQ',
       exchange: TradeExchange.nse,
     );
-    await tester.pumpAndSettle();
+    await pumpNavigation();
     expect(find.byType(OrdersScreen), findsOneWidget);
 
     await app.navigator.pop();
-    await tester.pumpAndSettle();
+    await pumpNavigation();
     expect(find.byType(OrdersScreen), findsNothing);
 
     app.navigator.openOrderBook();
-    await tester.pumpAndSettle();
+    await pumpNavigation();
     expect(find.byType(OrderBookScreen), findsOneWidget);
 
     await app.navigator.pop();
-    await tester.pumpAndSettle();
+    await pumpNavigation();
     expect(find.byType(OrderBookScreen), findsNothing);
 
     app.navigator.openFund(fundId: 'RELIANCE_EQ', exchange: TradeExchange.nse);
-    await tester.pumpAndSettle();
+    await pumpNavigation();
     expect(find.byType(FundSheet), findsOneWidget);
     expect(find.text('BUY'), findsOneWidget);
     expect(find.text('SELL'), findsOneWidget);
@@ -85,7 +91,7 @@ void main() {
     );
 
     await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
+    await pumpNavigation();
     expect(find.byType(FundSheet), findsNothing);
     expect(find.text('Dashboard'), findsExactly(2));
   });
@@ -155,8 +161,10 @@ void main() {
     await openAndCloseFunds(find.text('RELIANCE'));
 
     await tester.tap(find.text('Portfolio').last);
-    await tester.pumpAndSettle();
-    await openAndCloseFunds(find.text('RELIANCE'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
+    expect(find.text('RELIANCE'), findsNothing);
   });
 
   testWidgets('Dashboard, Watchlist and Portfolio open the same Search route', (
@@ -168,11 +176,15 @@ void main() {
 
     Future<void> openAndCloseSearch() async {
       await tester.tap(find.byTooltip('Search funds'));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump();
       expect(find.byType(SearchScreen), findsOneWidget);
       expect(find.text('TRADING FUNDS'), findsOneWidget);
       await app.navigator.pop();
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump();
       expect(find.byType(SearchScreen), findsNothing);
     }
 
@@ -181,7 +193,9 @@ void main() {
     await tester.pumpAndSettle();
     await openAndCloseSearch();
     app.navigator.goToPortfolio();
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump();
     await openAndCloseSearch();
   });
 

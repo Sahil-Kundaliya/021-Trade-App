@@ -19,9 +19,14 @@ class OrderPlacementBloc
   OrderPlacementBloc(this._repository, [this._livePrices])
     : super(const OrderPlacementState()) {
     on<OrderPlacementStarted>(_start);
-    on<OrderSideChanged>(
-      (event, emit) => _edit(emit, state.copyWith(side: event.side)),
-    );
+    on<OrderSideChanged>((event, emit) {
+      final next = state.copyWith(side: event.side);
+      _edit(emit, next);
+      final error = _sellQuantityError(next);
+      if (error != null) {
+        emit(next.copyWith(fieldErrors: {'quantity': error}));
+      }
+    });
     on<OrderExchangeChanged>(_exchangeChanged);
     on<OrderQuantityIncremented>(
       (_, emit) => _changeQuantity(
@@ -71,16 +76,19 @@ class OrderPlacementBloc
     on<OrderPlacementConfirmed>(_confirm);
     on<OrderPlacementRetryRequested>(_confirm);
     on<OrderLivePricesReceived>(_onLivePrices);
+    on<OrderPositionAvailabilityChanged>(_refreshAvailability);
   }
 
   final OrderPlacementRepository _repository;
   final LivePriceStreamManager? _livePrices;
   LivePriceLease? _lease;
   StreamSubscription<LivePriceBatch>? _liveSubscription;
+  StreamSubscription<void>? _positionSubscription;
 
   @override
   Future<void> close() async {
     await _liveSubscription?.cancel();
+    await _positionSubscription?.cancel();
     await _lease?.dispose();
     return super.close();
   }
@@ -102,6 +110,13 @@ class OrderPlacementBloc
           : loaded.defaultExchange;
       final instrument = loaded.forExchange(exchange);
       _watch(instrument);
+      _positionSubscription ??= _repository.positionChanges.listen(
+        (_) => add(const OrderPositionAvailabilityChanged()),
+      );
+      final available = await _repository.getAvailableSellQuantity(
+        fundId: instrument.id,
+        exchange: exchange,
+      );
       emit(
         OrderPlacementState(
           status: OrderPlacementStatus.ready,
@@ -112,6 +127,7 @@ class OrderPlacementBloc
           product: instrument.allowedProducts.first,
           limitPrice: instrument.ltp,
           triggerPrice: instrument.ltp,
+          availableSellQuantity: available,
         ),
       );
     } on Object {
@@ -136,6 +152,7 @@ class OrderPlacementBloc
         state.copyWith(exchange: event.exchange, instrument: instrument),
       );
       _watch(instrument);
+      add(const OrderPositionAvailabilityChanged());
     }
   }
 
@@ -148,8 +165,21 @@ class OrderPlacementBloc
     }
   }
 
-  void _changeQuantity(Emitter<OrderPlacementState> emit, int quantity) =>
-      _edit(emit, state.copyWith(quantity: quantity));
+  void _changeQuantity(Emitter<OrderPlacementState> emit, int quantity) {
+    final next = state.copyWith(quantity: quantity);
+    _edit(emit, next);
+    if (next.side == OrderSide.sell) {
+      final error = _sellQuantityError(next);
+      if (error != null) {
+        emit(
+          next.copyWith(
+            status: OrderPlacementStatus.ready,
+            fieldErrors: {'quantity': error},
+          ),
+        );
+      }
+    }
+  }
 
   void _edit(Emitter<OrderPlacementState> emit, OrderPlacementState next) {
     emit(
@@ -214,6 +244,15 @@ class OrderPlacementBloc
           placedOrder: placed,
         ),
       );
+    } on InsufficientPositionException catch (error) {
+      emit(
+        state.copyWith(
+          status: OrderPlacementStatus.ready,
+          fieldErrors: {'quantity': error.message},
+          errorMessage: error.message,
+        ),
+      );
+      add(const OrderPositionAvailabilityChanged());
     } on Object {
       emit(
         state.copyWith(
@@ -241,6 +280,8 @@ class OrderPlacementBloc
       errors['quantity'] =
           'Quantity must be in multiples of ${instrument.lotSize}.';
     }
+    final sellError = _sellQuantityError(value);
+    if (sellError != null) errors['quantity'] = sellError;
     if (!instrument.allowedProducts.contains(value.product)) {
       errors['product'] = 'Select a valid product.';
     }
@@ -284,6 +325,35 @@ class OrderPlacementBloc
       }
     }
     return errors;
+  }
+
+  String? _sellQuantityError(OrderPlacementState value) {
+    if (value.side != OrderSide.sell || value.quantity <= 0) return null;
+    final available = value.availableSellQuantity;
+    if (value.quantity <= available) return null;
+    return available <= 0
+        ? 'No quantity available to sell.'
+        : 'Only $available quantity available to sell.';
+  }
+
+  Future<void> _refreshAvailability(
+    OrderPositionAvailabilityChanged event,
+    Emitter<OrderPlacementState> emit,
+  ) async {
+    final instrument = state.instrument;
+    final exchange = state.exchange;
+    if (instrument == null || exchange == null) return;
+    final available = await _repository.getAvailableSellQuantity(
+      fundId: instrument.id,
+      exchange: exchange,
+    );
+    final next = state.copyWith(availableSellQuantity: available);
+    final error = _sellQuantityError(next);
+    emit(
+      next.copyWith(
+        fieldErrors: error == null ? const {} : {'quantity': error},
+      ),
+    );
   }
 
   void _validatePrice(

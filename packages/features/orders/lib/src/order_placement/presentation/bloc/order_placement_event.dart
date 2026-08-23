@@ -86,3 +86,7 @@ final class OrderLivePricesReceived extends OrderPlacementEvent {
   const OrderLivePricesReceived(this.batch);
   final LivePriceBatch batch;
 }
+
+final class OrderPositionAvailabilityChanged extends OrderPlacementEvent {
+  const OrderPositionAvailabilityChanged();
+}

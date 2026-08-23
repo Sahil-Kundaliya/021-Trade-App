@@ -21,9 +21,11 @@ void main() {
   test(
     'repository loads equity, future, option and typed missing ID',
     () async {
+      final store = OrderStore(_MemoryOrderBookApi());
       final repository = OrderPlacementRepositoryImpl(
         tradingApi,
-        OrderStore(_MemoryOrderBookApi()),
+        store,
+        PositionServiceImpl(store, tradingApi),
       );
       expect(
         (await repository.getInstrument('RELIANCE_EQ')).instrumentType,
@@ -50,9 +52,11 @@ void main() {
     'repository appends deterministic market, limit, SL and SL-M records',
     () async {
       final api = _MemoryOrderBookApi();
+      final store = OrderStore(api);
       final repository = OrderPlacementRepositoryImpl(
         tradingApi,
-        OrderStore(api),
+        store,
+        PositionServiceImpl(store, tradingApi),
       );
       final instrument = await repository.getInstrument('RELIANCE_EQ');
 
@@ -107,6 +111,74 @@ void main() {
       );
       expect(api.orders, hasLength(4));
       expect(api.orders.map((order) => order.id).toSet(), hasLength(4));
+    },
+  );
+
+  test(
+    'sell placement validates ownership and active reservations atomically',
+    () async {
+      final api = _MemoryOrderBookApi();
+      final store = OrderStore(api);
+      final positions = PositionServiceImpl(store, tradingApi);
+      final repository = OrderPlacementRepositoryImpl(
+        tradingApi,
+        store,
+        positions,
+      );
+      final instrument = await repository.getInstrument('RELIANCE_EQ');
+      OrderDraft draft({
+        required OrderSide side,
+        required int quantity,
+        TradeOrderType type = TradeOrderType.market,
+        TradeExchange exchange = TradeExchange.nse,
+      }) => OrderDraft(
+        instrument: instrument.forExchange(exchange),
+        side: side,
+        exchange: exchange,
+        quantity: quantity,
+        orderType: type,
+        product: TradeProduct.delivery,
+        validity: OrderValidity.day,
+        limitPrice: type == TradeOrderType.limit ? instrument.ltp : null,
+      );
+
+      await expectLater(
+        repository.placeOrder(draft(side: OrderSide.sell, quantity: 1)),
+        throwsA(isA<InsufficientPositionException>()),
+      );
+      expect(api.orders, isEmpty);
+
+      await repository.placeOrder(draft(side: OrderSide.buy, quantity: 10));
+      final reserved = await repository.placeOrder(
+        draft(side: OrderSide.sell, quantity: 6, type: TradeOrderType.limit),
+      );
+      expect(
+        await repository.getAvailableSellQuantity(
+          fundId: instrument.id,
+          exchange: TradeExchange.nse,
+        ),
+        4,
+      );
+      await expectLater(
+        repository.placeOrder(draft(side: OrderSide.sell, quantity: 5)),
+        throwsA(isA<InsufficientPositionException>()),
+      );
+      expect(api.orders, hasLength(2));
+
+      await store.cancel(reserved.id);
+      expect(
+        await repository.getAvailableSellQuantity(
+          fundId: instrument.id,
+          exchange: TradeExchange.nse,
+        ),
+        10,
+      );
+      await expectLater(
+        repository.placeOrder(
+          draft(side: OrderSide.sell, quantity: 1, exchange: TradeExchange.bse),
+        ),
+        throwsA(isA<InsufficientPositionException>()),
+      );
     },
   );
 
@@ -307,6 +379,13 @@ final class _BlocRepository implements OrderPlacementRepository {
   final OrderInstrument instrument;
   final drafts = <OrderDraft>[];
   int calls = 0;
+  @override
+  Stream<void> get positionChanges => const Stream.empty();
+  @override
+  Future<int> getAvailableSellQuantity({
+    required String fundId,
+    required TradeExchange exchange,
+  }) async => 100000;
   @override
   Future<OrderInstrument> getInstrument(String fundId) async => instrument;
   @override

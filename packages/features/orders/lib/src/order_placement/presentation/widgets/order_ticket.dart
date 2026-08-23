@@ -42,6 +42,14 @@ class OrderTicket extends StatelessWidget {
                       value: state.side,
                       onChanged: (value) => bloc.add(OrderSideChanged(value)),
                     ),
+                    if (state.side == OrderSide.sell) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      _AvailableQuantity(
+                        quantity: state.availableSellQuantity,
+                        lotSize: instrument.lotSize,
+                        isDerivative: instrument.isDerivative,
+                      ),
+                    ],
                     const SizedBox(height: AppSpacing.lg),
                     OrderChoiceSelector<TradeExchange>(
                       label: 'Exchange',
@@ -65,8 +73,12 @@ class OrderTicket extends StatelessWidget {
                       quantity: state.quantity,
                       lotSize: instrument.lotSize,
                       isDerivative: instrument.isDerivative,
-                      onIncrement: () =>
-                          bloc.add(const OrderQuantityIncremented()),
+                      onIncrement:
+                          state.side == OrderSide.sell &&
+                              state.quantity + instrument.quantityStep >
+                                  state.availableSellQuantity
+                          ? null
+                          : () => bloc.add(const OrderQuantityIncremented()),
                       onDecrement: () =>
                           bloc.add(const OrderQuantityDecremented()),
                       onChanged: (value) =>
@@ -220,4 +232,40 @@ class _MarketPrice extends StatelessWidget {
       ],
     ),
   );
+}
+
+class _AvailableQuantity extends StatelessWidget {
+  const _AvailableQuantity({
+    required this.quantity,
+    required this.lotSize,
+    required this.isDerivative,
+  });
+
+  final int quantity;
+  final int lotSize;
+  final bool isDerivative;
+
+  @override
+  Widget build(BuildContext context) {
+    final lots = lotSize <= 0 ? 0 : quantity ~/ lotSize;
+    final value = isDerivative
+        ? '$lots ${lots == 1 ? 'Lot' : 'Lots'} · $quantity Qty'
+        : '$quantity Qty';
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Available to sell',
+          style: context.textTheme.bodySmall?.copyWith(
+            color: context.appColors.textSecondary,
+          ),
+        ),
+        SensitiveValueText(
+          value,
+          type: SensitiveValueType.quantity,
+          style: context.textTheme.labelMedium,
+        ),
+      ],
+    );
+  }
 }

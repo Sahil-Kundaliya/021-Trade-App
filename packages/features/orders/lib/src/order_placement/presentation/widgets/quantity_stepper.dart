@@ -6,7 +6,7 @@ class QuantityStepper extends StatefulWidget {
     required this.quantity,
     required this.lotSize,
     required this.isDerivative,
-    required this.onIncrement,
+    this.onIncrement,
     required this.onDecrement,
     required this.onChanged,
     this.errorText,
@@ -15,7 +15,7 @@ class QuantityStepper extends StatefulWidget {
   final int quantity;
   final int lotSize;
   final bool isDerivative;
-  final VoidCallback onIncrement;
+  final VoidCallback? onIncrement;
   final VoidCallback onDecrement;
   final ValueChanged<String> onChanged;
   final String? errorText;

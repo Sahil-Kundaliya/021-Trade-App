@@ -27,7 +27,7 @@ _i174.GetIt configurePortfolioDependencies(
 }) {
   final gh = _i526.GetItHelper(getIt, environment, environmentFilter);
   gh.lazySingleton<_i976.HoldingsRepository>(
-    () => _i530.HoldingsRepositoryImpl(gh<_i607.TradingLocalApi>()),
+    () => _i530.HoldingsRepositoryImpl(gh<_i607.PositionService>()),
   );
   gh.factory<_i485.HoldingsBloc>(
     () => _i485.HoldingsBloc(

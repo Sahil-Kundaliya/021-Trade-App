@@ -7,9 +7,11 @@ import '../../../holdings/presentation/bloc/holdings_bloc.dart';
 import '../../../holdings/presentation/bloc/holdings_event.dart';
 import '../../../holdings/presentation/bloc/holdings_state.dart';
 import '../../../holdings/presentation/widgets/holdings_header.dart';
+import '../../../holdings/presentation/widgets/holdings_empty_state.dart';
 import '../../../holdings/presentation/widgets/holdings_list.dart';
 import '../../../holdings/presentation/widgets/portfolio_summary_card.dart';
 import '../../../holdings/domain/entities/holding.dart';
+import 'package:core_data/core_data.dart';
 
 class PortfolioContent extends StatelessWidget {
   const PortfolioContent({this.navigator, super.key});
@@ -20,17 +22,19 @@ class PortfolioContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 960),
-              child: BlocBuilder<HoldingsBloc, HoldingsState>(
-                builder: (context, state) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppSectionHeader(
+        child: BlocBuilder<HoldingsBloc, HoldingsState>(
+          builder: (context, state) => CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  0,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: _PageWidth(
+                    child: AppSectionHeader(
                       title: 'Portfolio',
                       trailing: AppIconButton(
                         tooltip: 'Search funds',
@@ -38,33 +42,97 @@ class PortfolioContent extends StatelessWidget {
                         icon: const Icon(Icons.search, size: AppSizes.iconSm),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-                    switch (state.status) {
-                      HoldingsStatus.initial ||
-                      HoldingsStatus.loading => const _HoldingsLoading(),
-                      HoldingsStatus.error => _HoldingsError(
-                        onRetry: () => context.read<HoldingsBloc>().add(
-                          const HoldingsRetryRequested(),
-                        ),
-                      ),
-                      HoldingsStatus.empty => const HoldingsList(holdings: []),
-                      HoldingsStatus.loaded => _LoadedPortfolio(
-                        state: state,
-                        onHoldingTap: (holding) => navigator?.openFund(
-                          fundId: holding.fundId,
-                          exchange: holding.tradeExchange,
-                        ),
-                      ),
-                    },
-                  ],
+                  ),
                 ),
               ),
-            ),
+              const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
+              switch (state.status) {
+                HoldingsStatus.empty => _CenteredPortfolioState(
+                  child: HoldingsEmptyState(
+                    onExplore: navigator == null
+                        ? null
+                        : () => navigator!.openSearch(),
+                  ),
+                ),
+                HoldingsStatus.error => _CenteredPortfolioState(
+                  child: _HoldingsError(
+                    onRetry: () => context.read<HoldingsBloc>().add(
+                      const HoldingsRetryRequested(),
+                    ),
+                  ),
+                ),
+                _ => SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: _PageWidth(
+                      child: switch (state.status) {
+                        HoldingsStatus.initial ||
+                        HoldingsStatus.loading => const _HoldingsLoading(),
+                        HoldingsStatus.loaded => _LoadedPortfolio(
+                          state: state,
+                          onHoldingTap: (holding) => navigator?.openFund(
+                            fundId: holding.fundId,
+                            exchange: holding.tradeExchange,
+                          ),
+                        ),
+                        HoldingsStatus.empty ||
+                        HoldingsStatus.error => const SizedBox.shrink(),
+                      },
+                    ),
+                  ),
+                ),
+              },
+            ],
           ),
         ),
       ),
     );
   }
+}
+
+class _CenteredPortfolioState extends StatelessWidget {
+  const _CenteredPortfolioState({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => SliverPadding(
+    padding: const EdgeInsets.fromLTRB(
+      AppSpacing.lg,
+      0,
+      AppSpacing.lg,
+      AppSpacing.lg,
+    ),
+    sliver: SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 960),
+          child: child,
+        ),
+      ),
+    ),
+  );
+}
+
+class _PageWidth extends StatelessWidget {
+  const _PageWidth({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.topCenter,
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 960),
+      child: child,
+    ),
+  );
 }
 
 class _LoadedPortfolio extends StatelessWidget {
@@ -78,6 +146,8 @@ class _LoadedPortfolio extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       PortfolioSummaryCard(summary: state.summary!),
+      const SizedBox(height: AppSpacing.lg),
+      _PortfolioCategoryTabs(state: state),
       const SizedBox(height: AppSpacing.xxl),
       HoldingsHeader(
         sort: state.sort,
@@ -85,9 +155,41 @@ class _LoadedPortfolio extends StatelessWidget {
             context.read<HoldingsBloc>().add(HoldingsSortChanged(sort)),
       ),
       const SizedBox(height: AppSpacing.md),
-      HoldingsList(holdings: state.holdings, onHoldingTap: onHoldingTap),
+      HoldingsList(holdings: state.visibleHoldings, onHoldingTap: onHoldingTap),
     ],
   );
+}
+
+class _PortfolioCategoryTabs extends StatelessWidget {
+  const _PortfolioCategoryTabs({required this.state});
+
+  final HoldingsState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final categories = state.availableCategories;
+    final selected = state.selectedCategory!;
+    final selectedIndex = categories.indexOf(selected);
+    return DefaultTabController(
+      key: ValueKey('${categories.join(',')}:${selected.name}'),
+      length: categories.length,
+      initialIndex: selectedIndex,
+      child: TabBar(
+        isScrollable: categories.length < 3,
+        tabAlignment: categories.length < 3 ? TabAlignment.start : null,
+        onTap: (index) => context.read<HoldingsBloc>().add(
+          HoldingsCategoryChanged(categories[index]),
+        ),
+        tabs: [for (final category in categories) Tab(text: _label(category))],
+      ),
+    );
+  }
+
+  static String _label(PortfolioCategory category) => switch (category) {
+    PortfolioCategory.equity => 'Equity',
+    PortfolioCategory.future => 'Futures',
+    PortfolioCategory.options => 'Options',
+  };
 }
 
 class _HoldingsLoading extends StatelessWidget {

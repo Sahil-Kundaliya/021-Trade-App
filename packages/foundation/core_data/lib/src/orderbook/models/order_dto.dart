@@ -108,6 +108,7 @@ class OrderDto {
     int? pendingQuantity,
     double? averagePrice,
     double? orderValue,
+    String? rejectionReason,
     DateTime? updatedAt,
   }) => OrderDto(
     id: id,
@@ -130,7 +131,7 @@ class OrderDto {
     triggerPrice: triggerPrice,
     orderValue: orderValue ?? this.orderValue,
     validity: validity,
-    rejectionReason: rejectionReason,
+    rejectionReason: rejectionReason ?? this.rejectionReason,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );

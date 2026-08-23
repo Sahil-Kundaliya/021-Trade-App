@@ -1,5 +1,6 @@
 import 'package:core_data/core_data.dart';
 
+import '../../domain/entities/holding.dart';
 import 'holdings_sort.dart';
 
 sealed class HoldingsEvent {
@@ -23,4 +24,14 @@ final class HoldingsRetryRequested extends HoldingsEvent {
 final class HoldingsLivePricesReceived extends HoldingsEvent {
   const HoldingsLivePricesReceived(this.batch);
   final LivePriceBatch batch;
+}
+
+final class HoldingsPositionsReceived extends HoldingsEvent {
+  const HoldingsPositionsReceived(this.holdings);
+  final List<Holding> holdings;
+}
+
+final class HoldingsCategoryChanged extends HoldingsEvent {
+  const HoldingsCategoryChanged(this.category);
+  final PortfolioCategory category;
 }

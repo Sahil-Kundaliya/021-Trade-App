@@ -57,6 +57,7 @@ void main() {
 
     test('SL persists trigger then fills on a later price', () async {
       final fixture = _Fixture();
+      await fixture.add(_order(id: 'holding', side: 'buy', status: 'executed'));
       await fixture.add(
         _order(
           id: 'sl',
@@ -142,6 +143,28 @@ void main() {
         expect(fixture.order('bse-order').status, 'executed');
       },
     );
+
+    test('serialized sell execution rejects an oversell race', () async {
+      final fixture = _Fixture();
+      await fixture.add(
+        _order(id: 'holding', side: 'buy', status: 'executed', quantity: 10),
+      );
+      await fixture.add(
+        _order(id: 'sell-a', side: 'sell', quantity: 6, limit: 100),
+      );
+      await fixture.add(
+        _order(id: 'sell-b', side: 'sell', quantity: 6, limit: 100),
+      );
+
+      await fixture.engine.evaluatePrice('fund', 100);
+
+      expect(fixture.order('sell-a').status, 'executed');
+      expect(fixture.order('sell-b').status, 'rejected');
+      expect(
+        fixture.order('sell-b').rejectionReason,
+        'Insufficient holding quantity.',
+      );
+    });
   });
 }
 
@@ -152,6 +175,7 @@ final class _Fixture {
       store,
       LivePriceStreamManager(platform),
       _EmptyTradingApi(),
+      PositionServiceImpl(store, _EmptyTradingApi()),
     );
   }
 
@@ -174,6 +198,7 @@ OrderDto _order({
   double? limit,
   double? trigger,
   String exchange = 'nse',
+  int quantity = 10,
 }) => OrderDto(
   id: id,
   fundId: 'fund',
@@ -185,9 +210,9 @@ OrderDto _order({
   orderType: type,
   productType: 'delivery',
   status: status,
-  quantity: 10,
-  filledQuantity: status == 'executed' ? 10 : 0,
-  pendingQuantity: status == 'executed' ? 0 : 10,
+  quantity: quantity,
+  filledQuantity: status == 'executed' ? quantity : 0,
+  pendingQuantity: status == 'executed' ? 0 : quantity,
   ltp: 101,
   averagePrice: status == 'executed' ? 101 : null,
   limitPrice: limit,

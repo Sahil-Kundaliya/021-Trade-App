@@ -30,6 +30,7 @@ _i174.GetIt configureOrdersDependencies(
     () => _i161.OrderPlacementRepositoryImpl(
       gh<_i607.TradingLocalApi>(),
       gh<_i607.OrderStore>(),
+      gh<_i607.PositionService>(),
     ),
   );
   gh.factory<_i41.OrderPlacementBloc>(

@@ -29,6 +29,7 @@ import 'package:core_data/src/orderbook/api/orderbook_local_api.dart' as _i871;
 import 'package:core_data/src/orderbook/api/orderbook_local_api_impl.dart'
     as _i196;
 import 'package:core_data/src/orderbook/store/order_store.dart' as _i32;
+import 'package:core_data/src/positions/position_service.dart' as _i21;
 import 'package:core_data/src/preferences/api/app_preferences_local_api.dart'
     as _i464;
 import 'package:core_data/src/preferences/api/app_preferences_local_api_impl.dart'
@@ -78,18 +79,25 @@ _i174.GetIt configureCoreDataDependencies(
   gh.lazySingleton<_i32.OrderStore>(
     () => _i32.OrderStore(gh<_i871.OrderBookLocalApi>()),
   );
-  gh.lazySingleton<_i51.OrderExecutionEngine>(
-    () => _i51.OrderExecutionEngine(
-      gh<_i32.OrderStore>(),
-      gh<_i951.LivePriceStreamManager>(),
-      gh<_i414.TradingLocalApi>(),
-    ),
-  );
   gh.lazySingleton<_i485.TradingNotificationCoordinator>(
     () => _i485.TradingNotificationCoordinator(
       gh<_i993.LocalNotificationService>(),
       gh<_i376.AppPreferencesRepository>(),
       gh<_i32.OrderStore>(),
+    ),
+  );
+  gh.lazySingleton<_i21.PositionService>(
+    () => _i21.PositionServiceImpl(
+      gh<_i32.OrderStore>(),
+      gh<_i414.TradingLocalApi>(),
+    ),
+  );
+  gh.lazySingleton<_i51.OrderExecutionEngine>(
+    () => _i51.OrderExecutionEngine(
+      gh<_i32.OrderStore>(),
+      gh<_i951.LivePriceStreamManager>(),
+      gh<_i414.TradingLocalApi>(),
+      gh<_i21.PositionService>(),
     ),
   );
   return getIt;

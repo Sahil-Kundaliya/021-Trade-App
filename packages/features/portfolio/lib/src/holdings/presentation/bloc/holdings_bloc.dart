@@ -19,16 +19,20 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
     on<HoldingsRetryRequested>(_load);
     on<HoldingsSortChanged>(_changeSort);
     on<HoldingsLivePricesReceived>(_applyLivePrices);
+    on<HoldingsPositionsReceived>(_positionsReceived);
+    on<HoldingsCategoryChanged>(_categoryChanged);
   }
 
   final HoldingsRepository _repository;
   final LivePriceStreamManager _livePrices;
   LivePriceLease? _lease;
   StreamSubscription<LivePriceBatch>? _liveSubscription;
+  StreamSubscription<List<Holding>>? _positionSubscription;
 
   @override
   Future<void> close() async {
     await _liveSubscription?.cancel();
+    await _positionSubscription?.cancel();
     await _lease?.dispose();
     return super.close();
   }
@@ -36,42 +40,11 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
   Future<void> _load(HoldingsEvent event, Emitter<HoldingsState> emit) async {
     emit(state.copyWith(status: HoldingsStatus.loading, clearError: true));
     try {
+      _positionSubscription ??= _repository.holdingChanges.listen(
+        (holdings) => add(HoldingsPositionsReceived(holdings)),
+      );
       final loaded = await _repository.getHoldings();
-      final holdings = loaded
-          .map((holding) {
-            final cached = _livePrices.latestFor(holding.marketKey);
-            return cached == null ? holding : holding.withLivePrice(cached);
-          })
-          .toList(growable: false);
-      if (holdings.isEmpty) {
-        emit(state.copyWith(status: HoldingsStatus.empty, holdings: const []));
-        return;
-      }
-      final totalInvested = holdings.fold<double>(
-        0,
-        (total, holding) => total + holding.investedValue,
-      );
-      final currentValue = holdings.fold<double>(
-        0,
-        (total, holding) => total + holding.currentValue,
-      );
-      final totalPnl = currentValue - totalInvested;
-      final summary = PortfolioSummary(
-        totalInvested: totalInvested,
-        currentValue: currentValue,
-        totalPnl: totalPnl,
-        totalPnlPercent: totalInvested == 0
-            ? 0
-            : totalPnl / totalInvested * 100,
-      );
-      emit(
-        state.copyWith(
-          status: HoldingsStatus.loaded,
-          holdings: _sorted(holdings, state.sort),
-          summary: summary,
-        ),
-      );
-      _watch(holdings);
+      await _applyPositions(loaded, emit);
     } on Object catch (error) {
       emit(
         state.copyWith(
@@ -79,6 +52,63 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
           errorMessage: error.toString(),
         ),
       );
+    }
+  }
+
+  Future<void> _positionsReceived(
+    HoldingsPositionsReceived event,
+    Emitter<HoldingsState> emit,
+  ) => _applyPositions(event.holdings, emit);
+
+  Future<void> _applyPositions(
+    List<Holding> loaded,
+    Emitter<HoldingsState> emit,
+  ) async {
+    final holdings = loaded
+        .map((holding) {
+          final cached = _livePrices.latestFor(holding.marketKey);
+          return cached == null ? holding : holding.withLivePrice(cached);
+        })
+        .toList(growable: false);
+    final categories = PortfolioCategory.values
+        .where(
+          (category) => holdings.any((holding) => holding.category == category),
+        )
+        .toList(growable: false);
+    final selected = categories.contains(state.selectedCategory)
+        ? state.selectedCategory
+        : categories.firstOrNull;
+    await _watch(holdings);
+    if (holdings.isEmpty) {
+      emit(
+        state.copyWith(
+          status: HoldingsStatus.empty,
+          holdings: const [],
+          availableCategories: const [],
+          clearSelectedCategory: true,
+        ),
+      );
+      return;
+    }
+    final sorted = _sorted(holdings, state.sort);
+    emit(
+      state.copyWith(
+        status: HoldingsStatus.loaded,
+        holdings: sorted,
+        summary: _summary(sorted),
+        availableCategories: categories,
+        selectedCategory: selected,
+        clearError: true,
+      ),
+    );
+  }
+
+  void _categoryChanged(
+    HoldingsCategoryChanged event,
+    Emitter<HoldingsState> emit,
+  ) {
+    if (state.availableCategories.contains(event.category)) {
+      emit(state.copyWith(selectedCategory: event.category));
     }
   }
 
@@ -111,7 +141,7 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
     return List<Holding>.unmodifiable(holdings);
   }
 
-  void _watch(List<Holding> holdings) {
+  Future<void> _watch(List<Holding> holdings) async {
     final seeds = holdings.map(
       (holding) => LiveInstrumentSeed.fromPrices(
         marketKey: holding.marketKey,
@@ -128,11 +158,17 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
         tickSize: holding.tickSize,
       ),
     );
-    final acquired = _livePrices.acquire(instruments: seeds);
-    _lease = acquired;
-    _liveSubscription = acquired.stream.listen(
-      (batch) => add(HoldingsLivePricesReceived(batch)),
-    );
+    final lease = _lease;
+    if (lease == null) {
+      if (holdings.isEmpty) return;
+      final acquired = _livePrices.acquire(instruments: seeds);
+      _lease = acquired;
+      _liveSubscription = acquired.stream.listen(
+        (batch) => add(HoldingsLivePricesReceived(batch)),
+      );
+    } else {
+      await lease.update(seeds);
+    }
   }
 
   void _applyLivePrices(
@@ -149,6 +185,15 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
           return tick == null ? holding : holding.withLivePrice(tick);
         })
         .toList(growable: false);
+    emit(
+      state.copyWith(
+        holdings: _sorted(holdings, state.sort),
+        summary: _summary(holdings),
+      ),
+    );
+  }
+
+  static PortfolioSummary _summary(List<Holding> holdings) {
     final totalInvested = holdings.fold<double>(
       0,
       (sum, item) => sum + item.investedValue,
@@ -158,16 +203,11 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
       (sum, item) => sum + item.currentValue,
     );
     final pnl = currentValue - totalInvested;
-    emit(
-      state.copyWith(
-        holdings: _sorted(holdings, state.sort),
-        summary: PortfolioSummary(
-          totalInvested: totalInvested,
-          currentValue: currentValue,
-          totalPnl: pnl,
-          totalPnlPercent: totalInvested == 0 ? 0 : pnl / totalInvested * 100,
-        ),
-      ),
+    return PortfolioSummary(
+      totalInvested: totalInvested,
+      currentValue: currentValue,
+      totalPnl: pnl,
+      totalPnlPercent: totalInvested == 0 ? 0 : pnl / totalInvested * 100,
     );
   }
 }

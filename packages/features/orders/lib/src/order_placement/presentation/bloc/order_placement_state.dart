@@ -28,6 +28,7 @@ class OrderPlacementState {
     this.fieldErrors = const {},
     this.errorMessage,
     this.placedOrder,
+    this.availableSellQuantity = 0,
   });
 
   final OrderPlacementStatus status;
@@ -43,6 +44,7 @@ class OrderPlacementState {
   final Map<String, String> fieldErrors;
   final String? errorMessage;
   final PlacedOrder? placedOrder;
+  final int availableSellQuantity;
 
   bool get hasInstrument => instrument != null;
   bool get isPlacingOrder => status == OrderPlacementStatus.placing;
@@ -87,6 +89,7 @@ class OrderPlacementState {
     bool clearFieldErrors = false,
     bool clearLimitPrice = false,
     bool clearTriggerPrice = false,
+    int? availableSellQuantity,
   }) => OrderPlacementState(
     status: status ?? this.status,
     instrument: instrument ?? this.instrument,
@@ -105,5 +108,6 @@ class OrderPlacementState {
         : (fieldErrors ?? this.fieldErrors),
     errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     placedOrder: placedOrder ?? this.placedOrder,
+    availableSellQuantity: availableSellQuantity ?? this.availableSellQuantity,
   );
 }

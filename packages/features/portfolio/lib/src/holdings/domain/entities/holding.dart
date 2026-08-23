@@ -27,7 +27,7 @@ class Holding {
   final String fundId;
   final String symbol;
   final String companyName;
-  final String category;
+  final PortfolioCategory category;
   final String instrumentType;
   final String exchange;
   TradeExchange get tradeExchange => TradeExchange.parse(exchange);
