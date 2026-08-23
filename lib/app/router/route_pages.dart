@@ -6,6 +6,7 @@ import 'package:orders/orders.dart';
 import 'package:orderbook/orderbook.dart';
 import 'package:portfolio/portfolio.dart';
 import 'package:profile/profile.dart';
+import 'package:search/search.dart';
 import 'package:watchlist/watchlist.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -135,4 +136,20 @@ class LicenceRoutePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const LicenceScreen();
+}
+
+@RoutePage(name: 'SearchRoute')
+class SearchRoutePage extends StatelessWidget {
+  const SearchRoutePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final privacyMode = context.select<AppPreferencesBloc, bool>(
+      (bloc) => bloc.state.preferences.privacyMode,
+    );
+    return PrivacyModeScope(
+      enabled: privacyMode,
+      child: SearchScreen(navigator: AppNavigationScope.of(context)),
+    );
+  }
 }

@@ -8,6 +8,7 @@ import 'package:profile/dependency_injection.dart';
 import 'package:orderbook/dependency_injection.dart';
 import 'package:orders/dependency_injection.dart';
 import 'package:watchlist/dependency_injection.dart';
+import 'package:search/dependency_injection.dart';
 import 'package:zero_two_one_trade_assignment/app/theme/theme_bloc.dart';
 import 'package:zero_two_one_trade_assignment/app/preferences/app_preferences_bloc.dart';
 
@@ -23,6 +24,7 @@ void configureDependencies() {
   registerOrderBookDependencies(getIt);
   registerOrdersDependencies(getIt);
   registerWatchlistDependencies(getIt);
+  registerSearchDependencies(getIt);
   getIt.registerFactory<ThemeBloc>(
     () => ThemeBloc(getIt<AppPreferencesRepository>()),
   );

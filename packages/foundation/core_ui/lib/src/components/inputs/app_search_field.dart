@@ -8,6 +8,8 @@ class AppSearchField extends StatelessWidget {
     this.hintText = 'Search',
     this.onChanged,
     this.onClear,
+    this.autofocus = false,
+    this.showSearchIcon = true,
     super.key,
   });
 
@@ -15,16 +17,21 @@ class AppSearchField extends StatelessWidget {
   final String hintText;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onClear;
+  final bool autofocus;
+  final bool showSearchIcon;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      autofocus: autofocus,
       onChanged: onChanged,
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
         hintText: hintText,
-        prefixIcon: const Icon(Icons.search, size: AppSizes.iconSm),
+        prefixIcon: showSearchIcon
+            ? const Icon(Icons.search, size: AppSizes.iconSm)
+            : null,
         suffixIcon: onClear == null
             ? null
             : IconButton(

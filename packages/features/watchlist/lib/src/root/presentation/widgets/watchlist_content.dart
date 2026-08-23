@@ -34,7 +34,7 @@ class WatchlistContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const WatchlistHeader(),
+                WatchlistHeader(onSearch: navigator?.openSearch),
                 const SizedBox(height: AppSpacing.lg),
                 const WatchlistMarketIndices(),
                 const SizedBox(height: AppSpacing.lg),

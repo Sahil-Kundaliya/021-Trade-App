@@ -21,6 +21,8 @@ abstract interface class AppNavigator {
 
   Future<void> openLicenceInformation();
 
+  Future<void> openSearch();
+
   Future<void> openFund({
     required String fundId,
     required TradeExchange exchange,

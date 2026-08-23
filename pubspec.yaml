@@ -22,6 +22,8 @@ dependencies:
     path: packages/features/profile
   watchlist:
     path: packages/features/watchlist
+  search:
+    path: packages/features/search
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1

@@ -30,7 +30,14 @@ class PortfolioContent extends StatelessWidget {
                 builder: (context, state) => Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const AppSectionHeader(title: 'Portfolio'),
+                    AppSectionHeader(
+                      title: 'Portfolio',
+                      trailing: AppIconButton(
+                        tooltip: 'Search funds',
+                        onPressed: navigator?.openSearch,
+                        icon: const Icon(Icons.search, size: AppSizes.iconSm),
+                      ),
+                    ),
                     const SizedBox(height: AppSpacing.lg),
                     switch (state.status) {
                       HoldingsStatus.initial ||

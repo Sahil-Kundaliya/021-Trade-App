@@ -23,7 +23,14 @@ class DashboardContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const AppSectionHeader(title: 'Dashboard'),
+              AppSectionHeader(
+                title: 'Dashboard',
+                trailing: AppIconButton(
+                  tooltip: 'Search funds',
+                  onPressed: navigator?.openSearch,
+                  icon: const Icon(Icons.search, size: AppSizes.iconSm),
+                ),
+              ),
               const SizedBox(height: AppSpacing.lg),
               const DashboardMarketIndices(),
               const SizedBox(height: AppSpacing.lg),

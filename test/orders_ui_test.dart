@@ -143,6 +143,9 @@ final class _FakeOrderPlacementRepository implements OrderPlacementRepository {
 
 final class _FakeNavigator implements AppNavigator {
   @override
+  Future<void> openSearch() async {}
+
+  @override
   void goToDashboard() {}
   @override
   void goToPortfolio() {}

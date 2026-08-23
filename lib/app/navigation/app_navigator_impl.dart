@@ -39,6 +39,9 @@ final class AppNavigatorImpl implements AppNavigator {
       _router.push<void>(const LicenceRoute());
 
   @override
+  Future<void> openSearch() => _router.push<void>(const SearchRoute());
+
+  @override
   Future<void> openFund({
     required String fundId,
     required TradeExchange exchange,

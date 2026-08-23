@@ -179,6 +179,22 @@ class ProfileRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [SearchRoutePage]
+class SearchRoute extends PageRouteInfo<void> {
+  const SearchRoute({List<PageRouteInfo>? children})
+    : super(SearchRoute.name, initialChildren: children);
+
+  static const String name = 'SearchRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const SearchRoutePage();
+    },
+  );
+}
+
+/// generated route for
 /// [WatchlistRoutePage]
 class WatchlistRoute extends PageRouteInfo<void> {
   const WatchlistRoute({List<PageRouteInfo>? children})

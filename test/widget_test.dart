@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:orders/orders.dart';
 import 'package:orderbook/orderbook.dart';
 import 'package:profile/profile.dart';
+import 'package:search/search.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zero_two_one_trade_assignment/app/app.dart';
 
@@ -156,6 +157,56 @@ void main() {
     await tester.tap(find.text('Portfolio').last);
     await tester.pumpAndSettle();
     await openAndCloseFunds(find.text('RELIANCE'));
+  });
+
+  testWidgets('Dashboard, Watchlist and Portfolio open the same Search route', (
+    tester,
+  ) async {
+    final app = TradingApp();
+    await tester.pumpWidget(app);
+    await tester.pumpAndSettle();
+
+    Future<void> openAndCloseSearch() async {
+      await tester.tap(find.byTooltip('Search funds'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SearchScreen), findsOneWidget);
+      expect(find.text('TRADING FUNDS'), findsOneWidget);
+      await app.navigator.pop();
+      await tester.pumpAndSettle();
+      expect(find.byType(SearchScreen), findsNothing);
+    }
+
+    await openAndCloseSearch();
+    app.navigator.goToWatchlist();
+    await tester.pumpAndSettle();
+    await openAndCloseSearch();
+    app.navigator.goToPortfolio();
+    await tester.pumpAndSettle();
+    await openAndCloseSearch();
+  });
+
+  testWidgets('Search preserves a BSE listing when opening Fund Details', (
+    tester,
+  ) async {
+    final app = TradingApp();
+    await tester.pumpWidget(app);
+    await tester.pumpAndSettle();
+
+    app.navigator.openSearch();
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'REL');
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.textContaining('SEARCH RESULTS'), findsOneWidget);
+    final bseResult = find.text('BSE • Equity');
+    expect(bseResult, findsOneWidget);
+    await tester.tap(bseResult);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.byType(FundSheet), findsOneWidget);
+    expect(find.text('BSE'), findsWidgets);
   });
 
   testWidgets('fund instrument details pin after the sheet fully expands', (
