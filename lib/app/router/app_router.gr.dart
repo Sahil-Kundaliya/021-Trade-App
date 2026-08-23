@@ -60,18 +60,56 @@ class OrderBookRoute extends PageRouteInfo<void> {
 
 /// generated route for
 /// [OrdersRoutePage]
-class OrdersRoute extends PageRouteInfo<void> {
-  const OrdersRoute({List<PageRouteInfo>? children})
-    : super(OrdersRoute.name, initialChildren: children);
+class OrdersRoute extends PageRouteInfo<OrdersRouteArgs> {
+  OrdersRoute({
+    required String fundId,
+    TradeSide? side,
+    Key? key,
+    List<PageRouteInfo>? children,
+  }) : super(
+         OrdersRoute.name,
+         args: OrdersRouteArgs(fundId: fundId, side: side, key: key),
+         initialChildren: children,
+       );
 
   static const String name = 'OrdersRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const OrdersRoutePage();
+      final args = data.argsAs<OrdersRouteArgs>();
+      return OrdersRoutePage(
+        fundId: args.fundId,
+        side: args.side,
+        key: args.key,
+      );
     },
   );
+}
+
+class OrdersRouteArgs {
+  const OrdersRouteArgs({required this.fundId, this.side, this.key});
+
+  final String fundId;
+
+  final TradeSide? side;
+
+  final Key? key;
+
+  @override
+  String toString() {
+    return 'OrdersRouteArgs{fundId: $fundId, side: $side, key: $key}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! OrdersRouteArgs) return false;
+    return fundId == other.fundId && side == other.side && key == other.key;
+  }
+
+  @override
+  int get hashCode => fundId.hashCode ^ side.hashCode ^ key.hashCode;
 }
 
 /// generated route for

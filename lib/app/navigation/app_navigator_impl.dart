@@ -23,8 +23,8 @@ final class AppNavigatorImpl implements AppNavigator {
   void goToProfile() => _openTab(const ProfileRoute());
 
   @override
-  Future<void> openOrders({String? fundId, TradeSide? side}) =>
-      _router.push<void>(const OrdersRoute());
+  Future<void> openOrders({required String fundId, TradeSide? side}) =>
+      _router.push<void>(OrdersRoute(fundId: fundId, side: side));
 
   @override
   Future<void> openOrderBook() => _router.push<void>(const OrderBookRoute());

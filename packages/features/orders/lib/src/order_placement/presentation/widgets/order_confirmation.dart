@@ -1,0 +1,114 @@
+import 'package:core_ui/core_ui.dart';
+import 'package:flutter/material.dart';
+
+import '../../domain/entities/placed_order.dart';
+import '../../domain/enums/order_enums.dart';
+
+class OrderConfirmation extends StatelessWidget {
+  const OrderConfirmation({
+    required this.order,
+    required this.onViewOrderBook,
+    required this.onDone,
+    super.key,
+  });
+  final PlacedOrder order;
+  final VoidCallback onViewOrderBook;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final draft = order.draft;
+    final status = switch (order.status) {
+      PlacedOrderStatus.executed => 'EXECUTED',
+      PlacedOrderStatus.open => 'OPEN',
+      PlacedOrderStatus.triggerPending => 'TRIGGER PENDING',
+    };
+    final sideColor = draft.side == OrderSide.buy
+        ? context.appColors.buy
+        : context.appColors.sell;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Column(
+            children: [
+              Icon(
+                Icons.check_circle,
+                size: AppSizes.iconLg * 2,
+                color: context.appColors.positive,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text('Order Placed', style: context.textTheme.headlineSmall),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                '${draft.side.name.toUpperCase()} · $status',
+                style: context.textTheme.titleMedium?.copyWith(
+                  color: sideColor,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              AppCard(
+                child: Column(
+                  children: [
+                    Text(
+                      draft.instrument.symbol,
+                      style: context.textTheme.titleLarge,
+                    ),
+                    Text(
+                      '${draft.exchange.name.toUpperCase()} · ${draft.instrument.instrumentType.name}',
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: context.appColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _row(context, 'Quantity', '${draft.quantity} Qty'),
+                    if (order.averagePrice != null)
+                      _row(
+                        context,
+                        'Executed Price',
+                        _money(order.averagePrice!),
+                      ),
+                    if (draft.limitPrice != null)
+                      _row(context, 'Limit Price', _money(draft.limitPrice!)),
+                    if (draft.triggerPrice != null)
+                      _row(
+                        context,
+                        'Trigger Price',
+                        _money(draft.triggerPrice!),
+                      ),
+                    _row(context, 'Order Value', _money(order.orderValue)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              OutlinedButton(
+                onPressed: onViewOrderBook,
+                child: const Text('View Order Book'),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              AppButton(label: 'Done', onPressed: onDone, expand: true),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Widget _row(BuildContext context, String label, String value) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(color: context.appColors.textSecondary),
+              ),
+            ),
+            Text(value),
+          ],
+        ),
+      );
+  static String _money(double value) => '₹${value.toStringAsFixed(2)}';
+}

@@ -1,4 +1,6 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/widgets.dart';
+import 'package:navigation_contract/navigation_contract.dart';
 import 'package:zero_two_one_trade_assignment/app/router/route_pages.dart';
 import 'package:zero_two_one_trade_assignment/app/shell/main_shell_page.dart';
 

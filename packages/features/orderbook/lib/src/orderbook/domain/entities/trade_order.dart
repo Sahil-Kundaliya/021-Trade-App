@@ -17,7 +17,7 @@ enum OrderStatus {
 
 enum TradeOrderType { market, limit, stopLoss, stopLossMarket }
 
-enum TradeProductType { delivery, intraday }
+enum TradeProductType { delivery, intraday, overnight }
 
 enum TradeExchange { nse, bse }
 

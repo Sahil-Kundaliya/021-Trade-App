@@ -9,7 +9,7 @@ abstract interface class AppNavigator {
 
   void goToProfile();
 
-  Future<void> openOrders({String? fundId, TradeSide? side});
+  Future<void> openOrders({required String fundId, TradeSide? side});
 
   Future<void> openOrderBook();
 

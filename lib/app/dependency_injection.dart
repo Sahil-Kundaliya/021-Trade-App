@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:fund/dependency_injection.dart';
 import 'package:portfolio/dependency_injection.dart';
 import 'package:orderbook/dependency_injection.dart';
+import 'package:orders/dependency_injection.dart';
 import 'package:watchlist/dependency_injection.dart';
 
 final getIt = GetIt.instance;
@@ -16,5 +17,6 @@ void configureDependencies() {
   registerFundDependencies(getIt);
   registerPortfolioDependencies(getIt);
   registerOrderBookDependencies(getIt);
+  registerOrdersDependencies(getIt);
   registerWatchlistDependencies(getIt);
 }

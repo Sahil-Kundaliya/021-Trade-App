@@ -6,6 +6,7 @@ import 'package:portfolio/portfolio.dart';
 import 'package:profile/profile.dart';
 import 'package:watchlist/watchlist.dart';
 import 'package:flutter/widgets.dart';
+import 'package:navigation_contract/navigation_contract.dart';
 import 'package:zero_two_one_trade_assignment/app/navigation/app_navigation_scope.dart';
 
 @RoutePage(name: 'DashboardRoute')
@@ -46,10 +47,17 @@ class ProfileRoutePage extends StatelessWidget {
 
 @RoutePage(name: 'OrdersRoute')
 class OrdersRoutePage extends StatelessWidget {
-  const OrdersRoutePage({super.key});
+  const OrdersRoutePage({required this.fundId, this.side, super.key});
+
+  final String fundId;
+  final TradeSide? side;
 
   @override
-  Widget build(BuildContext context) => const OrdersPage();
+  Widget build(BuildContext context) => OrdersScreen(
+    fundId: fundId,
+    side: side,
+    navigator: AppNavigationScope.of(context),
+  );
 }
 
 @RoutePage(name: 'OrderBookRoute')

@@ -45,6 +45,9 @@ abstract final class OrderFormat {
     TradeOrderType.stopLoss => 'SL',
     TradeOrderType.stopLossMarket => 'SL-M',
   };
-  static String product(TradeProductType value) =>
-      value == TradeProductType.delivery ? 'Delivery' : 'Intraday';
+  static String product(TradeProductType value) => switch (value) {
+    TradeProductType.delivery => 'Delivery',
+    TradeProductType.intraday => 'Intraday',
+    TradeProductType.overnight => 'Overnight',
+  };
 }

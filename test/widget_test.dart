@@ -52,13 +52,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Dashboard'), findsExactly(2));
 
-    app.navigator.openOrders();
+    app.navigator.openOrders(fundId: 'RELIANCE_EQ');
     await tester.pumpAndSettle();
-    expect(find.byType(OrdersPage), findsOneWidget);
+    expect(find.byType(OrdersScreen), findsOneWidget);
 
     await app.navigator.pop();
     await tester.pumpAndSettle();
-    expect(find.byType(OrdersPage), findsNothing);
+    expect(find.byType(OrdersScreen), findsNothing);
 
     app.navigator.openOrderBook();
     await tester.pumpAndSettle();
@@ -176,7 +176,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(FundSheet), findsNothing);
-      expect(find.byType(OrdersPage), findsOneWidget);
+      expect(find.byType(OrdersScreen), findsOneWidget);
 
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
