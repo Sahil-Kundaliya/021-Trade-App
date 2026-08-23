@@ -67,6 +67,13 @@ abstract final class JsonValueReader {
     throw TradingDataException('Expected a list at "$key".');
   }
 
+  static List<dynamic> optionalList(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value == null) return const [];
+    if (value is List<dynamic>) return value;
+    throw TradingDataException('Expected a list or null at "$key".');
+  }
+
   static Map<String, dynamic> listObject(dynamic value, String path) {
     if (value is Map<String, dynamic>) return value;
     throw TradingDataException('Expected an object at "$path".');

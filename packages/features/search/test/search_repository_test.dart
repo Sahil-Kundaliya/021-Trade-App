@@ -14,14 +14,14 @@ void main() {
 
     final funds = await repository.getFunds();
 
-    expect(funds, hasLength(40));
-    expect(funds.map((fund) => fund.id).toSet(), hasLength(30));
+    expect(funds, hasLength(49));
+    expect(funds.map((fund) => fund.id).toSet(), hasLength(39));
     expect(
       funds
           .where((fund) => fund.id == 'RELIANCE_EQ')
           .map((fund) => fund.exchange),
       containsAll([TradeExchange.nse, TradeExchange.bse]),
     );
-    expect(funds.map((fund) => fund.marketKey).toSet(), hasLength(40));
+    expect(funds.map((fund) => fund.marketKey).toSet(), hasLength(49));
   });
 }

@@ -19,10 +19,10 @@ void main() {
 
     expect(fundsWatch.elapsedMilliseconds, greaterThanOrEqualTo(790));
     expect(holdingsWatch.elapsedMilliseconds, greaterThanOrEqualTo(790));
-    expect(funds, hasLength(30));
+    expect(funds, hasLength(39));
     expect(funds.where((fund) => fund.category == 'Equity'), hasLength(10));
     expect(funds.where((fund) => fund.category == 'Future'), hasLength(10));
-    expect(funds.where((fund) => fund.category == 'Options'), hasLength(10));
+    expect(funds.where((fund) => fund.category == 'Options'), hasLength(19));
     expect(holdings, hasLength(6));
     expect(
       holdings.where((holding) => holding.category == 'Equity'),

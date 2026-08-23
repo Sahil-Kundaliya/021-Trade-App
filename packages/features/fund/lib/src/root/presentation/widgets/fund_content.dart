@@ -1,10 +1,14 @@
+import 'package:core_data/core_data.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../fund_details/domain/entities/fund_details.dart';
 import '../../../fund_details/presentation/bloc/fund_details_bloc.dart';
 import '../../../fund_details/presentation/bloc/fund_details_event.dart';
 import '../../../fund_details/presentation/bloc/fund_details_state.dart';
+import '../../../fund_details/presentation/bloc/option_chain/option_chain_bloc.dart';
+import '../../../fund_details/presentation/bloc/option_chain/option_chain_state.dart';
 import '../../../fund_details/presentation/widgets/fund_sections.dart';
 import 'fund_details_skeleton.dart';
 
@@ -12,12 +16,14 @@ class FundContent extends StatelessWidget {
   const FundContent({
     required this.onBuy,
     required this.onSell,
+    required this.onOpenFund,
     this.scrollController,
     this.showDragHandle = false,
     super.key,
   });
   final VoidCallback onBuy;
   final VoidCallback onSell;
+  final void Function(String fundId, TradeExchange exchange) onOpenFund;
   final ScrollController? scrollController;
   final bool showDragHandle;
 
@@ -26,10 +32,33 @@ class FundContent extends StatelessWidget {
       BlocConsumer<FundDetailsBloc, FundDetailsState>(
         listenWhen: (previous, current) =>
             previous.messageVersion != current.messageVersion &&
-            current.message != null,
-        listener: (context, state) => ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(state.message!))),
+                current.message != null ||
+            previous.fund?.id != current.fund?.id ||
+            previous.status != current.status,
+        listener: (context, state) {
+          if (state.message != null) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message!)));
+          }
+          final fund = state.fund;
+          if (fund != null && state.status == FundDetailsStatus.loaded) {
+            final underlying = fund.instrumentType == FundInstrumentType.equity
+                ? fund.symbol
+                : fund.underlyingSymbol;
+            if (underlying != null && underlying.isNotEmpty) {
+              context.read<OptionChainBloc>().add(
+                OptionChainStarted(
+                  underlyingSymbol: underlying,
+                  exchange: fund.exchange,
+                  selectedStrikeMinor: fund.strikePrice == null
+                      ? null
+                      : (fund.strikePrice! * 100).round(),
+                ),
+              );
+            }
+          }
+        },
         builder: (context, state) => CustomScrollView(
           controller: scrollController,
           slivers: [
@@ -79,6 +108,7 @@ class FundContent extends StatelessWidget {
                   state: state,
                   onBuy: onBuy,
                   onSell: onSell,
+                  onOpenFund: onOpenFund,
                 ),
               ),
             },

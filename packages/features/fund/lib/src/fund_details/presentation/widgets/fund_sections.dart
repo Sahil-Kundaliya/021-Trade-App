@@ -4,21 +4,27 @@ import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:core_data/core_data.dart';
+
 import '../../domain/entities/fund_details.dart';
 import '../bloc/fund_details_bloc.dart';
 import '../bloc/fund_details_event.dart';
 import '../bloc/fund_details_state.dart';
+import 'chart/fund_live_chart.dart';
+import 'derivatives/option_chain_section.dart';
 
 class FundLoadedSections extends StatelessWidget {
   const FundLoadedSections({
     required this.state,
     required this.onBuy,
     required this.onSell,
+    required this.onOpenFund,
     super.key,
   });
   final FundDetailsState state;
   final VoidCallback onBuy;
   final VoidCallback onSell;
+  final void Function(String fundId, TradeExchange exchange) onOpenFund;
 
   @override
   Widget build(BuildContext context) {
@@ -42,11 +48,34 @@ class FundLoadedSections extends StatelessWidget {
                 const SizedBox(height: AppSpacing.lg),
                 _TradeActions(onBuy: onBuy, onSell: onSell),
                 const SizedBox(height: AppSpacing.lg),
+                const _SectionCard(child: FundLiveChart()),
+                const SizedBox(height: AppSpacing.lg),
                 _SectionCard(child: _MarketStats(fund: fund)),
+                if (fund.instrumentType == FundInstrumentType.future) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  _SectionCard(child: FutureContractDetails(fund: fund)),
+                ],
+                if (fund.instrumentType == FundInstrumentType.option) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  _SectionCard(child: OptionContractDetails(fund: fund)),
+                ],
                 const SizedBox(height: AppSpacing.lg),
                 _SectionCard(child: _MarketDepth(depth: fund.marketDepth)),
-                const SizedBox(height: AppSpacing.lg),
-                _SectionCard(child: _PriceHistory(state: state)),
+                if (fund.instrumentType == FundInstrumentType.equity) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  _SectionCard(
+                    child: EquityDerivativesSection(
+                      fund: fund,
+                      onOpenFund: onOpenFund,
+                    ),
+                  ),
+                ],
+                if (fund.instrumentType != FundInstrumentType.equity) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  _SectionCard(
+                    child: OptionChainSection(onOpenFund: onOpenFund),
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.lg),
                 _SectionCard(child: _Margin(details: fund.marginDetails)),
                 const SizedBox(height: AppSpacing.lg),
@@ -345,21 +374,6 @@ class _MarketStats extends StatelessWidget {
       ('Low', _money(fund.low)),
       ('Prev. Close', _money(fund.previousClose)),
       ('Volume', _compact(fund.volume)),
-      if (fund.instrumentType != FundInstrumentType.equity) ...[
-        ('Expiry', _date(fund.expiryDate)),
-        ('Lot Size', _integer(fund.lotSize)),
-        ('Open Interest', _integer(fund.openInterest)),
-        ('Underlying', fund.underlyingSymbol ?? '—'),
-      ],
-      if (fund.instrumentType == FundInstrumentType.option) ...[
-        ('Strike', _money(fund.strikePrice)),
-        ('Option Type', fund.optionType ?? '—'),
-        if (fund.impliedVolatility != null)
-          (
-            'Implied Volatility',
-            '${fund.impliedVolatility!.toStringAsFixed(2)}%',
-          ),
-      ],
     ];
     return _TableRows(rows: rows);
   }
@@ -536,140 +550,6 @@ class _DepthImbalance extends StatelessWidget {
       ],
     );
   }
-}
-
-class _PriceHistory extends StatelessWidget {
-  const _PriceHistory({required this.state});
-  final FundDetailsState state;
-  @override
-  Widget build(BuildContext context) {
-    final summary = state.historySummary;
-    final points = state.selectedHistoryPoints;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const AppSectionHeader(title: 'PRICE HISTORY'),
-        const SizedBox(height: AppSpacing.md),
-        if (summary == null)
-          Text(
-            'Price history unavailable',
-            style: context.textTheme.bodyMedium?.copyWith(
-              color: context.appColors.textSecondary,
-            ),
-          )
-        else ...[
-          SensitiveValueText(
-            _money(summary.latest),
-            type: SensitiveValueType.currency,
-            style: context.appTextStyles.priceMedium,
-          ),
-          SensitiveValueText(
-            '${_signedMoney(summary.change)} (${_signedPercent(summary.changePercent)})',
-            maskedValue: '${PrivacyMask.currency} (${PrivacyMask.percentage})',
-            style: context.appTextStyles.percentageMedium.copyWith(
-              color: summary.change >= 0
-                  ? context.appColors.positive
-                  : context.appColors.negative,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          SegmentedButton<FundHistoryPeriod>(
-            segments: const [
-              ButtonSegment(
-                value: FundHistoryPeriod.oneMonth,
-                label: Text('1M'),
-              ),
-              ButtonSegment(
-                value: FundHistoryPeriod.threeMonths,
-                label: Text('3M'),
-              ),
-            ],
-            selected: {state.selectedHistoryPeriod},
-            onSelectionChanged: (value) => context.read<FundDetailsBloc>().add(
-              FundHistoryPeriodChanged(value.first),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          SizedBox(
-            height: 180,
-            child: CustomPaint(
-              painter: _HistoryPainter(
-                points: points,
-                lineColor: summary.change >= 0
-                    ? context.appColors.positive
-                    : context.appColors.negative,
-                gridColor: context.appColors.chartGrid,
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SensitiveValueText(
-                'Low ${_money(summary.low)}',
-                maskedValue: 'Low ${PrivacyMask.currency}',
-                style: context.appTextStyles.tableValue,
-              ),
-              SensitiveValueText(
-                'High ${_money(summary.high)}',
-                maskedValue: 'High ${PrivacyMask.currency}',
-                style: context.appTextStyles.tableValue,
-              ),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _HistoryPainter extends CustomPainter {
-  const _HistoryPainter({
-    required this.points,
-    required this.lineColor,
-    required this.gridColor,
-  });
-  final List<FundHistoryPoint> points;
-  final Color lineColor;
-  final Color gridColor;
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (points.length < 2) return;
-    final values = points.map((point) => point.value);
-    final minValue = values.reduce(math.min);
-    final maxValue = values.reduce(math.max);
-    final range = maxValue - minValue == 0 ? 1.0 : maxValue - minValue;
-    final gridPaint = Paint()
-      ..color = gridColor
-      ..strokeWidth = 1;
-    for (var i = 0; i <= 3; i++) {
-      final y = size.height * i / 3;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
-    }
-    final path = Path();
-    for (var i = 0; i < points.length; i++) {
-      final x = size.width * i / (points.length - 1);
-      final y =
-          size.height - ((points[i].value - minValue) / range * size.height);
-      i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
-    }
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = lineColor
-        ..strokeWidth = 2
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _HistoryPainter oldDelegate) =>
-      oldDelegate.points != points ||
-      oldDelegate.lineColor != lineColor ||
-      oldDelegate.gridColor != gridColor;
 }
 
 class _Margin extends StatelessWidget {

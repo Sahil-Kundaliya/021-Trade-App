@@ -1,5 +1,6 @@
 import '../../market/trade_exchange.dart';
 import '../parsing/json_value_reader.dart';
+import 'price_candle_dto.dart';
 
 class FundExchangeListingDto {
   const FundExchangeListingDto({
@@ -12,6 +13,7 @@ class FundExchangeListingDto {
     required this.low,
     required this.volume,
     required this.tickSize,
+    this.intradayCandles = const [],
   });
 
   factory FundExchangeListingDto.fromJson(Map<String, dynamic> json) =>
@@ -25,6 +27,18 @@ class FundExchangeListingDto {
         low: JsonValueReader.number(json, 'low'),
         volume: JsonValueReader.integer(json, 'volume'),
         tickSize: JsonValueReader.number(json, 'tickSize'),
+        intradayCandles: JsonValueReader.optionalList(json, 'intradayCandles')
+            .asMap()
+            .entries
+            .map(
+              (entry) => PriceCandleDto.fromJson(
+                JsonValueReader.listObject(
+                  entry.value,
+                  'intradayCandles[${entry.key}]',
+                ),
+              ),
+            )
+            .toList(growable: false),
       );
 
   final String fundId;
@@ -36,6 +50,7 @@ class FundExchangeListingDto {
   final double low;
   final int volume;
   final double tickSize;
+  final List<PriceCandleDto> intradayCandles;
 
   double get change => ltp - previousClose;
   double get changePercent =>

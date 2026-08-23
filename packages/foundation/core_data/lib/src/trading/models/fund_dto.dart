@@ -1,6 +1,7 @@
 import '../parsing/json_value_reader.dart';
 import 'market_depth_dto.dart';
 import 'price_history_point_dto.dart';
+import 'price_candle_dto.dart';
 import 'fund_activity_dto.dart';
 import 'fund_collateral_dto.dart';
 import 'fund_margin_dto.dart';
@@ -41,6 +42,7 @@ class FundDto {
     required this.collateralDetails,
     required this.recentActivity,
     this.listings = const [],
+    this.intradayCandles = const [],
   });
 
   factory FundDto.fromJson(Map<String, dynamic> json) {
@@ -123,6 +125,18 @@ class FundDto {
             ),
           )
           .toList(growable: false),
+      intradayCandles: JsonValueReader.optionalList(json, 'intradayCandles')
+          .asMap()
+          .entries
+          .map(
+            (entry) => PriceCandleDto.fromJson(
+              JsonValueReader.listObject(
+                entry.value,
+                'intradayCandles[${entry.key}]',
+              ),
+            ),
+          )
+          .toList(growable: false),
     );
   }
 
@@ -157,6 +171,7 @@ class FundDto {
   final FundCollateralDto collateralDetails;
   final List<FundActivityDto> recentActivity;
   final List<FundExchangeListingDto> listings;
+  final List<PriceCandleDto> intradayCandles;
 
   List<TradeExchange> get availableExchanges => listings
       .map((listing) => listing.exchange)
@@ -190,6 +205,7 @@ class FundDto {
       volume: listing.volume,
       tickSize: listing.tickSize,
       marketDepth: _depthFor(listing),
+      intradayCandles: listing.intradayCandles,
     );
   }
 
@@ -231,6 +247,7 @@ class FundDto {
     double? tickSize,
     List<FundExchangeListingDto>? listings,
     MarketDepthDto? marketDepth,
+    List<PriceCandleDto>? intradayCandles,
   }) => FundDto(
     id: id,
     symbol: symbol,
@@ -263,5 +280,6 @@ class FundDto {
     collateralDetails: collateralDetails,
     recentActivity: recentActivity,
     listings: listings ?? this.listings,
+    intradayCandles: intradayCandles ?? this.intradayCandles,
   );
 }

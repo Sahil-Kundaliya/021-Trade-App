@@ -1,11 +1,8 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_it/get_it.dart';
 import 'package:navigation_contract/navigation_contract.dart';
 
-import '../../../fund_details/presentation/bloc/fund_details_bloc.dart';
-import '../../../fund_details/presentation/bloc/fund_details_event.dart';
+import 'fund_bloc_scope.dart';
 import 'fund_content.dart';
 
 class FundSheet extends StatelessWidget {
@@ -40,14 +37,18 @@ class FundSheet extends StatelessWidget {
           ),
           child: SafeArea(
             top: false,
-            child: BlocProvider(
-              create: (_) => GetIt.instance<FundDetailsBloc>()
-                ..add(FundDetailsStarted(fundId: fundId, exchange: exchange)),
+            child: FundBlocScope(
+              fundId: fundId,
+              exchange: exchange,
               child: FundContent(
                 scrollController: scrollController,
                 showDragHandle: true,
                 onBuy: () => _openOrders(TradeSide.buy),
                 onSell: () => _openOrders(TradeSide.sell),
+                onOpenFund: (id, nextExchange) => navigator.openFund(
+                  fundId: id,
+                  exchange: nextExchange,
+                ),
               ),
             ),
           ),
