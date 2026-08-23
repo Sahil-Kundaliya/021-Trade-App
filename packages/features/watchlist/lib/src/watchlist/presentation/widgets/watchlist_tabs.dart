@@ -87,10 +87,11 @@ class _WatchlistTab extends StatelessWidget {
             child: Center(
               child: Text(
                 label,
-                style: context.textTheme.labelLarge?.copyWith(
-                  color: foreground,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                ),
+                style:
+                    (selected
+                            ? context.appTextStyles.button
+                            : context.appTextStyles.label)
+                        .copyWith(color: foreground),
               ),
             ),
           ),

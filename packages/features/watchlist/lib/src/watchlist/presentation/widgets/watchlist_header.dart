@@ -9,6 +9,7 @@ class WatchlistHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AppSectionHeader(
     title: 'Watchlist',
+    level: AppSectionHeaderLevel.page,
     trailing: AppIconButton(
       tooltip: 'Search funds',
       onPressed: onSearch,

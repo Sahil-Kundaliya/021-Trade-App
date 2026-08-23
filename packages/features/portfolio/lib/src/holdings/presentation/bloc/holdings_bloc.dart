@@ -38,6 +38,7 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
   }
 
   Future<void> _load(HoldingsEvent event, Emitter<HoldingsState> emit) async {
+    if (state.status == HoldingsStatus.loading) return;
     emit(state.copyWith(status: HoldingsStatus.loading, clearError: true));
     try {
       _positionSubscription ??= _repository.holdingChanges.listen(

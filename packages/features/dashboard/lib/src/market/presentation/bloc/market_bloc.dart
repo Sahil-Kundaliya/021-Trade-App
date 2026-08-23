@@ -35,6 +35,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
   }
 
   Future<void> _load(MarketEvent event, Emitter<MarketState> emit) async {
+    if (state.status == MarketStatus.loading) return;
     emit(state.copyWith(status: MarketStatus.loading, clearError: true));
     try {
       final loaded = await _repository.getFunds();

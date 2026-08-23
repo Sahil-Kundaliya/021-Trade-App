@@ -23,7 +23,9 @@ class BuySellSwitch extends StatelessWidget {
           : context.appColors.sellContainer;
       return Expanded(
         child: Padding(
-          padding: EdgeInsets.only(right: buy ? AppSpacing.sm : 0),
+          padding: EdgeInsets.only(
+            right: buy ? AppSpacing.sm : AppSpacing.none,
+          ),
           child: FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: selected ? color : container,

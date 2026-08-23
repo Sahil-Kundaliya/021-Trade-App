@@ -56,9 +56,8 @@ class ProfileSettingTile extends StatelessWidget {
                           children: [
                             Text(
                               title,
-                              style: context.textTheme.bodyMedium?.copyWith(
+                              style: context.appTextStyles.bodyMedium.copyWith(
                                 color: context.appColors.textPrimary,
-                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             if (subtitle != null) ...[
@@ -138,11 +137,10 @@ class _ProfileSettingTrailing extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.end,
-              style: context.textTheme.labelMedium?.copyWith(
+              style: context.appTextStyles.statusLabel.copyWith(
                 color: statusIsPositive
                     ? context.appColors.positive
                     : context.appColors.textSecondary,
-                fontWeight: FontWeight.w600,
               ),
             ),
           ),

@@ -12,6 +12,7 @@ import '../../../holdings/presentation/widgets/holdings_list.dart';
 import '../../../holdings/presentation/widgets/portfolio_summary_card.dart';
 import '../../../holdings/domain/entities/holding.dart';
 import 'package:core_data/core_data.dart';
+import 'portfolio_skeleton.dart';
 
 class PortfolioContent extends StatelessWidget {
   const PortfolioContent({this.navigator, super.key});
@@ -36,6 +37,7 @@ class PortfolioContent extends StatelessWidget {
                   child: _PageWidth(
                     child: AppSectionHeader(
                       title: 'Portfolio',
+                      level: AppSectionHeaderLevel.page,
                       trailing: AppIconButton(
                         tooltip: 'Search funds',
                         onPressed: navigator?.openSearch,
@@ -72,7 +74,7 @@ class PortfolioContent extends StatelessWidget {
                     child: _PageWidth(
                       child: switch (state.status) {
                         HoldingsStatus.initial ||
-                        HoldingsStatus.loading => const _HoldingsLoading(),
+                        HoldingsStatus.loading => const PortfolioSkeleton(),
                         HoldingsStatus.loaded => _LoadedPortfolio(
                           state: state,
                           onHoldingTap: (holding) => navigator?.openFund(
@@ -148,14 +150,27 @@ class _LoadedPortfolio extends StatelessWidget {
       PortfolioSummaryCard(summary: state.summary!),
       const SizedBox(height: AppSpacing.lg),
       _PortfolioCategoryTabs(state: state),
-      const SizedBox(height: AppSpacing.xxl),
+      const SizedBox(height: AppSpacing.lg),
       HoldingsHeader(
         sort: state.sort,
         onSortChanged: (sort) =>
             context.read<HoldingsBloc>().add(HoldingsSortChanged(sort)),
       ),
       const SizedBox(height: AppSpacing.md),
-      HoldingsList(holdings: state.visibleHoldings, onHoldingTap: onHoldingTap),
+      AnimatedSwitcher(
+        duration: context.motionDuration(AppMotion.short),
+        switchInCurve: AppMotionCurves.enter,
+        switchOutCurve: AppMotionCurves.exit,
+        child: HoldingsList(
+          key: ValueKey((
+            state.selectedCategory,
+            state.sort,
+            state.visibleHoldings.map((holding) => holding.fundId).join(','),
+          )),
+          holdings: state.visibleHoldings,
+          onHoldingTap: onHoldingTap,
+        ),
+      ),
     ],
   );
 }
@@ -192,25 +207,15 @@ class _PortfolioCategoryTabs extends StatelessWidget {
   };
 }
 
-class _HoldingsLoading extends StatelessWidget {
-  const _HoldingsLoading();
-
-  @override
-  Widget build(BuildContext context) => const SizedBox(
-    height: 260,
-    child: Center(child: CircularProgressIndicator()),
-  );
-}
-
 class _HoldingsError extends StatelessWidget {
   const _HoldingsError({required this.onRetry});
 
   final VoidCallback onRetry;
 
   @override
-  Widget build(BuildContext context) => AppEmptyState(
+  Widget build(BuildContext context) => AppErrorState(
     title: 'Unable to load holdings',
     description: 'Please try loading your portfolio again.',
-    action: AppButton(label: 'Retry', onPressed: onRetry),
+    onRetry: onRetry,
   );
 }

@@ -33,6 +33,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
   }
 
   Future<void> _load(SearchEvent event, Emitter<SearchState> emit) async {
+    if (state.status == SearchStatus.loading) return;
     emit(state.copyWith(status: SearchStatus.loading, clearError: true));
     try {
       final loaded = await (_loadFuture ??= _repository.getFunds());

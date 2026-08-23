@@ -37,6 +37,30 @@ void main() {
   });
 
   group('Theme extensions', () {
+    test('compact semantic typography stays within the trading scale', () {
+      final styles = AppTheme.light.extension<AppTextStyles>()!;
+
+      expect(styles.pageTitle.fontSize, 20);
+      expect(styles.financialHero.fontSize, 22);
+      expect(styles.cardTitle.fontSize, 14);
+      expect(styles.body.fontSize, 13);
+      expect(styles.bodySecondary.fontSize, 12);
+      expect(styles.caption.fontSize, 11);
+      expect(styles.tableCell.fontFeatures, isNotEmpty);
+      expect(styles.financialRegular.fontFeatures, isNotEmpty);
+    });
+
+    test('compact sizing and motion tokens preserve accessible targets', () {
+      expect(AppSizes.buttonHeightMd, 44);
+      expect(AppSizes.inputHeight, 44);
+      expect(AppSizes.touchTarget, 48);
+      expect(AppSpacing.cardPadding, const EdgeInsets.all(AppSpacing.md));
+      expect(AppRadius.md, 8);
+      expect(AppBorders.strong, 1.5);
+      expect(AppMotion.fast, const Duration(milliseconds: 120));
+      expect(AppMotion.standard, const Duration(milliseconds: 200));
+    });
+
     test('AppColors copyWith and lerp preserve semantic roles', () {
       const replacement = Color(0xFF123456);
       final copied = lightAppColors.copyWith(positive: replacement);

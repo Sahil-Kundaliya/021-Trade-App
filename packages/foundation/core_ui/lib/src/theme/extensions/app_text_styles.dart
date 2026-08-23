@@ -1,143 +1,195 @@
 import 'package:flutter/material.dart';
 
+/// Semantic typography for compact, data-dense trading interfaces.
 @immutable
 final class AppTextStyles extends ThemeExtension<AppTextStyles> {
   const AppTextStyles({
-    required this.priceLarge,
-    required this.priceMedium,
-    required this.priceSmall,
-    required this.marketValueLarge,
-    required this.marketValueMedium,
-    required this.percentageMedium,
-    required this.percentageSmall,
+    required this.pageTitle,
+    required this.pageSubtitle,
+    required this.sectionTitle,
+    required this.cardTitle,
+    required this.body,
+    required this.bodyMedium,
+    required this.bodySecondary,
+    required this.label,
+    required this.caption,
+    required this.button,
+    required this.marketSymbol,
+    required this.marketCompany,
+    required this.financialHero,
+    required this.financialLarge,
+    required this.financialMedium,
+    required this.financialRegular,
+    required this.financialSmall,
+    required this.financialCaption,
     required this.tableHeader,
-    required this.tableValue,
-    required this.quantity,
-    required this.orderValue,
+    required this.tableCell,
+    required this.statusLabel,
   });
 
   factory AppTextStyles.fromTextTheme(TextTheme textTheme) {
     const tabularFigures = <FontFeature>[FontFeature.tabularFigures()];
+    TextStyle numeric(TextStyle style) =>
+        style.copyWith(fontFeatures: tabularFigures);
+
     return AppTextStyles(
-      priceLarge: textTheme.headlineLarge!.copyWith(
-        fontWeight: FontWeight.w600,
-        fontFeatures: tabularFigures,
+      pageTitle: textTheme.titleLarge!,
+      pageSubtitle: textTheme.bodyMedium!,
+      sectionTitle: textTheme.titleSmall!.copyWith(
+        fontSize: 13,
+        height: 18 / 13,
+        letterSpacing: 0.35,
       ),
-      priceMedium: textTheme.titleLarge!.copyWith(
-        fontWeight: FontWeight.w600,
-        fontFeatures: tabularFigures,
+      cardTitle: textTheme.titleMedium!,
+      body: textTheme.bodyMedium!,
+      bodyMedium: textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w500),
+      bodySecondary: textTheme.bodySmall!,
+      label: textTheme.labelMedium!,
+      caption: textTheme.labelSmall!.copyWith(fontWeight: FontWeight.w400),
+      button: textTheme.labelLarge!,
+      marketSymbol: textTheme.titleMedium!,
+      marketCompany: textTheme.bodySmall!,
+      financialHero: numeric(
+        textTheme.headlineLarge!.copyWith(fontWeight: FontWeight.w600),
       ),
-      priceSmall: textTheme.titleSmall!.copyWith(
-        fontWeight: FontWeight.w500,
-        fontFeatures: tabularFigures,
+      financialLarge: numeric(
+        textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.w600),
       ),
-      marketValueLarge: textTheme.headlineMedium!.copyWith(
-        fontWeight: FontWeight.w600,
-        fontFeatures: tabularFigures,
+      financialMedium: numeric(
+        textTheme.titleMedium!.copyWith(fontWeight: FontWeight.w500),
       ),
-      marketValueMedium: textTheme.titleMedium!.copyWith(
-        fontWeight: FontWeight.w600,
-        fontFeatures: tabularFigures,
+      financialRegular: numeric(
+        textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w500),
       ),
-      percentageMedium: textTheme.labelLarge!.copyWith(
-        fontWeight: FontWeight.w600,
-        fontFeatures: tabularFigures,
+      financialSmall: numeric(
+        textTheme.bodySmall!.copyWith(fontWeight: FontWeight.w500),
       ),
-      percentageSmall: textTheme.labelSmall!.copyWith(
-        fontWeight: FontWeight.w600,
-        fontFeatures: tabularFigures,
+      financialCaption: numeric(
+        textTheme.labelSmall!.copyWith(fontWeight: FontWeight.w500),
       ),
       tableHeader: textTheme.labelSmall!.copyWith(
         fontWeight: FontWeight.w600,
         letterSpacing: 0.35,
       ),
-      tableValue: textTheme.bodySmall!.copyWith(
-        fontWeight: FontWeight.w500,
-        fontFeatures: tabularFigures,
+      tableCell: numeric(
+        textTheme.bodySmall!.copyWith(fontWeight: FontWeight.w500),
       ),
-      quantity: textTheme.bodyMedium!.copyWith(
-        fontWeight: FontWeight.w500,
-        fontFeatures: tabularFigures,
-      ),
-      orderValue: textTheme.titleSmall!.copyWith(
+      statusLabel: textTheme.labelSmall!.copyWith(
         fontWeight: FontWeight.w600,
-        fontFeatures: tabularFigures,
+        letterSpacing: 0.25,
       ),
     );
   }
 
-  final TextStyle priceLarge;
-  final TextStyle priceMedium;
-  final TextStyle priceSmall;
-  final TextStyle marketValueLarge;
-  final TextStyle marketValueMedium;
-  final TextStyle percentageMedium;
-  final TextStyle percentageSmall;
+  final TextStyle pageTitle;
+  final TextStyle pageSubtitle;
+  final TextStyle sectionTitle;
+  final TextStyle cardTitle;
+  final TextStyle body;
+  final TextStyle bodyMedium;
+  final TextStyle bodySecondary;
+  final TextStyle label;
+  final TextStyle caption;
+  final TextStyle button;
+  final TextStyle marketSymbol;
+  final TextStyle marketCompany;
+  final TextStyle financialHero;
+  final TextStyle financialLarge;
+  final TextStyle financialMedium;
+  final TextStyle financialRegular;
+  final TextStyle financialSmall;
+  final TextStyle financialCaption;
   final TextStyle tableHeader;
-  final TextStyle tableValue;
-  final TextStyle quantity;
-  final TextStyle orderValue;
+  final TextStyle tableCell;
+  final TextStyle statusLabel;
+
+  // Compatibility aliases for the original public API.
+  TextStyle get priceLarge => financialHero;
+  TextStyle get priceMedium => financialLarge;
+  TextStyle get priceSmall => financialMedium;
+  TextStyle get marketValueLarge => financialLarge;
+  TextStyle get marketValueMedium => financialMedium;
+  TextStyle get percentageMedium => financialRegular;
+  TextStyle get percentageSmall => financialCaption;
+  TextStyle get tableValue => tableCell;
+  TextStyle get quantity => financialRegular;
+  TextStyle get orderValue => financialMedium;
 
   @override
   AppTextStyles copyWith({
+    TextStyle? pageTitle,
+    TextStyle? pageSubtitle,
+    TextStyle? sectionTitle,
+    TextStyle? cardTitle,
+    TextStyle? body,
+    TextStyle? bodyMedium,
+    TextStyle? bodySecondary,
+    TextStyle? label,
+    TextStyle? caption,
+    TextStyle? button,
+    TextStyle? marketSymbol,
+    TextStyle? marketCompany,
+    TextStyle? financialHero,
+    TextStyle? financialLarge,
+    TextStyle? financialMedium,
+    TextStyle? financialRegular,
+    TextStyle? financialSmall,
+    TextStyle? financialCaption,
+    TextStyle? tableHeader,
+    TextStyle? tableCell,
+    TextStyle? statusLabel,
     TextStyle? priceLarge,
     TextStyle? priceMedium,
-    TextStyle? priceSmall,
-    TextStyle? marketValueLarge,
-    TextStyle? marketValueMedium,
-    TextStyle? percentageMedium,
-    TextStyle? percentageSmall,
-    TextStyle? tableHeader,
-    TextStyle? tableValue,
-    TextStyle? quantity,
-    TextStyle? orderValue,
-  }) {
-    return AppTextStyles(
-      priceLarge: priceLarge ?? this.priceLarge,
-      priceMedium: priceMedium ?? this.priceMedium,
-      priceSmall: priceSmall ?? this.priceSmall,
-      marketValueLarge: marketValueLarge ?? this.marketValueLarge,
-      marketValueMedium: marketValueMedium ?? this.marketValueMedium,
-      percentageMedium: percentageMedium ?? this.percentageMedium,
-      percentageSmall: percentageSmall ?? this.percentageSmall,
-      tableHeader: tableHeader ?? this.tableHeader,
-      tableValue: tableValue ?? this.tableValue,
-      quantity: quantity ?? this.quantity,
-      orderValue: orderValue ?? this.orderValue,
-    );
-  }
+  }) => AppTextStyles(
+    pageTitle: pageTitle ?? this.pageTitle,
+    pageSubtitle: pageSubtitle ?? this.pageSubtitle,
+    sectionTitle: sectionTitle ?? this.sectionTitle,
+    cardTitle: cardTitle ?? this.cardTitle,
+    body: body ?? this.body,
+    bodyMedium: bodyMedium ?? this.bodyMedium,
+    bodySecondary: bodySecondary ?? this.bodySecondary,
+    label: label ?? this.label,
+    caption: caption ?? this.caption,
+    button: button ?? this.button,
+    marketSymbol: marketSymbol ?? this.marketSymbol,
+    marketCompany: marketCompany ?? this.marketCompany,
+    financialHero: financialHero ?? priceLarge ?? this.financialHero,
+    financialLarge: financialLarge ?? priceMedium ?? this.financialLarge,
+    financialMedium: financialMedium ?? this.financialMedium,
+    financialRegular: financialRegular ?? this.financialRegular,
+    financialSmall: financialSmall ?? this.financialSmall,
+    financialCaption: financialCaption ?? this.financialCaption,
+    tableHeader: tableHeader ?? this.tableHeader,
+    tableCell: tableCell ?? this.tableCell,
+    statusLabel: statusLabel ?? this.statusLabel,
+  );
 
   @override
   AppTextStyles lerp(covariant AppTextStyles? other, double t) {
     if (other == null) return this;
+    TextStyle mix(TextStyle a, TextStyle b) => TextStyle.lerp(a, b, t)!;
     return AppTextStyles(
-      priceLarge: TextStyle.lerp(priceLarge, other.priceLarge, t)!,
-      priceMedium: TextStyle.lerp(priceMedium, other.priceMedium, t)!,
-      priceSmall: TextStyle.lerp(priceSmall, other.priceSmall, t)!,
-      marketValueLarge: TextStyle.lerp(
-        marketValueLarge,
-        other.marketValueLarge,
-        t,
-      )!,
-      marketValueMedium: TextStyle.lerp(
-        marketValueMedium,
-        other.marketValueMedium,
-        t,
-      )!,
-      percentageMedium: TextStyle.lerp(
-        percentageMedium,
-        other.percentageMedium,
-        t,
-      )!,
-      percentageSmall: TextStyle.lerp(
-        percentageSmall,
-        other.percentageSmall,
-        t,
-      )!,
-      tableHeader: TextStyle.lerp(tableHeader, other.tableHeader, t)!,
-      tableValue: TextStyle.lerp(tableValue, other.tableValue, t)!,
-      quantity: TextStyle.lerp(quantity, other.quantity, t)!,
-      orderValue: TextStyle.lerp(orderValue, other.orderValue, t)!,
+      pageTitle: mix(pageTitle, other.pageTitle),
+      pageSubtitle: mix(pageSubtitle, other.pageSubtitle),
+      sectionTitle: mix(sectionTitle, other.sectionTitle),
+      cardTitle: mix(cardTitle, other.cardTitle),
+      body: mix(body, other.body),
+      bodyMedium: mix(bodyMedium, other.bodyMedium),
+      bodySecondary: mix(bodySecondary, other.bodySecondary),
+      label: mix(label, other.label),
+      caption: mix(caption, other.caption),
+      button: mix(button, other.button),
+      marketSymbol: mix(marketSymbol, other.marketSymbol),
+      marketCompany: mix(marketCompany, other.marketCompany),
+      financialHero: mix(financialHero, other.financialHero),
+      financialLarge: mix(financialLarge, other.financialLarge),
+      financialMedium: mix(financialMedium, other.financialMedium),
+      financialRegular: mix(financialRegular, other.financialRegular),
+      financialSmall: mix(financialSmall, other.financialSmall),
+      financialCaption: mix(financialCaption, other.financialCaption),
+      tableHeader: mix(tableHeader, other.tableHeader),
+      tableCell: mix(tableCell, other.tableCell),
+      statusLabel: mix(statusLabel, other.statusLabel),
     );
   }
 }

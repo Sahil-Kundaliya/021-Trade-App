@@ -63,7 +63,7 @@ class OrderTicket extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.xxl),
+              const SizedBox(height: AppSpacing.lg),
               _TicketSection(
                 title: 'QUANTITY & PRODUCT',
                 child: Column(
@@ -98,7 +98,7 @@ class OrderTicket extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.xxl),
+              const SizedBox(height: AppSpacing.lg),
               _TicketSection(
                 title: 'ORDER DETAILS',
                 child: Column(
@@ -157,14 +157,16 @@ class OrderTicket extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.xxl),
+              const SizedBox(height: AppSpacing.lg),
               OrderSummary(state: state),
               if (state.errorFor('form') != null)
                 Padding(
                   padding: const EdgeInsets.only(top: AppSpacing.sm),
                   child: Text(
                     state.errorFor('form')!,
-                    style: TextStyle(color: context.appColors.negative),
+                    style: context.appTextStyles.bodySecondary.copyWith(
+                      color: context.appColors.negative,
+                    ),
                   ),
                 ),
             ],

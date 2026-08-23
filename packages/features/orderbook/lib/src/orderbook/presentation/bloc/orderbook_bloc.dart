@@ -44,6 +44,7 @@ class OrderBookBloc extends Bloc<OrderBookEvent, OrderBookState> {
   }
 
   Future<void> _load(OrderBookEvent event, Emitter<OrderBookState> emit) async {
+    if (state.status == OrderBookStatus.loading) return;
     emit(state.copyWith(status: OrderBookStatus.loading, clearError: true));
     try {
       final orders = List<TradeOrder>.of(await _repository.getOrders())

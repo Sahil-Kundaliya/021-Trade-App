@@ -36,9 +36,8 @@ class LogoutTile extends StatelessWidget {
                   const SizedBox(width: AppSpacing.md),
                   Text(
                     'Log Out',
-                    style: context.textTheme.bodyMedium?.copyWith(
+                    style: context.appTextStyles.bodyMedium.copyWith(
                       color: context.appColors.negative,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],

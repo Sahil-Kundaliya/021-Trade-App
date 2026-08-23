@@ -72,7 +72,9 @@ class WatchlistManagementSheet extends StatelessWidget {
                   ),
                   title: Text(
                     'Delete Watchlist',
-                    style: TextStyle(color: context.appColors.negative),
+                    style: context.appTextStyles.bodyMedium.copyWith(
+                      color: context.appColors.negative,
+                    ),
                   ),
                   onTap: () =>
                       Navigator.pop(context, WatchlistManagementAction.delete),

@@ -18,7 +18,9 @@ class FundSearchResults extends StatelessWidget {
       BlocSelector<SearchBloc, SearchState, _ResultsViewData>(
         selector: _ResultsViewData.fromState,
         builder: (context, data) => AnimatedSwitcher(
-          duration: AppDurations.normal,
+          duration: context.motionDuration(AppMotion.medium),
+          switchInCurve: AppMotionCurves.enter,
+          switchOutCurve: AppMotionCurves.exit,
           child: Column(
             key: ValueKey((data.isSearchActive, data.query.length)),
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,9 +29,8 @@ class FundSearchResults extends StatelessWidget {
                 data.isSearchActive
                     ? 'SEARCH RESULTS • ${data.funds.length}'
                     : 'TRADING FUNDS',
-                style: context.textTheme.labelMedium?.copyWith(
+                style: context.appTextStyles.sectionTitle.copyWith(
                   color: context.appColors.textSecondary,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
               if (!data.isSearchActive && data.query.trim().isNotEmpty) ...[

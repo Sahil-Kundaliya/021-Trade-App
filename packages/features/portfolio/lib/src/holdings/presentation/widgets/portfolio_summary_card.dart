@@ -84,7 +84,7 @@ class _PortfolioOverview extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.fade,
             softWrap: false,
-            style: context.appTextStyles.marketValueLarge.copyWith(
+            style: context.appTextStyles.financialHero.copyWith(
               color: context.appColors.textPrimary,
             ),
           ),

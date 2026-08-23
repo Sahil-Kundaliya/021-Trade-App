@@ -9,6 +9,7 @@ import '../../../fund_search/presentation/bloc/search_state.dart';
 import '../../../fund_search/presentation/widgets/fund_category_filter.dart';
 import '../../../fund_search/presentation/widgets/fund_search_field.dart';
 import '../../../fund_search/presentation/widgets/fund_search_results.dart';
+import 'search_skeleton.dart';
 
 class SearchContent extends StatelessWidget {
   const SearchContent({required this.navigator, super.key});
@@ -33,17 +34,13 @@ class SearchContent extends StatelessWidget {
           child: BlocSelector<SearchBloc, SearchState, SearchStatus>(
             selector: (state) => state.status,
             builder: (context, status) => switch (status) {
-              SearchStatus.initial || SearchStatus.loading => const Center(
-                child: CircularProgressIndicator(),
-              ),
-              SearchStatus.error => AppEmptyState(
+              SearchStatus.initial ||
+              SearchStatus.loading => const SearchSkeleton(),
+              SearchStatus.error => AppErrorState(
                 title: 'Unable to load funds',
                 description: 'Please try loading local instruments again.',
-                action: AppButton(
-                  label: 'Retry',
-                  onPressed: () => context.read<SearchBloc>().add(
-                    const SearchRetryRequested(),
-                  ),
+                onRetry: () => context.read<SearchBloc>().add(
+                  const SearchRetryRequested(),
                 ),
               ),
               SearchStatus.loaded => _LoadedSearch(navigator: navigator),

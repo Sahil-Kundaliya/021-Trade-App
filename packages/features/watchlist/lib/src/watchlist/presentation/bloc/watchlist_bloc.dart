@@ -49,6 +49,7 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
   }
 
   Future<void> _load(WatchlistEvent event, Emitter<WatchlistState> emit) async {
+    if (state.status == WatchlistStatus.loading) return;
     emit(state.copyWith(status: WatchlistStatus.loading, clearError: true));
     try {
       final watchlistsFuture = _repository.getWatchlists();

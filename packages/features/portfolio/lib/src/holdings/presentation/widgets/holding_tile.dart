@@ -26,7 +26,7 @@ class HoldingTile extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: LayoutBuilder(
               builder: (context, constraints) {
                 if (constraints.maxWidth >= 700) {

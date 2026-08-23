@@ -32,9 +32,8 @@ class WatchlistStockTile extends StatelessWidget {
                       stock.symbol,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.titleSmall?.copyWith(
+                      style: context.appTextStyles.marketSymbol.copyWith(
                         color: context.appColors.textPrimary,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -107,9 +106,8 @@ class _StockTag extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: context.textTheme.labelSmall?.copyWith(
+          style: context.appTextStyles.caption.copyWith(
             color: context.appColors.textSecondary,
-            fontSize: 10,
           ),
         ),
       ),

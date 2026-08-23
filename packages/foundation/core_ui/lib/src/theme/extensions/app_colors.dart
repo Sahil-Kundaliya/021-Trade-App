@@ -43,6 +43,8 @@ final class AppColors extends ThemeExtension<AppColors> {
     required this.chartAxis,
     required this.selection,
     required this.selectionContainer,
+    required this.skeletonBase,
+    required this.skeletonHighlight,
   });
 
   final Color primary;
@@ -85,6 +87,8 @@ final class AppColors extends ThemeExtension<AppColors> {
   final Color chartAxis;
   final Color selection;
   final Color selectionContainer;
+  final Color skeletonBase;
+  final Color skeletonHighlight;
 
   @override
   AppColors copyWith({
@@ -128,6 +132,8 @@ final class AppColors extends ThemeExtension<AppColors> {
     Color? chartAxis,
     Color? selection,
     Color? selectionContainer,
+    Color? skeletonBase,
+    Color? skeletonHighlight,
   }) {
     return AppColors(
       primary: primary ?? this.primary,
@@ -170,6 +176,8 @@ final class AppColors extends ThemeExtension<AppColors> {
       chartAxis: chartAxis ?? this.chartAxis,
       selection: selection ?? this.selection,
       selectionContainer: selectionContainer ?? this.selectionContainer,
+      skeletonBase: skeletonBase ?? this.skeletonBase,
+      skeletonHighlight: skeletonHighlight ?? this.skeletonHighlight,
     );
   }
 
@@ -245,6 +253,12 @@ final class AppColors extends ThemeExtension<AppColors> {
         other.selectionContainer,
         t,
       )!,
+      skeletonBase: Color.lerp(skeletonBase, other.skeletonBase, t)!,
+      skeletonHighlight: Color.lerp(
+        skeletonHighlight,
+        other.skeletonHighlight,
+        t,
+      )!,
     );
   }
 }
@@ -290,6 +304,8 @@ const lightAppColors = AppColors(
   chartAxis: Color(0xFF8A95A5),
   selection: Color(0xFF3157F6),
   selectionContainer: Color(0xFFE8EDFF),
+  skeletonBase: Color(0xFFE4E9F0),
+  skeletonHighlight: Color(0xFFF5F7FA),
 );
 
 const darkAppColors = AppColors(
@@ -333,4 +349,6 @@ const darkAppColors = AppColors(
   chartAxis: Color(0xFF7F8B99),
   selection: Color(0xFF8297FF),
   selectionContainer: Color(0xFF27376F),
+  skeletonBase: Color(0xFF202A35),
+  skeletonHighlight: Color(0xFF303C49),
 );

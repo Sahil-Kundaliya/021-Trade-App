@@ -8,6 +8,7 @@ import '../../../orderbook/presentation/bloc/orderbook_state.dart';
 import '../../../orderbook/presentation/widgets/orderbook_empty_state.dart';
 import '../../../orderbook/presentation/widgets/orderbook_list.dart';
 import '../../../orderbook/presentation/widgets/orderbook_tabs.dart';
+import 'orderbook_skeleton.dart';
 
 class OrderBookContent extends StatelessWidget {
   const OrderBookContent({super.key});
@@ -36,7 +37,23 @@ class OrderBookContent extends StatelessWidget {
                     ),
                   ),
                 ),
-                Expanded(child: _Body(state: state)),
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: context.motionDuration(AppMotion.standard),
+                    switchInCurve: AppMotionCurves.enter,
+                    switchOutCurve: AppMotionCurves.exit,
+                    child: _Body(
+                      key: ValueKey((
+                        state.status,
+                        state.selectedTab,
+                        state.visibleOrders
+                            .map((order) => '${order.orderId}:${order.status}')
+                            .join(','),
+                      )),
+                      state: state,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -47,21 +64,18 @@ class OrderBookContent extends StatelessWidget {
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.state});
+  const _Body({required this.state, super.key});
   final OrderBookState state;
 
   @override
   Widget build(BuildContext context) => switch (state.status) {
     OrderBookStatus.initial ||
-    OrderBookStatus.loading => const Center(child: CircularProgressIndicator()),
-    OrderBookStatus.error => AppEmptyState(
+    OrderBookStatus.loading => const OrderBookSkeleton(),
+    OrderBookStatus.error => AppErrorState(
       title: 'Unable to load orders.',
       description: 'Please try loading your order book again.',
-      action: AppButton(
-        label: 'Retry',
-        onPressed: () =>
-            context.read<OrderBookBloc>().add(const OrderBookRetryRequested()),
-      ),
+      onRetry: () =>
+          context.read<OrderBookBloc>().add(const OrderBookRetryRequested()),
     ),
     OrderBookStatus.empty => OrderBookEmptyState(tab: state.selectedTab),
     OrderBookStatus.loaded =>

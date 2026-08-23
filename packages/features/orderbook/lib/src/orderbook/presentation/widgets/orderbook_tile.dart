@@ -128,11 +128,10 @@ class _Side extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
     OrderFormat.side(order.side),
-    style: context.textTheme.labelLarge?.copyWith(
+    style: context.appTextStyles.statusLabel.copyWith(
       color: order.side == OrderSide.buy
           ? context.appColors.buy
           : context.appColors.sell,
-      fontWeight: FontWeight.w700,
     ),
   );
 }
@@ -149,9 +148,7 @@ class _Identity extends StatelessWidget {
         order.symbol,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: context.textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-        ),
+        style: context.appTextStyles.marketSymbol,
       ),
       const SizedBox(height: AppSpacing.xs),
       Text(

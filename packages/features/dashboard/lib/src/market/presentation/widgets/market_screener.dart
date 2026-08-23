@@ -40,6 +40,7 @@ class MarketScreener extends StatelessWidget {
           const AppSectionHeader(
             title: 'Market Screener',
             subtitle: 'Explore market movers',
+            level: AppSectionHeaderLevel.card,
           ),
           const SizedBox(height: AppSpacing.lg),
           MarketCategorySelector(
@@ -77,7 +78,9 @@ class MarketScreener extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           AnimatedSwitcher(
-            duration: AppDurations.fast,
+            duration: context.motionDuration(AppMotion.short),
+            switchInCurve: AppMotionCurves.enter,
+            switchOutCurve: AppMotionCurves.exit,
             child: MarketList(
               key: ValueKey((
                 selectedCategory,

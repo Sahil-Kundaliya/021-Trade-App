@@ -27,6 +27,25 @@ Future<void> installImmediateTradingApi() async {
     await getIt.unregister<OrderBookLocalApi>();
   }
   getIt.registerSingleton<OrderBookLocalApi>(const _ImmediateOrderBookApi());
+  if (getIt.isRegistered<ConnectivityService>()) {
+    await getIt.unregister<ConnectivityService>();
+  }
+  getIt.registerSingleton<ConnectivityService>(
+    const _OnlineConnectivityService(),
+  );
+}
+
+final class _OnlineConnectivityService implements ConnectivityService {
+  const _OnlineConnectivityService();
+
+  @override
+  Stream<ConnectivityStatus> get statusStream => const Stream.empty();
+
+  @override
+  Future<ConnectivityStatus> checkNow() async => ConnectivityStatus.online;
+
+  @override
+  Future<void> dispose() async {}
 }
 
 final class _ImmediateOrderBookApi implements OrderBookLocalApi {

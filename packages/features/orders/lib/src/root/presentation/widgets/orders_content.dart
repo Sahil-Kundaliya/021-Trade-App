@@ -11,6 +11,7 @@ import '../../../order_placement/presentation/widgets/order_confirmation.dart';
 import '../../../order_placement/presentation/widgets/order_instrument_header.dart';
 import '../../../order_placement/presentation/widgets/order_review.dart';
 import '../../../order_placement/presentation/widgets/order_ticket.dart';
+import 'order_placement_skeleton.dart';
 
 class OrdersContent extends StatelessWidget {
   const OrdersContent({required this.navigator, super.key});
@@ -31,7 +32,7 @@ class OrdersContent extends StatelessWidget {
                     builder: (context) {
                       if (state.status == OrderPlacementStatus.loading ||
                           state.status == OrderPlacementStatus.initial) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const OrderPlacementSkeleton();
                       }
                       if (state.status == OrderPlacementStatus.success) {
                         return OrderConfirmation(
@@ -41,16 +42,13 @@ class OrdersContent extends StatelessWidget {
                         );
                       }
                       if (state.instrument == null) {
-                        return AppEmptyState(
-                          icon: Icons.error_outline,
+                        return AppErrorState(
                           title: 'Unable to load instrument',
                           description:
                               state.errorMessage ??
                               'Please close this page and try again.',
-                          action: AppButton(
-                            label: 'Done',
-                            onPressed: navigator.pop,
-                          ),
+                          actionLabel: 'Done',
+                          onRetry: navigator.pop,
                         );
                       }
                       if (state.status == OrderPlacementStatus.review ||

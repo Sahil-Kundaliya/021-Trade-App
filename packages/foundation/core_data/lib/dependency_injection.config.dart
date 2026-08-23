@@ -11,6 +11,9 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:core_data/src/cache/flutter_key_value_storage.dart' as _i572;
 import 'package:core_data/src/cache/key_value_storage.dart' as _i767;
+import 'package:core_data/src/connectivity/connectivity_service.dart' as _i208;
+import 'package:core_data/src/connectivity/connectivity_service_impl.dart'
+    as _i909;
 import 'package:core_data/src/live_price/platform/live_price_platform_api.dart'
     as _i846;
 import 'package:core_data/src/live_price/platform/live_price_platform_api_impl.dart'
@@ -53,6 +56,10 @@ _i174.GetIt configureCoreDataDependencies(
   final gh = _i526.GetItHelper(getIt, environment, environmentFilter);
   gh.lazySingleton<_i993.LocalNotificationService>(
     () => _i514.LocalNotificationServiceImpl(),
+  );
+  gh.lazySingleton<_i208.ConnectivityService>(
+    () => _i909.ConnectivityServiceImpl(),
+    dispose: (i) => i.dispose(),
   );
   gh.lazySingleton<_i767.KeyValueStorage>(
     () => const _i572.FlutterKeyValueStorage(),

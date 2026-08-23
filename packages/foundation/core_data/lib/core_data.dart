@@ -1,4 +1,7 @@
 export 'src/cache/key_value_storage.dart';
+export 'src/connectivity/connectivity_exception.dart';
+export 'src/connectivity/connectivity_service.dart';
+export 'src/connectivity/connectivity_status.dart';
 export 'src/live_price/exceptions/live_price_exception.dart';
 export 'src/live_price/models/live_instrument_seed.dart';
 export 'src/live_price/models/live_price_batch.dart';

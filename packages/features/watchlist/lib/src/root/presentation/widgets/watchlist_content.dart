@@ -11,6 +11,7 @@ import '../../../watchlist/presentation/widgets/watchlist_section.dart';
 import '../../../watchlist/presentation/widgets/create_watchlist_sheet.dart';
 import '../../../watchlist/presentation/widgets/watchlist_management_sheet.dart';
 import 'watchlist_market_indices.dart';
+import 'watchlist_skeleton.dart';
 
 class WatchlistContent extends StatelessWidget {
   const WatchlistContent({this.navigator, super.key});
@@ -42,7 +43,7 @@ class WatchlistContent extends StatelessWidget {
                   child: BlocBuilder<WatchlistBloc, WatchlistState>(
                     builder: (context, state) => switch (state.status) {
                       WatchlistStatus.initial ||
-                      WatchlistStatus.loading => const _WatchlistLoading(),
+                      WatchlistStatus.loading => const WatchlistSkeleton(),
                       WatchlistStatus.error => _WatchlistError(
                         onRetry: () => context.read<WatchlistBloc>().add(
                           const WatchlistRetryRequested(),
@@ -79,6 +80,21 @@ class WatchlistContent extends StatelessWidget {
                           fundId: fund.id,
                           exchange: fund.tradeExchange,
                         ),
+                        onReorder: (oldIndex, newIndex) {
+                          final watchlistId = state.selectedWatchlistId;
+                          if (watchlistId == null || state.isSaving) return;
+                          context.read<WatchlistBloc>().add(
+                            WatchlistFundsReorderRequested(
+                              watchlistId: watchlistId,
+                              oldIndex: oldIndex,
+                              // The bloc retains Flutter's legacy insertion-index
+                              // contract; the widget reports the adjusted index.
+                              newIndex: newIndex > oldIndex
+                                  ? newIndex + 1
+                                  : newIndex,
+                            ),
+                          );
+                        },
                       ),
                     },
                   ),
@@ -92,23 +108,15 @@ class WatchlistContent extends StatelessWidget {
   }
 }
 
-class _WatchlistLoading extends StatelessWidget {
-  const _WatchlistLoading();
-
-  @override
-  Widget build(BuildContext context) =>
-      const Center(child: CircularProgressIndicator());
-}
-
 class _WatchlistError extends StatelessWidget {
   const _WatchlistError({required this.onRetry});
 
   final VoidCallback onRetry;
 
   @override
-  Widget build(BuildContext context) => AppEmptyState(
+  Widget build(BuildContext context) => AppErrorState(
     title: 'Unable to load watchlists.',
     description: 'Please try loading your watchlists again.',
-    action: AppButton(label: 'Retry', onPressed: onRetry),
+    onRetry: onRetry,
   );
 }

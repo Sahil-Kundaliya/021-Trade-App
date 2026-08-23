@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fund/fund.dart';
 import 'package:navigation_contract/navigation_contract.dart';
 import 'package:zero_two_one_trade_assignment/app/router/app_router.dart';
+import 'package:zero_two_one_trade_assignment/app/connectivity/connectivity_guard.dart';
 
 final class AppNavigatorImpl implements AppNavigator {
   AppNavigatorImpl(this._router);
@@ -57,8 +58,14 @@ final class AppNavigatorImpl implements AppNavigator {
       enableDrag: true,
       showDragHandle: false,
       backgroundColor: context.appColors.surface.withValues(alpha: 0),
-      builder: (_) =>
-          FundSheet(fundId: fundId, exchange: exchange, navigator: this),
+      builder: (_) => ConnectivityGuard(
+        childBuilder: (key) => FundSheet(
+          key: key,
+          fundId: fundId,
+          exchange: exchange,
+          navigator: this,
+        ),
+      ),
     );
   }
 

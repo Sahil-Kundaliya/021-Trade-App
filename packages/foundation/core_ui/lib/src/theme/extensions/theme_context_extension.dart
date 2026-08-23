@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 import 'app_text_styles.dart';
+import '../tokens/app_durations.dart';
 
 extension AppThemeContext on BuildContext {
   AppColors get appColors {
@@ -21,4 +22,10 @@ extension AppThemeContext on BuildContext {
   ColorScheme get colorScheme => Theme.of(this).colorScheme;
 
   bool get isDarkMode => Theme.of(this).brightness == Brightness.dark;
+
+  bool get animationsDisabled =>
+      MediaQuery.maybeOf(this)?.disableAnimations ?? false;
+
+  Duration motionDuration(Duration duration) =>
+      animationsDisabled ? AppMotion.instant : duration;
 }

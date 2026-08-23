@@ -68,6 +68,7 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
     FundDetailsStarted event,
     Emitter<FundDetailsState> emit,
   ) async {
+    if (state.status == FundDetailsStatus.loading) return;
     emit(
       FundDetailsState(
         status: FundDetailsStatus.loading,
@@ -114,6 +115,7 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
     FundDetailsRetryRequested event,
     Emitter<FundDetailsState> emit,
   ) {
+    if (state.status == FundDetailsStatus.loading) return;
     final id = state.fundId;
     if (id != null) {
       add(FundDetailsStarted(fundId: id, exchange: state.exchange));

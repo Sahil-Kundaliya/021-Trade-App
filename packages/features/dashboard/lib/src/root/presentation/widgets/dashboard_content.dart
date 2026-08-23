@@ -8,6 +8,7 @@ import '../../../market/presentation/bloc/market_event.dart';
 import '../../../market/presentation/bloc/market_state.dart';
 import '../../../market/presentation/widgets/market_screener.dart';
 import 'dashboard_market_indices.dart';
+import 'dashboard_skeleton.dart';
 
 class DashboardContent extends StatelessWidget {
   const DashboardContent({this.navigator, super.key});
@@ -18,71 +19,64 @@ class DashboardContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppSectionHeader(
-                title: 'Dashboard',
-                trailing: AppIconButton(
-                  tooltip: 'Search funds',
-                  onPressed: navigator?.openSearch,
-                  icon: const Icon(Icons.search, size: AppSizes.iconSm),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              const DashboardMarketIndices(),
-              const SizedBox(height: AppSpacing.lg),
-              BlocBuilder<MarketBloc, MarketState>(
-                builder: (context, state) => switch (state.status) {
-                  MarketStatus.initial ||
-                  MarketStatus.loading => const _MarketLoading(),
-                  MarketStatus.error => _MarketError(
-                    onRetry: () => context.read<MarketBloc>().add(
-                      const MarketRetryRequested(),
-                    ),
+        child: BlocBuilder<MarketBloc, MarketState>(
+          builder: (context, state) => SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child:
+                state.status == MarketStatus.initial ||
+                    state.status == MarketStatus.loading
+                ? const DashboardSkeleton()
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppSectionHeader(
+                        title: 'Dashboard',
+                        level: AppSectionHeaderLevel.page,
+                        trailing: AppIconButton(
+                          tooltip: 'Search funds',
+                          onPressed: navigator?.openSearch,
+                          icon: const Icon(Icons.search, size: AppSizes.iconSm),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      const DashboardMarketIndices(),
+                      const SizedBox(height: AppSpacing.lg),
+                      switch (state.status) {
+                        MarketStatus.initial ||
+                        MarketStatus.loading => const SizedBox.shrink(),
+                        MarketStatus.error => _MarketError(
+                          onRetry: () => context.read<MarketBloc>().add(
+                            const MarketRetryRequested(),
+                          ),
+                        ),
+                        MarketStatus.empty => const _MarketEmpty(),
+                        MarketStatus.loaded => MarketScreener(
+                          selectedCategory: state.selectedCategory,
+                          selectedSubcategory: state.selectedSubcategory,
+                          selectedExchange: state.selectedExchange,
+                          instruments: state.visibleFunds,
+                          onCategorySelected: (category) => context
+                              .read<MarketBloc>()
+                              .add(MarketCategoryChanged(category)),
+                          onSubcategorySelected: (subcategory) => context
+                              .read<MarketBloc>()
+                              .add(MarketSubcategoryChanged(subcategory)),
+                          onExchangeSelected: (exchange) => context
+                              .read<MarketBloc>()
+                              .add(MarketExchangeChanged(exchange)),
+                          onItemTap: (instrument) => navigator?.openFund(
+                            fundId: instrument.id,
+                            exchange: instrument.exchange,
+                          ),
+                        ),
+                      },
+                    ],
                   ),
-                  MarketStatus.empty => const _MarketEmpty(),
-                  MarketStatus.loaded => MarketScreener(
-                    selectedCategory: state.selectedCategory,
-                    selectedSubcategory: state.selectedSubcategory,
-                    selectedExchange: state.selectedExchange,
-                    instruments: state.visibleFunds,
-                    onCategorySelected: (category) => context
-                        .read<MarketBloc>()
-                        .add(MarketCategoryChanged(category)),
-                    onSubcategorySelected: (subcategory) => context
-                        .read<MarketBloc>()
-                        .add(MarketSubcategoryChanged(subcategory)),
-                    onExchangeSelected: (exchange) => context
-                        .read<MarketBloc>()
-                        .add(MarketExchangeChanged(exchange)),
-                    onItemTap: (instrument) => navigator?.openFund(
-                      fundId: instrument.id,
-                      exchange: instrument.exchange,
-                    ),
-                  ),
-                },
-              ),
-            ],
           ),
         ),
       ),
     );
   }
-}
-
-class _MarketLoading extends StatelessWidget {
-  const _MarketLoading();
-
-  @override
-  Widget build(BuildContext context) => const AppCard(
-    child: SizedBox(
-      height: 220,
-      child: Center(child: CircularProgressIndicator()),
-    ),
-  );
 }
 
 class _MarketEmpty extends StatelessWidget {
@@ -104,12 +98,10 @@ class _MarketError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AppCard(
-    child: Column(
-      children: [
-        const Text('Unable to load market data'),
-        const SizedBox(height: AppSpacing.md),
-        AppButton(label: 'Retry', onPressed: onRetry),
-      ],
+    child: AppErrorState(
+      title: 'Unable to load market data',
+      description: 'Please try loading market data again.',
+      onRetry: onRetry,
     ),
   );
 }

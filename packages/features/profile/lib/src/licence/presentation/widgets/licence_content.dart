@@ -141,9 +141,7 @@ class _DemoNotice extends StatelessWidget {
               Expanded(
                 child: Text(
                   'Demo Regulatory Information',
-                  style: context.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: context.appTextStyles.cardTitle,
                 ),
               ),
             ],
@@ -155,9 +153,8 @@ class _DemoNotice extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             'NOT A REAL REGISTRATION',
-            style: context.textTheme.labelMedium?.copyWith(
+            style: context.appTextStyles.statusLabel.copyWith(
               color: context.appColors.warning,
-              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -236,9 +233,7 @@ class _LicenceRow extends StatelessWidget {
       SelectableText(
         value,
         textAlign: TextAlign.start,
-        style: context.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w500,
-        ),
+        style: context.appTextStyles.bodyMedium,
       ),
     ],
   );

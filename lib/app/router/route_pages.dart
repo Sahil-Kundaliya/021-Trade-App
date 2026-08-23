@@ -14,14 +14,18 @@ import 'package:navigation_contract/navigation_contract.dart';
 import 'package:zero_two_one_trade_assignment/app/dependency_injection.dart';
 import 'package:zero_two_one_trade_assignment/app/navigation/app_navigation_scope.dart';
 import 'package:zero_two_one_trade_assignment/app/preferences/app_preferences_bloc.dart';
+import 'package:zero_two_one_trade_assignment/app/connectivity/connectivity_guard.dart';
+import 'package:zero_two_one_trade_assignment/app/connectivity/connectivity_policy.dart';
 
 @RoutePage(name: 'DashboardRoute')
 class DashboardRoutePage extends StatelessWidget {
   const DashboardRoutePage({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      DashboardPage(navigator: AppNavigationScope.of(context));
+  Widget build(BuildContext context) => _internetRequired(
+    InternetRequiredFeature.dashboard,
+    (key) => DashboardPage(key: key, navigator: AppNavigationScope.of(context)),
+  );
 }
 
 @RoutePage(name: 'WatchlistRoute')
@@ -29,8 +33,10 @@ class WatchlistRoutePage extends StatelessWidget {
   const WatchlistRoutePage({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      WatchlistPage(navigator: AppNavigationScope.of(context));
+  Widget build(BuildContext context) => _internetRequired(
+    InternetRequiredFeature.watchlist,
+    (key) => WatchlistPage(key: key, navigator: AppNavigationScope.of(context)),
+  );
 }
 
 @RoutePage(name: 'PortfolioRoute')
@@ -42,9 +48,13 @@ class PortfolioRoutePage extends StatelessWidget {
     final privacyMode = context.select<AppPreferencesBloc, bool>(
       (bloc) => bloc.state.preferences.privacyMode,
     );
-    return PrivacyModeScope(
-      enabled: privacyMode,
-      child: PortfolioPage(navigator: AppNavigationScope.of(context)),
+    return _internetRequired(
+      InternetRequiredFeature.portfolio,
+      (key) => PrivacyModeScope(
+        key: key,
+        enabled: privacyMode,
+        child: PortfolioPage(navigator: AppNavigationScope.of(context)),
+      ),
     );
   }
 }
@@ -114,11 +124,15 @@ class OrdersRoutePage extends StatelessWidget {
   final TradeSide? side;
 
   @override
-  Widget build(BuildContext context) => OrdersScreen(
-    fundId: fundId,
-    exchange: exchange,
-    side: side,
-    navigator: AppNavigationScope.of(context),
+  Widget build(BuildContext context) => _internetRequired(
+    InternetRequiredFeature.orders,
+    (key) => OrdersScreen(
+      key: key,
+      fundId: fundId,
+      exchange: exchange,
+      side: side,
+      navigator: AppNavigationScope.of(context),
+    ),
   );
 }
 
@@ -127,7 +141,10 @@ class OrderBookRoutePage extends StatelessWidget {
   const OrderBookRoutePage({super.key});
 
   @override
-  Widget build(BuildContext context) => const OrderBookScreen();
+  Widget build(BuildContext context) => _internetRequired(
+    InternetRequiredFeature.orderBook,
+    (key) => OrderBookScreen(key: key),
+  );
 }
 
 @RoutePage(name: 'LicenceRoute')
@@ -147,9 +164,21 @@ class SearchRoutePage extends StatelessWidget {
     final privacyMode = context.select<AppPreferencesBloc, bool>(
       (bloc) => bloc.state.preferences.privacyMode,
     );
-    return PrivacyModeScope(
-      enabled: privacyMode,
-      child: SearchScreen(navigator: AppNavigationScope.of(context)),
+    return _internetRequired(
+      InternetRequiredFeature.search,
+      (key) => PrivacyModeScope(
+        key: key,
+        enabled: privacyMode,
+        child: SearchScreen(navigator: AppNavigationScope.of(context)),
+      ),
     );
   }
+}
+
+Widget _internetRequired(
+  InternetRequiredFeature feature,
+  ConnectivityChildBuilder builder,
+) {
+  assert(ConnectivityPolicy.internetRequired.contains(feature));
+  return ConnectivityGuard(childBuilder: builder);
 }

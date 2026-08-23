@@ -47,9 +47,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
                     children: [
                       Text(
                         order.symbol,
-                        style: context.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: context.appTextStyles.cardTitle,
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
@@ -68,11 +66,10 @@ class OrderDetailsBottomSheet extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               OrderFormat.side(order.side),
-              style: context.textTheme.labelLarge?.copyWith(
+              style: context.appTextStyles.statusLabel.copyWith(
                 color: order.side == OrderSide.buy
                     ? context.appColors.buy
                     : context.appColors.sell,
-                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),
@@ -160,9 +157,8 @@ class OrderDetailsBottomSheet extends StatelessWidget {
                     children: [
                       Text(
                         'Rejection Reason',
-                        style: context.textTheme.labelMedium?.copyWith(
+                        style: context.appTextStyles.statusLabel.copyWith(
                           color: context.appColors.negative,
-                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),

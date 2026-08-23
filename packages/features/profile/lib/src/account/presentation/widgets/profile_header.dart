@@ -29,9 +29,8 @@ class ProfileHeader extends StatelessWidget {
                       profile.fullName,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.titleMedium?.copyWith(
+                      style: context.appTextStyles.cardTitle.copyWith(
                         color: context.appColors.textPrimary,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     if (profile.isVerified) const _VerifiedBadge(),
@@ -110,9 +109,8 @@ class _VerifiedBadge extends StatelessWidget {
           const SizedBox(width: AppSpacing.xs),
           Text(
             'Verified',
-            style: context.textTheme.labelMedium?.copyWith(
+            style: context.appTextStyles.statusLabel.copyWith(
               color: context.appColors.positive,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ],

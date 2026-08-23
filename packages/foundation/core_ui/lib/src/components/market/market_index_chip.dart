@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../theme/extensions/theme_context_extension.dart';
 import '../../theme/tokens/app_radius.dart';
 import '../../theme/tokens/app_spacing.dart';
+import '../../theme/tokens/app_sizes.dart';
 import 'market_index_view_data.dart';
 import '../../privacy/privacy_mode_scope.dart';
 import '../../privacy/sensitive_value_text.dart';
@@ -10,8 +11,8 @@ import '../../privacy/sensitive_value_text.dart';
 class MarketIndexChip extends StatelessWidget {
   const MarketIndexChip({required this.item, this.onTap, super.key});
 
-  static const double width = 176;
-  static const double height = 112;
+  static const double width = AppSizes.marketIndexWidth;
+  static const double height = AppSizes.marketIndexHeight;
 
   final MarketIndexViewData item;
   final VoidCallback? onTap;
@@ -48,9 +49,8 @@ class MarketIndexChip extends StatelessWidget {
                     item.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.labelMedium?.copyWith(
+                    style: context.appTextStyles.label.copyWith(
                       color: context.appColors.textSecondary,
-                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const Spacer(),
@@ -59,7 +59,7 @@ class MarketIndexChip extends StatelessWidget {
                     type: SensitiveValueType.number,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: context.appTextStyles.marketValueMedium.copyWith(
+                    style: context.appTextStyles.financialSmall.copyWith(
                       color: context.appColors.textPrimary,
                     ),
                   ),

@@ -15,6 +15,7 @@ class WatchlistSection extends StatelessWidget {
     this.onLongPressed,
     this.onAddPressed,
     this.onStockTap,
+    this.onReorder,
     super.key,
   });
 
@@ -25,6 +26,7 @@ class WatchlistSection extends StatelessWidget {
   final ValueChanged<Watchlist>? onLongPressed;
   final VoidCallback? onAddPressed;
   final ValueChanged<WatchlistFund>? onStockTap;
+  final ReorderCallback? onReorder;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +45,11 @@ class WatchlistSection extends StatelessWidget {
           ),
         const SizedBox(height: AppSpacing.sm),
         Expanded(
-          child: WatchlistStockList(stocks: funds, onStockTap: onStockTap),
+          child: WatchlistStockList(
+            stocks: funds,
+            onStockTap: onStockTap,
+            onReorder: onReorder,
+          ),
         ),
       ],
     );

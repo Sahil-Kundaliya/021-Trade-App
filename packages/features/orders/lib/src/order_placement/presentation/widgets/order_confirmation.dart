@@ -33,10 +33,17 @@ class OrderConfirmation extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 560),
           child: Column(
             children: [
-              Icon(
-                Icons.check_circle,
-                size: AppSizes.iconLg * 2,
-                color: context.appColors.positive,
+              TweenAnimationBuilder<double>(
+                duration: context.motionDuration(AppMotion.standard),
+                curve: AppMotionCurves.emphasized,
+                tween: Tween(begin: 0.92, end: 1),
+                builder: (context, value, child) =>
+                    Transform.scale(scale: value, child: child),
+                child: Icon(
+                  Icons.check_circle,
+                  size: AppSizes.iconLg,
+                  color: context.appColors.positive,
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
               Text('Order Placed', style: context.textTheme.headlineSmall),
@@ -124,7 +131,9 @@ class OrderConfirmation extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: TextStyle(color: context.appColors.textSecondary),
+            style: context.appTextStyles.bodySecondary.copyWith(
+              color: context.appColors.textSecondary,
+            ),
           ),
         ),
         type == null ? Text(value) : SensitiveValueText(value, type: type),

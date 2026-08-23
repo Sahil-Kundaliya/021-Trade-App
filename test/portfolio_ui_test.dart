@@ -81,7 +81,7 @@ void main() {
     final viewportCenter =
         tester.view.physicalSize.height / tester.view.devicePixelRatio / 2;
     expect(
-      (tester.getCenter(find.byType(AppEmptyState)).dy - viewportCenter).abs(),
+      (tester.getCenter(find.byType(AppErrorState)).dy - viewportCenter).abs(),
       lessThan(80),
     );
   });

@@ -4,6 +4,7 @@ import 'app_color_scheme.dart';
 import 'extensions/app_colors.dart';
 import 'extensions/app_text_styles.dart';
 import 'tokens/app_radius.dart';
+import 'tokens/app_borders.dart';
 import 'tokens/app_sizes.dart';
 import 'tokens/app_spacing.dart';
 import 'typography/app_typography.dart';
@@ -133,7 +134,10 @@ abstract final class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.smBorderRadius,
-          borderSide: BorderSide(color: colors.primary, width: 1.5),
+          borderSide: BorderSide(
+            color: colors.primary,
+            width: AppBorders.strong,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: AppRadius.smBorderRadius,
@@ -141,7 +145,10 @@ abstract final class AppTheme {
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: AppRadius.smBorderRadius,
-          borderSide: BorderSide(color: colors.negativeStrong, width: 1.5),
+          borderSide: BorderSide(
+            color: colors.negativeStrong,
+            width: AppBorders.strong,
+          ),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: AppRadius.smBorderRadius,
@@ -204,6 +211,46 @@ abstract final class AppTheme {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
         showCheckmark: false,
       ),
+      tabBarTheme: TabBarThemeData(
+        labelColor: colors.primary,
+        unselectedLabelColor: colors.textSecondary,
+        labelStyle: tradingTextStyles.label.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: tradingTextStyles.label,
+        indicatorColor: colors.primary,
+        dividerColor: colors.borderSubtle,
+        indicatorSize: TabBarIndicatorSize.tab,
+      ),
+      listTileTheme: ListTileThemeData(
+        dense: true,
+        minTileHeight: AppSizes.touchTarget,
+        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        horizontalTitleGap: AppSpacing.md,
+        minLeadingWidth: AppSizes.iconMd,
+        titleTextStyle: tradingTextStyles.bodyMedium,
+        subtitleTextStyle: tradingTextStyles.bodySecondary.copyWith(
+          color: colors.textSecondary,
+        ),
+        iconColor: colors.textSecondary,
+        shape: controlShape,
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: colors.surfaceElevated,
+        surfaceTintColor: colors.surfaceElevated,
+        textStyle: tradingTextStyles.body,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorderRadius),
+      ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: tradingTextStyles.body,
+        inputDecorationTheme: InputDecorationThemeData(
+          isDense: true,
+          filled: true,
+          fillColor: colors.surfaceLow,
+          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          border: OutlineInputBorder(borderRadius: AppRadius.mdBorderRadius),
+        ),
+      ),
       dialogTheme: DialogThemeData(
         backgroundColor: colors.surfaceElevated,
         surfaceTintColor: colors.surfaceElevated,
@@ -243,7 +290,7 @@ abstract final class AppTheme {
           return null;
         }),
         shape: RoundedRectangleBorder(borderRadius: AppRadius.xsBorderRadius),
-        side: BorderSide(color: colors.border, width: 1.5),
+        side: BorderSide(color: colors.border, width: AppBorders.strong),
       ),
       radioTheme: RadioThemeData(
         fillColor: WidgetStateProperty.resolveWith((states) {
@@ -293,7 +340,7 @@ abstract final class AppTheme {
         thumbColor: WidgetStatePropertyAll(colors.border),
         trackColor: WidgetStatePropertyAll(colors.surfaceLow),
         radius: const Radius.circular(AppRadius.pill),
-        thickness: const WidgetStatePropertyAll(4),
+        thickness: const WidgetStatePropertyAll(AppSpacing.xs),
       ),
     );
   }

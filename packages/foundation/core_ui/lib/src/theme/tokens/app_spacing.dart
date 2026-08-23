@@ -12,5 +12,6 @@ abstract final class AppSpacing {
   static const double xxxl = 32;
   static const double huge = 48;
 
-  static const EdgeInsets cardPadding = EdgeInsets.all(lg);
+  static const EdgeInsets screenPadding = EdgeInsets.all(lg);
+  static const EdgeInsets cardPadding = EdgeInsets.all(md);
 }

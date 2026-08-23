@@ -137,10 +137,13 @@ class _ProfileSections extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const AppSectionHeader(title: 'Profile'),
+        const AppSectionHeader(
+          title: 'Profile',
+          level: AppSectionHeaderLevel.page,
+        ),
         const SizedBox(height: AppSpacing.lg),
         const ProfileHeader(profile: mockTraderProfile),
-        const SizedBox(height: AppSpacing.xxl),
+        const SizedBox(height: AppSpacing.lg),
         const ProfileSection(
           title: 'Account',
           children: [
@@ -166,7 +169,7 @@ class _ProfileSections extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.xxl),
+        const SizedBox(height: AppSpacing.lg),
         ProfileSection(
           title: 'Preferences',
           children: [
@@ -195,7 +198,7 @@ class _ProfileSections extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.xxl),
+        const SizedBox(height: AppSpacing.lg),
         const ProfileSection(
           title: 'Security',
           children: [
@@ -220,7 +223,7 @@ class _ProfileSections extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.xxl),
+        const SizedBox(height: AppSpacing.lg),
         ProfileSection(
           title: 'Trading & App',
           children: [
@@ -253,7 +256,7 @@ class _ProfileSections extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.xxl),
+        const SizedBox(height: AppSpacing.lg),
         ProfileSection(
           title: 'Support & Legal',
           children: [
@@ -281,7 +284,7 @@ class _ProfileSections extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.xxl),
+        const SizedBox(height: AppSpacing.lg),
         const LogoutTile(),
         const SizedBox(height: AppSpacing.lg),
       ],
@@ -518,12 +521,7 @@ class _InfoLine extends StatelessWidget {
     child: Row(
       children: [
         Expanded(child: Text(label)),
-        Text(
-          value,
-          style: context.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        Text(value, style: context.appTextStyles.bodyMedium),
       ],
     ),
   );

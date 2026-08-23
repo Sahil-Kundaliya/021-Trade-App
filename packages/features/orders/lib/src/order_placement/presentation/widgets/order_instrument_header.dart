@@ -26,9 +26,7 @@ class OrderInstrumentHeader extends StatelessWidget {
                 instrument.symbol,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: context.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: context.appTextStyles.cardTitle,
               ),
               const SizedBox(height: AppSpacing.xxs),
               Text(

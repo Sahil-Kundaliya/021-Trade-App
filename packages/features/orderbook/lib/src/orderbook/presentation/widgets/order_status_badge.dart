@@ -26,9 +26,8 @@ class OrderStatusBadge extends StatelessWidget {
           OrderFormat.status(status),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: context.appTextStyles.tableHeader.copyWith(
+          style: context.appTextStyles.statusLabel.copyWith(
             color: colors.foreground,
-            fontSize: 10,
           ),
         ),
       ),

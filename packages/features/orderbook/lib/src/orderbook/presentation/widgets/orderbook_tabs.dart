@@ -75,12 +75,15 @@ class _Tab extends StatelessWidget {
         child: Text(
           label,
           textAlign: TextAlign.center,
-          style: context.textTheme.labelLarge?.copyWith(
-            color: selected
-                ? context.appColors.primary
-                : context.appColors.textSecondary,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-          ),
+          style:
+              (selected
+                      ? context.appTextStyles.button
+                      : context.appTextStyles.label)
+                  .copyWith(
+                    color: selected
+                        ? context.appColors.primary
+                        : context.appColors.textSecondary,
+                  ),
         ),
       ),
     ),

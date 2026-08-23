@@ -6,6 +6,7 @@ import '../../../fund_details/presentation/bloc/fund_details_bloc.dart';
 import '../../../fund_details/presentation/bloc/fund_details_event.dart';
 import '../../../fund_details/presentation/bloc/fund_details_state.dart';
 import '../../../fund_details/presentation/widgets/fund_sections.dart';
+import 'fund_details_skeleton.dart';
 
 class FundContent extends StatelessWidget {
   const FundContent({
@@ -58,24 +59,16 @@ class FundContent extends StatelessWidget {
               ),
             ),
             switch (state.status) {
-              FundDetailsStatus.initial ||
-              FundDetailsStatus.loading => const SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 360,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              ),
+              FundDetailsStatus.initial || FundDetailsStatus.loading =>
+                const SliverToBoxAdapter(child: FundDetailsSkeleton()),
               FundDetailsStatus.error => SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 sliver: SliverToBoxAdapter(
-                  child: AppEmptyState(
+                  child: AppErrorState(
                     title: 'Unable to load fund details',
                     description: state.errorMessage ?? 'Please try again.',
-                    action: AppButton(
-                      label: 'Retry',
-                      onPressed: () => context.read<FundDetailsBloc>().add(
-                        const FundDetailsRetryRequested(),
-                      ),
+                    onRetry: () => context.read<FundDetailsBloc>().add(
+                      const FundDetailsRetryRequested(),
                     ),
                   ),
                 ),

@@ -11,6 +11,7 @@ import 'package:watchlist/dependency_injection.dart';
 import 'package:search/dependency_injection.dart';
 import 'package:zero_two_one_trade_assignment/app/theme/theme_bloc.dart';
 import 'package:zero_two_one_trade_assignment/app/preferences/app_preferences_bloc.dart';
+import 'package:zero_two_one_trade_assignment/app/connectivity/connectivity_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -33,5 +34,8 @@ void configureDependencies() {
       getIt<AppPreferencesRepository>(),
       getIt<LocalNotificationService>(),
     ),
+  );
+  getIt.registerFactory<ConnectivityBloc>(
+    () => ConnectivityBloc(getIt<ConnectivityService>()),
   );
 }
