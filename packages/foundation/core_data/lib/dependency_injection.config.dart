@@ -14,6 +14,12 @@ import 'package:core_data/src/cache/key_value_storage.dart' as _i767;
 import 'package:core_data/src/orderbook/api/orderbook_local_api.dart' as _i871;
 import 'package:core_data/src/orderbook/api/orderbook_local_api_impl.dart'
     as _i196;
+import 'package:core_data/src/preferences/api/app_preferences_local_api.dart'
+    as _i464;
+import 'package:core_data/src/preferences/api/app_preferences_local_api_impl.dart'
+    as _i99;
+import 'package:core_data/src/preferences/repositories/app_preferences_repository.dart'
+    as _i376;
 import 'package:core_data/src/trading/api/trading_local_api.dart' as _i414;
 import 'package:core_data/src/trading/api/trading_local_api_impl.dart' as _i125;
 import 'package:core_data/src/watchlist/api/watchlist_local_api.dart' as _i936;
@@ -38,6 +44,12 @@ _i174.GetIt configureCoreDataDependencies(
   );
   gh.lazySingleton<_i936.WatchlistLocalApi>(
     () => _i668.WatchlistLocalApiImpl(gh<_i767.KeyValueStorage>()),
+  );
+  gh.lazySingleton<_i464.AppPreferencesLocalApi>(
+    () => _i99.AppPreferencesLocalApiImpl(gh<_i767.KeyValueStorage>()),
+  );
+  gh.lazySingleton<_i376.AppPreferencesRepository>(
+    () => _i376.AppPreferencesRepository(gh<_i464.AppPreferencesLocalApi>()),
   );
   return getIt;
 }

@@ -30,6 +30,10 @@ final class AppNavigatorImpl implements AppNavigator {
   Future<void> openOrderBook() => _router.push<void>(const OrderBookRoute());
 
   @override
+  Future<void> openLicenceInformation() =>
+      _router.push<void>(const LicenceRoute());
+
+  @override
   Future<void> openFund({required String fundId}) async {
     final context = _router.navigatorKey.currentContext;
     if (context == null) return;

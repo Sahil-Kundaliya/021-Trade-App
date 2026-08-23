@@ -1,32 +1,63 @@
+import 'package:core_data/core_data.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:navigation_contract/navigation_contract.dart';
 
 import '../../../account/data/mock_profile_data.dart';
+import '../../../account/presentation/bloc/profile_bloc.dart';
+import '../../../account/presentation/bloc/profile_event.dart';
+import '../../../account/presentation/bloc/profile_state.dart';
 import '../../../account/presentation/widgets/logout_tile.dart';
 import '../../../account/presentation/widgets/profile_header.dart';
 import '../../../account/presentation/widgets/profile_section.dart';
 import '../../../account/presentation/widgets/profile_setting_tile.dart';
 import '../../../account/presentation/widgets/profile_toggle_tile.dart';
-import '../../../account/presentation/widgets/theme_setting_tile.dart';
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({this.navigator, super.key});
-
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({
+    required this.bloc,
+    required this.themeMode,
+    required this.onThemeChanged,
+    this.navigator,
+    super.key,
+  });
+  final ProfileBloc bloc;
+  final AppThemeMode themeMode;
+  final ValueChanged<AppThemeMode> onThemeChanged;
   final AppNavigator? navigator;
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  Widget build(BuildContext context) => BlocProvider.value(
+    value: bloc,
+    child: ProfileContent(
+      navigator: navigator,
+      themeMode: themeMode,
+      onThemeChanged: onThemeChanged,
+    ),
+  );
 }
 
-class _ProfilePageState extends State<ProfilePage> {
-  ThemeMode _selectedTheme = ThemeMode.system;
-  bool _privacyModeEnabled = false;
-  bool _appLockEnabled = false;
+class ProfileContent extends StatelessWidget {
+  const ProfileContent({
+    required this.themeMode,
+    required this.onThemeChanged,
+    this.navigator,
+    super.key,
+  });
+  final AppNavigator? navigator;
+  final AppThemeMode themeMode;
+  final ValueChanged<AppThemeMode> onThemeChanged;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => BlocConsumer<ProfileBloc, ProfileState>(
+    listenWhen: (previous, current) =>
+        previous.errorMessage != current.errorMessage &&
+        current.errorMessage != null,
+    listener: (context, state) => ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(state.errorMessage!))),
+    builder: (context, state) => Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -34,240 +65,458 @@ class _ProfilePageState extends State<ProfilePage> {
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 840),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const AppSectionHeader(title: 'Profile'),
-                  const SizedBox(height: AppSpacing.lg),
-                  const ProfileHeader(profile: mockTraderProfile),
-                  const SizedBox(height: AppSpacing.xxl),
-                  ProfileSection(
-                    title: 'Account',
-                    children: const [
-                      ProfileSettingTile(
-                        icon: Icons.person_outline,
-                        title: 'Personal Details',
-                        subtitle: 'Name, email, phone and account information',
-                      ),
-                      ProfileSettingTile(
-                        icon: Icons.account_balance_outlined,
-                        title: 'Bank & Demat Details',
-                        subtitle: 'Linked bank and Demat account',
-                      ),
-                      ProfileSettingTile(
-                        icon: Icons.candlestick_chart_outlined,
-                        title: 'Trading Segments',
-                        subtitle: 'Equity, Futures & Options',
-                      ),
-                      ProfileSettingTile(
-                        icon: Icons.description_outlined,
-                        title: 'Documents & Reports',
-                        subtitle: 'Statements, contract notes and reports',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  ProfileSection(
-                    title: 'Preferences',
-                    children: [
-                      ThemeSettingTile(
-                        selectedTheme: _selectedTheme,
-                        onTap: _showThemePicker,
-                      ),
-                      ProfileToggleTile(
-                        icon: Icons.visibility_off_outlined,
-                        title: 'Privacy Mode',
-                        subtitle: 'Hide sensitive portfolio and fund values',
-                        value: _privacyModeEnabled,
-                        onChanged: (value) {
-                          setState(() => _privacyModeEnabled = value);
-                        },
-                      ),
-                      const ProfileSettingTile(
-                        icon: Icons.notifications_none_outlined,
-                        title: 'Notifications',
-                        subtitle: 'Orders, price alerts and account activity',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  ProfileSection(
-                    title: 'Security',
-                    children: [
-                      ProfileToggleTile(
-                        icon: Icons.fingerprint,
-                        title: 'Biometric / App Lock',
-                        subtitle: 'Use Face ID, fingerprint or device lock',
-                        value: _appLockEnabled,
-                        onChanged: (value) {
-                          setState(() => _appLockEnabled = value);
-                        },
-                      ),
-                      const ProfileSettingTile(
-                        icon: Icons.shield_outlined,
-                        title: 'Two-Factor Authentication',
-                        subtitle: 'Add an extra layer of account security',
-                        status: 'Enabled',
-                        statusIsPositive: true,
-                      ),
-                      const ProfileSettingTile(
-                        icon: Icons.lock_outline,
-                        title: 'Change Password',
-                      ),
-                      const ProfileSettingTile(
-                        icon: Icons.devices_outlined,
-                        title: 'Active Sessions',
-                        subtitle: 'Manage devices logged into your account',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  ProfileSection(
-                    title: 'Trading & App',
-                    children: [
-                      ProfileSettingTile(
-                        icon: Icons.receipt_long_outlined,
-                        title: 'Order Book',
-                        subtitle: 'Open and closed orders',
-                        onTap: widget.navigator?.openOrderBook,
-                      ),
-                      ProfileSettingTile(
-                        icon: Icons.tune_outlined,
-                        title: 'Order Preferences',
-                        subtitle: 'Default order and confirmation settings',
-                      ),
-                      ProfileSettingTile(
-                        icon: Icons.show_chart,
-                        title: 'Price Display Preferences',
-                        subtitle: 'Market value and price display options',
-                      ),
-                      ProfileSettingTile(
-                        icon: Icons.info_outline,
-                        title: 'App Information',
-                        value: 'Version 1.0.0',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  const ProfileSection(
-                    title: 'Support & Legal',
-                    children: [
-                      ProfileSettingTile(
-                        icon: Icons.help_outline,
-                        title: 'Help & Support',
-                        subtitle: 'FAQs and customer support',
-                      ),
-                      ProfileSettingTile(
-                        icon: Icons.report_outlined,
-                        title: 'Report an Issue',
-                      ),
-                      ProfileSettingTile(
-                        icon: Icons.privacy_tip_outlined,
-                        title: 'Privacy Policy',
-                      ),
-                      ProfileSettingTile(
-                        icon: Icons.gavel_outlined,
-                        title: 'Terms & Conditions',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  const LogoutTile(),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
+              child: _ProfileSections(
+                state: state,
+                navigator: navigator,
+                themeMode: themeMode,
+                onThemeChanged: onThemeChanged,
               ),
             ),
           ),
         ),
       ),
-    );
-  }
-
-  Future<void> _showThemePicker() async {
-    final selection = await showModalBottomSheet<ThemeMode>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => _ThemePicker(selectedTheme: _selectedTheme),
-    );
-
-    if (selection != null && mounted) {
-      setState(() => _selectedTheme = selection);
-    }
-  }
+    ),
+  );
 }
 
-class _ThemePicker extends StatelessWidget {
-  const _ThemePicker({required this.selectedTheme});
-
-  final ThemeMode selectedTheme;
+class _ProfileSections extends StatelessWidget {
+  const _ProfileSections({
+    required this.state,
+    required this.navigator,
+    required this.themeMode,
+    required this.onThemeChanged,
+  });
+  final ProfileState state;
+  final AppNavigator? navigator;
+  final AppThemeMode themeMode;
+  final ValueChanged<AppThemeMode> onThemeChanged;
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.sm,
-          AppSpacing.lg,
-          AppSpacing.lg,
+    final preferences = state.preferences;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const AppSectionHeader(title: 'Profile'),
+        const SizedBox(height: AppSpacing.lg),
+        const ProfileHeader(profile: mockTraderProfile),
+        const SizedBox(height: AppSpacing.xxl),
+        const ProfileSection(
+          title: 'Account',
+          children: [
+            ProfileSettingTile(
+              icon: Icons.person_outline,
+              title: 'Personal Details',
+              subtitle: 'Name, email, phone and account information',
+            ),
+            ProfileSettingTile(
+              icon: Icons.account_balance_outlined,
+              title: 'Bank & Demat Details',
+              subtitle: 'Linked bank and Demat account',
+            ),
+            ProfileSettingTile(
+              icon: Icons.candlestick_chart_outlined,
+              title: 'Trading Segments',
+              subtitle: 'Equity, Futures & Options',
+            ),
+            ProfileSettingTile(
+              icon: Icons.description_outlined,
+              title: 'Documents & Reports',
+              subtitle: 'Statements, contract notes and reports',
+            ),
+          ],
         ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
+        const SizedBox(height: AppSpacing.xxl),
+        ProfileSection(
+          title: 'Preferences',
+          children: [
+            ProfileSettingTile(
+              icon: Icons.brightness_6_outlined,
+              title: 'Theme',
+              subtitle: 'Change app appearance',
+              value: _themeLabel(themeMode),
+              onTap: () => _showThemePicker(context),
+            ),
+            ProfileToggleTile(
+              icon: Icons.visibility_off_outlined,
+              title: 'Privacy Mode',
+              subtitle: 'Hide sensitive portfolio and fund values',
+              value: preferences.privacyMode,
+              onChanged: (value) => context.read<ProfileBloc>().add(
+                ProfilePrivacyModeChanged(value),
+              ),
+            ),
+            ProfileToggleTile(
+              icon: Icons.notifications_none_outlined,
+              title: 'Notifications',
+              subtitle: 'Local notification preference',
+              value: preferences.notificationsEnabled,
+              onChanged: (value) => context.read<ProfileBloc>().add(
+                ProfileNotificationsChanged(value),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xxl),
+        const ProfileSection(
+          title: 'Security',
+          children: [
+            ProfileSettingTile(
+              icon: Icons.fingerprint,
+              title: 'Biometric / App Lock',
+              subtitle: 'Requires device authentication infrastructure',
+            ),
+            ProfileSettingTile(
+              icon: Icons.shield_outlined,
+              title: 'Two-Factor Authentication',
+              subtitle: 'Requires account security infrastructure',
+            ),
+            ProfileSettingTile(
+              icon: Icons.lock_outline,
+              title: 'Change Password',
+            ),
+            ProfileSettingTile(
+              icon: Icons.devices_outlined,
+              title: 'Active Sessions',
+              subtitle: 'Manage devices logged into your account',
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xxl),
+        ProfileSection(
+          title: 'Trading & App',
+          children: [
+            ProfileSettingTile(
+              icon: Icons.receipt_long_outlined,
+              title: 'Order Book',
+              subtitle: 'Open and closed orders',
+              onTap: navigator?.openOrderBook,
+            ),
+            ProfileSettingTile(
+              icon: Icons.tune_outlined,
+              title: 'Order Preferences',
+              subtitle: 'Default side, order type and product',
+              value: _orderSummary(preferences),
+              onTap: () => _showOrderPreferences(context, preferences),
+            ),
+            ProfileSettingTile(
+              icon: Icons.show_chart,
+              title: 'Price Display Preferences',
+              subtitle: 'Market value and price display options',
+              value: _priceLabel(preferences.priceDisplayMode),
+              onTap: () =>
+                  _showPriceDisplay(context, preferences.priceDisplayMode),
+            ),
+            ProfileSettingTile(
+              icon: Icons.info_outline,
+              title: 'App Information',
+              value: 'Version 1.0.0',
+              onTap: () => _showAppInformation(context),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xxl),
+        ProfileSection(
+          title: 'Support & Legal',
+          children: [
+            const ProfileSettingTile(
+              icon: Icons.help_outline,
+              title: 'Help & Support',
+              subtitle: 'FAQs and customer support',
+            ),
+            const ProfileSettingTile(
+              icon: Icons.report_outlined,
+              title: 'Report an Issue',
+            ),
+            ProfileSettingTile(
+              icon: Icons.policy_outlined,
+              title: 'Licence & Regulatory Information',
+              onTap: navigator?.openLicenceInformation,
+            ),
+            const ProfileSettingTile(
+              icon: Icons.privacy_tip_outlined,
+              title: 'Privacy Policy',
+            ),
+            const ProfileSettingTile(
+              icon: Icons.gavel_outlined,
+              title: 'Terms & Conditions',
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xxl),
+        const LogoutTile(),
+        const SizedBox(height: AppSpacing.lg),
+      ],
+    );
+  }
+
+  Future<void> _showThemePicker(BuildContext context) async {
+    final selection = await showModalBottomSheet<AppThemeMode>(
+      context: context,
+      builder: (_) => _ChoiceSheet<AppThemeMode>(
+        title: 'Theme',
+        selected: themeMode,
+        options: const {
+          AppThemeMode.system: 'System',
+          AppThemeMode.light: 'Light',
+          AppThemeMode.dark: 'Dark',
+        },
+      ),
+    );
+    if (selection != null) onThemeChanged(selection);
+  }
+
+  Future<void> _showPriceDisplay(
+    BuildContext context,
+    PriceDisplayMode selected,
+  ) async {
+    final selection = await showModalBottomSheet<PriceDisplayMode>(
+      context: context,
+      builder: (_) => _ChoiceSheet<PriceDisplayMode>(
+        title: 'Price Display Preferences',
+        selected: selected,
+        options: const {
+          PriceDisplayMode.absoluteAndPercent: 'Price Change + %',
+          PriceDisplayMode.percentOnly: 'Percentage Only',
+          PriceDisplayMode.absoluteOnly: 'Absolute Change Only',
+        },
+      ),
+    );
+    if (selection != null && context.mounted) {
+      context.read<ProfileBloc>().add(ProfilePriceDisplayChanged(selection));
+    }
+  }
+
+  Future<void> _showOrderPreferences(
+    BuildContext context,
+    AppPreferences value,
+  ) async {
+    final result = await showModalBottomSheet<_OrderSelection>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _OrderPreferencesSheet(preferences: value),
+    );
+    if (result != null && context.mounted) {
+      context.read<ProfileBloc>().add(
+        ProfileOrderPreferencesChanged(
+          side: result.side,
+          orderType: result.orderType,
+          productType: result.productType,
+        ),
+      );
+    }
+  }
+
+  void _showAppInformation(BuildContext context) => showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('App Information'),
+      content: const Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _InfoLine(label: 'App Name', value: '021 Trade'),
+          _InfoLine(label: 'Version', value: '1.0.0'),
+          _InfoLine(label: 'Build Number', value: '1'),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close'),
+        ),
+      ],
+    ),
+  );
+}
+
+class _ChoiceSheet<T> extends StatelessWidget {
+  const _ChoiceSheet({
+    required this.title,
+    required this.selected,
+    required this.options,
+  });
+  final String title;
+  final T selected;
+  final Map<T, String> options;
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    child: Padding(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(title.toUpperCase(), style: context.appTextStyles.tableHeader),
+          const SizedBox(height: AppSpacing.md),
+          RadioGroup<T>(
+            groupValue: selected,
+            onChanged: (value) => Navigator.pop(context, value),
+            child: Column(
+              children: [
+                for (final option in options.entries)
+                  RadioListTile<T>(
+                    value: option.key,
+                    title: Text(option.value),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _OrderPreferencesSheet extends StatelessWidget {
+  const _OrderPreferencesSheet({required this.preferences});
+  final AppPreferences preferences;
+  @override
+  Widget build(BuildContext context) => BlocProvider(
+    create: (_) => _OrderPreferencesCubit(
+      _OrderSelection(
+        preferences.defaultOrderSide,
+        preferences.defaultOrderType,
+        preferences.defaultProductType,
+      ),
+    ),
+    child: BlocBuilder<_OrderPreferencesCubit, _OrderSelection>(
+      builder: (context, selection) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Appearance', style: context.textTheme.titleLarge),
-              const SizedBox(height: AppSpacing.sm),
               Text(
-                'Choose how the app should look. This preview setting is not persisted.',
-                style: context.textTheme.bodySmall?.copyWith(
-                  color: context.appColors.textSecondary,
-                ),
+                'ORDER PREFERENCES',
+                style: context.appTextStyles.tableHeader,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              _SegmentedField<DefaultOrderSide>(
+                label: 'Default Side',
+                selected: {selection.side},
+                values: const {
+                  DefaultOrderSide.buy: 'Buy',
+                  DefaultOrderSide.sell: 'Sell',
+                },
+                onChanged: context.read<_OrderPreferencesCubit>().sideChanged,
+              ),
+              _SegmentedField<DefaultOrderType>(
+                label: 'Order Type',
+                selected: {selection.orderType},
+                values: const {
+                  DefaultOrderType.market: 'Market',
+                  DefaultOrderType.limit: 'Limit',
+                },
+                onChanged: context
+                    .read<_OrderPreferencesCubit>()
+                    .orderTypeChanged,
+              ),
+              _SegmentedField<DefaultProductType>(
+                label: 'Product',
+                selected: {selection.productType},
+                values: const {
+                  DefaultProductType.delivery: 'Delivery',
+                  DefaultProductType.intraday: 'Intraday',
+                },
+                onChanged: context
+                    .read<_OrderPreferencesCubit>()
+                    .productTypeChanged,
               ),
               const SizedBox(height: AppSpacing.md),
-              RadioGroup<ThemeMode>(
-                groupValue: selectedTheme,
-                onChanged: (selection) => Navigator.of(context).pop(selection),
-                child: const Column(
-                  children: [
-                    _ThemeOption(
-                      title: 'System default',
-                      value: ThemeMode.system,
-                    ),
-                    _ThemeOption(title: 'Light', value: ThemeMode.light),
-                    _ThemeOption(title: 'Dark', value: ThemeMode.dark),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
-                ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, selection),
+                child: const Text('Save'),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
-class _ThemeOption extends StatelessWidget {
-  const _ThemeOption({required this.title, required this.value});
-
-  final String title;
-  final ThemeMode value;
-
+class _SegmentedField<T> extends StatelessWidget {
+  const _SegmentedField({
+    required this.label,
+    required this.selected,
+    required this.values,
+    required this.onChanged,
+  });
+  final String label;
+  final Set<T> selected;
+  final Map<T, String> values;
+  final ValueChanged<T> onChanged;
   @override
-  Widget build(BuildContext context) {
-    return RadioListTile<ThemeMode>(
-      value: value,
-      contentPadding: EdgeInsets.zero,
-      title: Text(title),
-    );
-  }
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: context.textTheme.labelLarge),
+        const SizedBox(height: AppSpacing.sm),
+        SegmentedButton<T>(
+          segments: [
+            for (final value in values.entries)
+              ButtonSegment(value: value.key, label: Text(value.value)),
+          ],
+          selected: selected,
+          onSelectionChanged: (selection) => onChanged(selection.first),
+        ),
+      ],
+    ),
+  );
 }
+
+class _InfoLine extends StatelessWidget {
+  const _InfoLine({required this.label, required this.value});
+  final String label;
+  final String value;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+    child: Row(
+      children: [
+        Expanded(child: Text(label)),
+        Text(
+          value,
+          style: context.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+final class _OrderSelection {
+  const _OrderSelection(this.side, this.orderType, this.productType);
+  final DefaultOrderSide side;
+  final DefaultOrderType orderType;
+  final DefaultProductType productType;
+}
+
+final class _OrderPreferencesCubit extends Cubit<_OrderSelection> {
+  _OrderPreferencesCubit(super.initialState);
+  void sideChanged(DefaultOrderSide value) =>
+      emit(_OrderSelection(value, state.orderType, state.productType));
+  void orderTypeChanged(DefaultOrderType value) =>
+      emit(_OrderSelection(state.side, value, state.productType));
+  void productTypeChanged(DefaultProductType value) =>
+      emit(_OrderSelection(state.side, state.orderType, value));
+}
+
+String _themeLabel(AppThemeMode mode) => switch (mode) {
+  AppThemeMode.system => 'System',
+  AppThemeMode.light => 'Light',
+  AppThemeMode.dark => 'Dark',
+};
+String _priceLabel(PriceDisplayMode mode) => switch (mode) {
+  PriceDisplayMode.absoluteAndPercent => 'Change + %',
+  PriceDisplayMode.percentOnly => 'Percentage',
+  PriceDisplayMode.absoluteOnly => 'Absolute',
+};
+String _orderSummary(AppPreferences value) =>
+    '${value.defaultOrderSide == DefaultOrderSide.buy ? 'Buy' : 'Sell'} · ${value.defaultOrderType == DefaultOrderType.market ? 'Market' : 'Limit'}';

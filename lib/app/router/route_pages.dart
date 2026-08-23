@@ -6,8 +6,11 @@ import 'package:portfolio/portfolio.dart';
 import 'package:profile/profile.dart';
 import 'package:watchlist/watchlist.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:navigation_contract/navigation_contract.dart';
+import 'package:zero_two_one_trade_assignment/app/dependency_injection.dart';
 import 'package:zero_two_one_trade_assignment/app/navigation/app_navigation_scope.dart';
+import 'package:zero_two_one_trade_assignment/app/theme/theme_bloc.dart';
 
 @RoutePage(name: 'DashboardRoute')
 class DashboardRoutePage extends StatelessWidget {
@@ -37,12 +40,33 @@ class PortfolioRoutePage extends StatelessWidget {
 }
 
 @RoutePage(name: 'ProfileRoute')
-class ProfileRoutePage extends StatelessWidget {
+class ProfileRoutePage extends StatefulWidget {
   const ProfileRoutePage({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      ProfilePage(navigator: AppNavigationScope.of(context));
+  State<ProfileRoutePage> createState() => _ProfileRoutePageState();
+}
+
+class _ProfileRoutePageState extends State<ProfileRoutePage> {
+  late final ProfileBloc _profileBloc = getIt<ProfileBloc>()
+    ..add(const ProfileStarted());
+
+  @override
+  void dispose() {
+    _profileBloc.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeBloc = context.watch<ThemeBloc>();
+    return ProfilePage(
+      bloc: _profileBloc,
+      navigator: AppNavigationScope.of(context),
+      themeMode: themeBloc.state.mode,
+      onThemeChanged: (mode) => themeBloc.add(ThemeModeChanged(mode)),
+    );
+  }
 }
 
 @RoutePage(name: 'OrdersRoute')
@@ -66,4 +90,12 @@ class OrderBookRoutePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const OrderBookScreen();
+}
+
+@RoutePage(name: 'LicenceRoute')
+class LicenceRoutePage extends StatelessWidget {
+  const LicenceRoutePage({super.key});
+
+  @override
+  Widget build(BuildContext context) => const LicenceScreen();
 }

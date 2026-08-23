@@ -7,22 +7,21 @@ class WatchlistHeader extends StatelessWidget {
   final VoidCallback? onSettingsPressed;
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(child: Text('Watchlist', style: context.textTheme.titleLarge)),
-        AppIconButton(
-          tooltip: 'Watchlist settings',
-          onPressed: onSettingsPressed ?? _noOp,
-          icon: Icon(
-            Icons.settings_outlined,
-            size: AppSizes.iconMd,
-            color: context.appColors.textSecondary,
-          ),
+  Widget build(BuildContext context) => AppSectionHeader(
+    title: 'Watchlist',
+    trailing: SizedBox.square(
+      dimension: AppSizes.iconSm,
+      child: AppIconButton(
+        tooltip: 'Watchlist settings',
+        onPressed: onSettingsPressed ?? _noOp,
+        icon: Icon(
+          Icons.settings_outlined,
+          size: AppSizes.iconSm,
+          color: context.appColors.textSecondary,
         ),
-      ],
-    );
-  }
+      ),
+    ),
+  );
 }
 
 void _noOp() {}

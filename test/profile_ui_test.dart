@@ -1,4 +1,5 @@
 import 'package:core_ui/core_ui.dart';
+import 'package:core_data/core_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:profile/profile.dart';
@@ -8,14 +9,7 @@ void main() {
     WidgetTester tester, {
     ThemeMode themeMode = ThemeMode.light,
   }) {
-    return tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: themeMode,
-        home: const ProfilePage(),
-      ),
-    );
+    return tester.pumpWidget(_ProfileHarness(initialThemeMode: themeMode));
   }
 
   testWidgets('shows the complete static trading profile', (tester) async {
@@ -64,26 +58,25 @@ void main() {
     }
 
     expect(find.text('System'), findsOneWidget);
-    expect(find.text('Enabled'), findsOneWidget);
     expect(find.text('Version 1.0.0'), findsOneWidget);
   });
 
-  testWidgets('theme picker changes presentation-only selected value', (
+  testWidgets('theme picker changes the application theme value', (
     tester,
   ) async {
     await pumpProfile(tester);
 
     await tester.tap(find.text('Theme'));
     await tester.pumpAndSettle();
-    expect(find.text('Appearance'), findsOneWidget);
-    expect(find.text('System default'), findsOneWidget);
-    expect(find.text('Light'), findsOneWidget);
+    expect(find.text('THEME'), findsOneWidget);
+    expect(find.text('System'), findsWidgets);
+    expect(find.text('Light'), findsWidgets);
     expect(find.text('Dark'), findsOneWidget);
 
     await tester.tap(find.text('Dark'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Appearance'), findsNothing);
+    expect(find.text('THEME'), findsNothing);
     expect(find.text('Dark'), findsOneWidget);
   });
 
@@ -116,10 +109,64 @@ void main() {
 
       expect(find.text('Verified'), findsOneWidget);
       expect(find.text('System'), findsOneWidget);
-      expect(find.text('Enabled'), findsOneWidget);
       expect(find.text('Version 1.0.0'), findsOneWidget);
       expect(find.byType(Switch), findsNWidgets(2));
       expect(tester.takeException(), isNull, reason: 'Failed at $width px');
     }
   });
+}
+
+class _ProfileHarness extends StatefulWidget {
+  const _ProfileHarness({required this.initialThemeMode});
+  final ThemeMode initialThemeMode;
+
+  @override
+  State<_ProfileHarness> createState() => _ProfileHarnessState();
+}
+
+class _ProfileHarnessState extends State<_ProfileHarness> {
+  AppThemeMode mode = AppThemeMode.system;
+  late ThemeMode renderedTheme = widget.initialThemeMode;
+  late final ProfileBloc bloc = ProfileBloc(
+    ProfilePreferencesRepositoryImpl(
+      AppPreferencesRepository(_MemoryPreferencesApi()),
+    ),
+  )..add(const ProfileStarted());
+
+  @override
+  void dispose() {
+    bloc.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    theme: AppTheme.light,
+    darkTheme: AppTheme.dark,
+    themeMode: renderedTheme,
+    home: ProfilePage(
+      bloc: bloc,
+      themeMode: mode,
+      onThemeChanged: (value) => setState(() {
+        mode = value;
+        renderedTheme = switch (value) {
+          AppThemeMode.system => ThemeMode.system,
+          AppThemeMode.light => ThemeMode.light,
+          AppThemeMode.dark => ThemeMode.dark,
+        };
+      }),
+    ),
+  );
+}
+
+final class _MemoryPreferencesApi implements AppPreferencesLocalApi {
+  AppPreferences? value;
+
+  @override
+  Future<AppPreferences?> read() async => value;
+
+  @override
+  Future<void> write(AppPreferences preferences) async {
+    value = preferences;
+  }
 }

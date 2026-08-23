@@ -2,6 +2,7 @@ import 'package:fund/fund.dart';
 import 'package:flutter/material.dart';
 import 'package:orders/orders.dart';
 import 'package:orderbook/orderbook.dart';
+import 'package:profile/profile.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zero_two_one_trade_assignment/app/app.dart';
 
@@ -99,6 +100,30 @@ void main() {
 
     expect(find.byType(OrderBookScreen), findsOneWidget);
     expect(find.text('No open orders'), findsOneWidget);
+  });
+
+  testWidgets('profile opens fictional licence information and returns', (
+    tester,
+  ) async {
+    final app = TradingApp();
+    await tester.pumpWidget(app);
+    await tester.pumpAndSettle();
+
+    app.navigator.goToProfile();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Licence & Regulatory Information'));
+    await tester.tap(find.text('Licence & Regulatory Information'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LicenceScreen), findsOneWidget);
+    expect(find.text('Demo Regulatory Information'), findsOneWidget);
+    expect(find.text('DEMO-INZ000000000'), findsOneWidget);
+    expect(find.text('NOT A REAL REGISTRATION'), findsOneWidget);
+
+    await app.navigator.pop();
+    await tester.pumpAndSettle();
+    expect(find.byType(LicenceScreen), findsNothing);
+    expect(find.text('Profile'), findsExactly(2));
   });
 
   testWidgets('all main feature entry points open the shared fund sheet', (

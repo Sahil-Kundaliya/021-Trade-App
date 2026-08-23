@@ -27,6 +27,22 @@ class DashboardRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [LicenceRoutePage]
+class LicenceRoute extends PageRouteInfo<void> {
+  const LicenceRoute({List<PageRouteInfo>? children})
+    : super(LicenceRoute.name, initialChildren: children);
+
+  static const String name = 'LicenceRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const LicenceRoutePage();
+    },
+  );
+}
+
+/// generated route for
 /// [MainShellPage]
 class MainShellRoute extends PageRouteInfo<void> {
   const MainShellRoute({List<PageRouteInfo>? children})

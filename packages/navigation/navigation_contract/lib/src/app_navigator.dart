@@ -13,6 +13,8 @@ abstract interface class AppNavigator {
 
   Future<void> openOrderBook();
 
+  Future<void> openLicenceInformation();
+
   Future<void> openFund({required String fundId});
 
   Future<void> pop();
