@@ -73,12 +73,8 @@ class OrderTicket extends StatelessWidget {
                       quantity: state.quantity,
                       lotSize: instrument.lotSize,
                       isDerivative: instrument.isDerivative,
-                      onIncrement:
-                          state.side == OrderSide.sell &&
-                              state.quantity + instrument.quantityStep >
-                                  state.availableSellQuantity
-                          ? null
-                          : () => bloc.add(const OrderQuantityIncremented()),
+                      onIncrement: () =>
+                          bloc.add(const OrderQuantityIncremented()),
                       onDecrement: () =>
                           bloc.add(const OrderQuantityDecremented()),
                       onChanged: (value) =>
@@ -139,10 +135,15 @@ class OrderTicket extends StatelessWidget {
                     ],
                     ExpansionTile(
                       tilePadding: EdgeInsets.zero,
+                      expandedAlignment: Alignment.centerLeft,
+                      expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
                       childrenPadding: const EdgeInsets.only(
                         bottom: AppSpacing.md,
                       ),
-                      title: const Text('More Options'),
+                      title: const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('More Options', textAlign: TextAlign.left),
+                      ),
                       children: [
                         OrderChoiceSelector<OrderValidity>(
                           label: 'Validity',
@@ -211,32 +212,33 @@ class _MarketPrice extends StatelessWidget {
   const _MarketPrice();
 
   @override
-  Widget build(BuildContext context) =>
-      BlocSelector<OrderPlacementBloc, OrderPlacementState, double>(
-        selector: (state) => state.instrument?.ltp ?? 0,
-        builder: (context, ltp) => Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: context.appColors.infoContainer,
-            borderRadius: AppRadius.mdBorderRadius,
+  Widget build(
+    BuildContext context,
+  ) => BlocSelector<OrderPlacementBloc, OrderPlacementState, double>(
+    selector: (state) => state.instrument?.ltp ?? 0,
+    builder: (context, ltp) => Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: context.appColors.infoContainer,
+        borderRadius: AppRadius.mdBorderRadius,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Price · Market Price', style: context.textTheme.labelLarge),
+          SensitiveValueText(
+            'Current LTP ${FinancialFormatter.price(ltp)}',
+            maskedValue: 'Current LTP ${PrivacyMask.currency}',
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Price · Market Price', style: context.textTheme.labelLarge),
-              SensitiveValueText(
-                'Current LTP ${FinancialFormatter.price(ltp)}',
-                maskedValue: 'Current LTP ${PrivacyMask.currency}',
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                'Market orders execute at the best available price. Actual execution may vary from the displayed LTP.',
-                style: context.textTheme.bodySmall,
-              ),
-            ],
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Market orders execute at the best available price. Actual execution may vary from the displayed LTP.',
+            style: context.textTheme.bodySmall,
           ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }
 
 class _AvailableQuantity extends StatelessWidget {

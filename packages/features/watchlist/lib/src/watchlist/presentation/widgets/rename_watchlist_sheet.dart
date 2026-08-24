@@ -13,6 +13,7 @@ Future<void> showRenameWatchlistSheet(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
+  showDragHandle: true,
   builder: (_) => BlocProvider.value(
     value: bloc,
     child: WatchlistNameSheet.rename(watchlist: watchlist),

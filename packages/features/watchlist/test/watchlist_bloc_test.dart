@@ -86,7 +86,7 @@ void main() {
 
   test('create and rename validate and persist immutable updates', () async {
     final created = bloc.stream.firstWhere(
-      (state) => state.watchlists.length == 3,
+      (state) => state.watchlists.length == 3 && !state.isSaving,
     );
     bloc.add(const WatchlistCreateRequested(name: '  Growth  '));
     await created;
@@ -96,7 +96,9 @@ void main() {
     expect(growth.fundIds, isEmpty);
 
     final renamed = bloc.stream.firstWhere(
-      (state) => state.watchlists.any((item) => item.name == 'Long Term'),
+      (state) =>
+          state.watchlists.any((item) => item.name == 'Long Term') &&
+          !state.isSaving,
     );
     bloc.add(
       WatchlistRenameRequested(watchlistId: growth.id, newName: ' Long Term '),
@@ -233,7 +235,7 @@ void main() {
       expect(bloc.state.watchlists, hasLength(2));
 
       final deleted = bloc.stream.firstWhere(
-        (state) => state.watchlists.length == 1,
+        (state) => state.watchlists.length == 1 && !state.isSaving,
       );
       bloc.add(const WatchlistDeleteRequested(watchlistId: 'watchlist_2'));
       await deleted;
@@ -246,7 +248,8 @@ void main() {
     'add prevents duplicates but allows the same fund in another watchlist',
     () async {
       final added = bloc.stream.firstWhere(
-        (state) => state.watchlists.last.fundIds.contains('TCS_EQ'),
+        (state) =>
+            state.watchlists.last.fundIds.contains('TCS_EQ') && !state.isSaving,
       );
       bloc.add(
         const WatchlistFundAddRequested(
@@ -273,7 +276,9 @@ void main() {
 
   test('remove affects only its target watchlist', () async {
     final removed = bloc.stream.firstWhere(
-      (state) => !state.watchlists.last.fundIds.contains('RELIANCE_EQ'),
+      (state) =>
+          !state.watchlists.last.fundIds.contains('RELIANCE_EQ') &&
+          !state.isSaving,
     );
     bloc.add(
       const WatchlistFundRemoveRequested(
@@ -287,7 +292,8 @@ void main() {
 
   test('reorder persists and preserves the requested order', () async {
     final reordered = bloc.stream.firstWhere(
-      (state) => state.watchlists.first.fundIds.first == 'TCS_EQ',
+      (state) =>
+          state.watchlists.first.fundIds.first == 'TCS_EQ' && !state.isSaving,
     );
     bloc.add(
       const WatchlistFundsReorderRequested(
@@ -309,9 +315,48 @@ void main() {
     ]);
   });
 
+  test('reorder stays optimistic while local persistence completes', () async {
+    final saveGate = Completer<void>();
+    repository.saveGate = saveGate;
+    addTearDown(() {
+      if (!saveGate.isCompleted) saveGate.complete();
+    });
+
+    final saving = bloc.stream.firstWhere((state) => state.isSaving);
+    bloc.add(
+      const WatchlistFundsReorderRequested(
+        watchlistId: 'watchlist_default',
+        oldIndex: 2,
+        newIndex: 0,
+      ),
+    );
+    final optimistic = await saving;
+
+    expect(optimistic.visibleFunds.map((fund) => fund.id), [
+      'TCS_EQ',
+      'INFY_EQ',
+      'RELIANCE_EQ',
+    ]);
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(bloc.state.visibleFunds.map((fund) => fund.id), [
+      'TCS_EQ',
+      'INFY_EQ',
+      'RELIANCE_EQ',
+    ]);
+
+    final saved = bloc.stream.firstWhere((state) => !state.isSaving);
+    saveGate.complete();
+    await saved;
+    expect(bloc.state.visibleFunds.map((fund) => fund.id), [
+      'TCS_EQ',
+      'INFY_EQ',
+      'RELIANCE_EQ',
+    ]);
+  });
+
   test('reorders user watchlists and keeps Default first', () async {
     final created = bloc.stream.firstWhere(
-      (state) => state.watchlists.length == 3,
+      (state) => state.watchlists.length == 3 && !state.isSaving,
     );
     bloc.add(const WatchlistCreateRequested(name: 'Banks'));
     await created;
@@ -322,7 +367,8 @@ void main() {
     final reordered = bloc.stream.firstWhere(
       (state) =>
           state.watchlists.length == 3 &&
-          state.watchlists[1].id == banks.id,
+          state.watchlists[1].id == banks.id &&
+          !state.isSaving,
     );
     bloc.add(const WatchlistsReorderRequested(oldIndex: 1, newIndex: 0));
     await reordered;
@@ -338,7 +384,7 @@ void main() {
 
   test('restore previous order when watchlist reorder save fails', () async {
     final created = bloc.stream.firstWhere(
-      (state) => state.watchlists.length == 3,
+      (state) => state.watchlists.length == 3 && !state.isSaving,
     );
     bloc.add(const WatchlistCreateRequested(name: 'Banks'));
     await created;
@@ -359,6 +405,7 @@ final class _FakeRepository implements WatchlistRepository {
   int readCount = 0;
   int saveCount = 0;
   bool failSaves = false;
+  Completer<void>? saveGate;
   late List<Watchlist> _watchlists = <Watchlist>[
     _watchlist('watchlist_default', 'Default', [
       'INFY_EQ',
@@ -406,6 +453,7 @@ final class _FakeRepository implements WatchlistRepository {
   @override
   Future<void> saveWatchlists(List<Watchlist> watchlists) async {
     saveCount += 1;
+    await saveGate?.future;
     if (failSaves) throw StateError('storage unavailable');
     _watchlists = List<Watchlist>.of(watchlists);
   }

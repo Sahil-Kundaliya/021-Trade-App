@@ -22,6 +22,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    showDragHandle: true,
     builder: (_) => OrderDetailsBottomSheet(order: order, onCancel: onCancel),
   );
 
@@ -37,6 +38,7 @@ class OrderDetailsBottomSheet extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 680),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(

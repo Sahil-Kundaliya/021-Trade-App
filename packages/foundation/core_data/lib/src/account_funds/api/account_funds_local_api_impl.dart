@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:injectable/injectable.dart';
@@ -25,10 +26,14 @@ final class AccountFundsLocalApiImpl implements AccountFundsLocalApi {
 
   final KeyValueStorage _storage;
   final Duration _requestDelay;
-  var _mutating = false;
+  Future<void>? _pendingMutation;
+  final _balanceChanges = StreamController<double>.broadcast();
 
   @override
   List<LinkedBankAccountDto> get linkedBanks => DemoLinkedBanks.all;
+
+  @override
+  Stream<double> get balanceChanges => _balanceChanges.stream;
 
   @override
   Future<AccountFundsStorageDto> read() async {
@@ -42,16 +47,10 @@ final class AccountFundsLocalApiImpl implements AccountFundsLocalApi {
     required double amount,
     required String bankId,
   }) async {
-    if (_mutating) {
-      throw const AccountFundsException('Add funds is already in progress.');
-    }
-    _mutating = true;
-    try {
+    return _runMutation(() async {
       await Future<void>.delayed(_requestDelay);
       return _credit(depositId: depositId, amount: amount, bankId: bankId);
-    } finally {
-      _mutating = false;
-    }
+    });
   }
 
   Future<AccountFundsStorageDto> _credit({
@@ -97,11 +96,49 @@ final class AccountFundsLocalApiImpl implements AccountFundsLocalApi {
         ]),
       );
       await _storage.setString(storageKey, jsonEncode(credited.toJson()));
+      _balanceChanges.add(credited.availableBalance);
       return credited;
     } on AccountFundsException {
       rethrow;
     } on Object catch (error) {
       throw AccountFundsException('Unable to add funds.', error);
+    }
+  }
+
+  @override
+  Future<AccountFundsStorageDto> debitFunds({required double amount}) async {
+    return _runMutation(() async {
+      await Future<void>.delayed(_requestDelay);
+      final amountPaise = _toPaise(amount);
+      if (amountPaise <= 0) {
+        throw const AccountFundsException(
+          'Debit amount must be greater than ₹0.',
+        );
+      }
+      final current = await _readStored();
+      final currentPaise = _toPaise(current.availableBalance);
+      if (amountPaise > currentPaise) {
+        throw const AccountFundsException('Insufficient available funds.');
+      }
+      final debited = AccountFundsStorageDto(
+        availableBalance: _toRupees(currentPaise - amountPaise),
+        deposits: current.deposits,
+      );
+      await _storage.setString(storageKey, jsonEncode(debited.toJson()));
+      _balanceChanges.add(debited.availableBalance);
+      return debited;
+    });
+  }
+
+  Future<T> _runMutation<T>(Future<T> Function() mutation) async {
+    final previous = _pendingMutation;
+    final release = Completer<void>();
+    _pendingMutation = release.future;
+    if (previous != null) await previous;
+    try {
+      return await mutation();
+    } finally {
+      release.complete();
     }
   }
 

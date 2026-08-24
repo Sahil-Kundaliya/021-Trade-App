@@ -31,6 +31,18 @@ void main() {
 
     expect(find.text('Watchlist'), findsOneWidget);
     expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
+    final settingsButton = find.ancestor(
+      of: find.byIcon(Icons.settings_outlined),
+      matching: find.byType(IconButton),
+    );
+    final searchButton = find.ancestor(
+      of: find.byIcon(Icons.search),
+      matching: find.byType(IconButton),
+    );
+    expect(tester.getSize(settingsButton), const Size.square(36));
+    expect(tester.getSize(searchButton), const Size.square(36));
+    expect(tester.widget<Icon>(find.byIcon(Icons.settings_outlined)).size, 16);
+    expect(tester.widget<Icon>(find.byIcon(Icons.search)).size, 16);
     expect(find.text('NIFTY 50'), findsOneWidget);
     expect(find.text('Default'), findsOneWidget);
     expect(find.text('Watchlist 2'), findsNothing);
@@ -152,6 +164,14 @@ void main() {
     await tester.tap(find.byIcon(Icons.settings_outlined));
     await tester.pumpAndSettle();
     expect(find.text('WATCHLIST SETTINGS'), findsOneWidget);
+    expect(
+      tester.widget<BottomSheet>(find.byType(BottomSheet)).showDragHandle,
+      isTrue,
+    );
+    expect(
+      tester.getSize(find.byType(BottomSheet)).height,
+      lessThan(tester.view.physicalSize.height / tester.view.devicePixelRatio),
+    );
     expect(find.text('Pinned'), findsOneWidget);
     expect(find.byIcon(Icons.drag_handle), findsOneWidget);
     expect(find.byIcon(Icons.push_pin_outlined), findsOneWidget);

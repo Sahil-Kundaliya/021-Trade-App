@@ -49,7 +49,7 @@ class PortfolioContent extends StatelessWidget {
                       trailing: AppIconButton(
                         tooltip: 'Search funds',
                         onPressed: navigator?.openSearch,
-                        icon: const Icon(Icons.search, size: AppSizes.iconSm),
+                        icon: const Icon(Icons.search, size: AppSizes.iconXs),
                       ),
                     ),
                   ),

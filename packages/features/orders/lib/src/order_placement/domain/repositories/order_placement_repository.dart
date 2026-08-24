@@ -9,6 +9,8 @@ abstract interface class OrderPlacementRepository {
     required String fundId,
     required TradeExchange exchange,
   });
+  Future<double> getAvailableFunds();
+  Future<double> addFunds(double amount);
   Stream<void> get positionChanges;
   Future<PlacedOrder> placeOrder(OrderDraft draft);
 }

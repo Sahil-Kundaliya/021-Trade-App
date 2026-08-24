@@ -6,6 +6,7 @@ Future<void> showAddBankDemoSheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    showDragHandle: true,
     builder: (_) => const AddBankDemoSheet(),
   );
 }
@@ -18,6 +19,7 @@ class AddBankDemoSheet extends StatelessWidget {
     return SafeArea(
       child: Align(
         alignment: Alignment.bottomCenter,
+        heightFactor: 1,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
           child: Padding(

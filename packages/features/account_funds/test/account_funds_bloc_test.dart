@@ -94,6 +94,7 @@ void main() {
       );
 
       expect(bloc.state.availableBalance, 5000);
+      expect(bloc.state.addedAmount, 5000);
       expect(bloc.state.enteredAmount, isEmpty);
       expect(bloc.state.selectedBankId, 'bank_icici_demo');
       expect(repository.lastBankId, 'bank_icici_demo');

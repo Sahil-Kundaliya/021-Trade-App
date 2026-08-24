@@ -9,6 +9,7 @@ import '../../../add_funds/presentation/widgets/add_bank_account_tile.dart';
 import '../../../add_funds/presentation/widgets/add_bank_demo_sheet.dart';
 import '../../../add_funds/presentation/widgets/add_funds_amount_field.dart';
 import '../../../add_funds/presentation/widgets/add_funds_bottom_bar.dart';
+import '../../../add_funds/presentation/widgets/add_funds_confirmation.dart';
 import '../../../add_funds/presentation/widgets/available_funds_summary.dart';
 import '../../../add_funds/presentation/widgets/linked_bank_list.dart';
 import '../../../add_funds/presentation/widgets/quick_amount_selector.dart';
@@ -21,30 +22,49 @@ class AccountFundsContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<AccountFundsBloc, AccountFundsState>(
       listenWhen: (previous, current) =>
-          previous.feedbackEpoch != current.feedbackEpoch,
+          previous.feedbackEpoch != current.feedbackEpoch &&
+          current.addError != null,
       listener: (context, state) {
-        final message = state.successMessage ?? state.addError;
+        final message = state.addError;
         if (message == null) return;
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(message)));
       },
       builder: (context, state) => Scaffold(
-        appBar: AppBar(title: const Text('Add Funds')),
-        resizeToAvoidBottomInset: true,
-        body: SafeArea(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 680),
-              child: _Body(state: state),
-            ),
-          ),
+        appBar: AppBar(
+          title: const Text('Add Funds'),
+          leading: BackButton(onPressed: () => _returnToSource(context)),
         ),
-        bottomNavigationBar: const AddFundsBottomBar(),
+        resizeToAvoidBottomInset: true,
+        body: state.successMessage != null && state.addedAmount != null
+            ? SafeArea(
+                child: AddFundsConfirmation(
+                  addedAmount: state.addedAmount!,
+                  availableBalance: state.availableBalance,
+                  onDone: () => _returnToSource(context),
+                ),
+              )
+            : SafeArea(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 680),
+                    child: _Body(state: state),
+                  ),
+                ),
+              ),
+        bottomNavigationBar:
+            state.successMessage != null && state.addedAmount != null
+            ? null
+            : const AddFundsBottomBar(),
       ),
     );
   }
+}
+
+void _returnToSource(BuildContext context) {
+  Navigator.of(context).maybePop();
 }
 
 class _Body extends StatelessWidget {

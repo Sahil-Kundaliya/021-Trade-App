@@ -5,6 +5,7 @@ import '../../privacy/sensitive_value_text.dart';
 import '../../theme/extensions/theme_context_extension.dart';
 import '../../theme/tokens/app_sizes.dart';
 import '../../theme/tokens/app_spacing.dart';
+import 'market_price_display_scope.dart';
 
 class MarketPriceChange extends StatelessWidget {
   const MarketPriceChange({
@@ -37,7 +38,21 @@ class MarketPriceChange extends StatelessWidget {
     final textStyle = (style ?? context.appTextStyles.percentageSmall).copyWith(
       color: color,
     );
-    final label = FinancialFormatter.changeGroup(change, changePercent);
+    final mode = MarketPriceDisplayScope.of(context);
+    final label = switch (mode) {
+      MarketPriceDisplayMode.absoluteAndPercent =>
+        FinancialFormatter.changeGroup(change, changePercent),
+      MarketPriceDisplayMode.percentOnly => FinancialFormatter.percentage(
+        changePercent,
+      ),
+      MarketPriceDisplayMode.absoluteOnly => FinancialFormatter.change(change),
+    };
+    final maskedValue = switch (mode) {
+      MarketPriceDisplayMode.absoluteAndPercent =>
+        '${PrivacyMask.number} (${PrivacyMask.percentage})',
+      MarketPriceDisplayMode.percentOnly => PrivacyMask.percentage,
+      MarketPriceDisplayMode.absoluteOnly => PrivacyMask.number,
+    };
     final showArrow = showDirection && sign != 0;
 
     return Row(
@@ -49,7 +64,7 @@ class MarketPriceChange extends StatelessWidget {
         SensitiveValueText(
           label,
           isMasked: isMasked,
-          maskedValue: '${PrivacyMask.number} (${PrivacyMask.percentage})',
+          maskedValue: maskedValue,
           style: textStyle,
           textAlign: textAlign,
           maxLines: maxLines,

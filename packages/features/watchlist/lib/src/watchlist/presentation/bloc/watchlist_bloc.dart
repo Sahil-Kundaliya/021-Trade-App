@@ -371,27 +371,30 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     bool resubscribe = true,
   }) async {
     final previous = state;
+    final selected =
+        selectedId ?? previous.selectedWatchlistId ?? next.first.id;
+    final visible = _resolve(next, selected, previous.allFunds);
     emit(
-      previous.copyWith(isSaving: true, clearMessage: true, clearError: true),
+      WatchlistState(
+        status: WatchlistStatus.loaded,
+        watchlists: next,
+        selectedWatchlistId: selected,
+        allFunds: previous.allFunds,
+        visibleFunds: visible,
+        livePrices: previous.livePrices,
+        isSaving: true,
+      ),
     );
     try {
       await _repository.saveWatchlists(next);
-      final selected =
-          selectedId ?? previous.selectedWatchlistId ?? next.first.id;
-      final visible = _resolve(next, selected, previous.allFunds);
       emit(
-        WatchlistState(
-          status: WatchlistStatus.loaded,
-          watchlists: next,
-          selectedWatchlistId: selected,
-          allFunds: previous.allFunds,
-          visibleFunds: visible,
-          livePrices: previous.livePrices,
-        ),
+        state.copyWith(isSaving: false, clearMessage: true, clearError: true),
       );
       if (resubscribe) {
-        final previousKeys = previous.visibleFunds.map((fund) => fund.marketKey);
-        final nextKeys = visible.map((fund) => fund.marketKey);
+        final previousKeys = previous.visibleFunds.map(
+          (fund) => fund.marketKey,
+        );
+        final nextKeys = state.visibleFunds.map((fund) => fund.marketKey);
         if (!_sameKeys(previousKeys, nextKeys)) {
           _watch(state.visibleFunds);
         }
@@ -399,6 +402,7 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     } on Object catch (error) {
       emit(
         previous.copyWith(
+          livePrices: state.livePrices,
           isSaving: false,
           message: failureMessage,
           errorMessage: error.toString(),

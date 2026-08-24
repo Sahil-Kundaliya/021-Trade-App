@@ -61,6 +61,64 @@ void main() {
     expect(restored.deposits.length, 2);
   });
 
+  test(
+    'successful debit persists and publishes the remaining balance',
+    () async {
+      final api = apiWith(_MemoryStorage());
+      await api.addFunds(
+        depositId: 'deposit_for_order',
+        amount: 5000,
+        bankId: DemoLinkedBanks.hdfc.id,
+      );
+      final nextBalance = api.balanceChanges.first;
+
+      final result = await api.debitFunds(amount: 3000);
+
+      expect(result.availableBalance, 2000);
+      expect((await api.read()).availableBalance, 2000);
+      expect(await nextBalance, 2000);
+    },
+  );
+
+  test('rejected debit leaves the local balance unchanged', () async {
+    final api = apiWith(_MemoryStorage());
+    await api.addFunds(
+      depositId: 'deposit_small',
+      amount: 1000,
+      bankId: DemoLinkedBanks.hdfc.id,
+    );
+
+    await expectLater(
+      api.debitFunds(amount: 1000.01),
+      throwsA(isA<AccountFundsException>()),
+    );
+    expect((await api.read()).availableBalance, 1000);
+  });
+
+  test('parallel credits serialize without losing any balance', () async {
+    final api = apiWith(_MemoryStorage());
+
+    await Future.wait([
+      api.addFunds(
+        depositId: 'parallel_a',
+        amount: 10000,
+        bankId: DemoLinkedBanks.hdfc.id,
+      ),
+      api.addFunds(
+        depositId: 'parallel_b',
+        amount: 10000,
+        bankId: DemoLinkedBanks.hdfc.id,
+      ),
+      api.addFunds(
+        depositId: 'parallel_c',
+        amount: 5500,
+        bankId: DemoLinkedBanks.hdfc.id,
+      ),
+    ]);
+
+    expect((await api.read()).availableBalance, 25500);
+  });
+
   test('₹10,000 is valid per add and does not cap total balance', () async {
     final api = apiWith(_MemoryStorage());
     await api.addFunds(

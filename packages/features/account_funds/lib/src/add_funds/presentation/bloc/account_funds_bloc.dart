@@ -137,6 +137,7 @@ class AccountFundsBloc extends Bloc<AccountFundsEvent, AccountFundsState> {
           banks: data.banks,
           enteredAmount: '',
           successMessage: AccountFundsMoney.addSuccessMessage,
+          addedAmount: amount,
           feedbackEpoch: state.feedbackEpoch + 1,
           clearValidation: true,
           clearAddError: true,

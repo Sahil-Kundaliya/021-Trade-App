@@ -11,6 +11,7 @@ Future<void> showCreateWatchlistSheet(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
+  showDragHandle: true,
   builder: (_) =>
       BlocProvider.value(value: bloc, child: const WatchlistNameSheet.create()),
 );

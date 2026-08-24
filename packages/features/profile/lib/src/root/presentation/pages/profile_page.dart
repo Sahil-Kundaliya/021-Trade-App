@@ -9,6 +9,7 @@ import '../../../account/presentation/bloc/profile_bloc.dart';
 import '../../../account/presentation/bloc/profile_event.dart';
 import '../../../account/presentation/bloc/profile_state.dart';
 import '../../../account/presentation/widgets/logout_tile.dart';
+import '../../../account/presentation/widgets/profile_available_funds_card.dart';
 import '../../../account/presentation/widgets/profile_header.dart';
 import '../../../account/presentation/widgets/profile_section.dart';
 import '../../../account/presentation/widgets/profile_setting_tile.dart';
@@ -144,6 +145,11 @@ class _ProfileSections extends StatelessWidget {
         const SizedBox(height: AppSpacing.lg),
         const ProfileHeader(profile: mockTraderProfile),
         const SizedBox(height: AppSpacing.lg),
+        ProfileAvailableFundsCard(
+          balance: state.availableFunds,
+          onTap: navigator == null ? null : () => _openAccountFunds(context),
+        ),
+        const SizedBox(height: AppSpacing.lg),
         const ProfileSection(
           title: 'Account',
           children: [
@@ -173,12 +179,6 @@ class _ProfileSections extends StatelessWidget {
         ProfileSection(
           title: 'Trading & App',
           children: [
-            ProfileSettingTile(
-              icon: Icons.account_balance_wallet_outlined,
-              title: 'Funds',
-              subtitle: 'Add money to your trading account',
-              onTap: navigator?.openAccountFunds,
-            ),
             ProfileSettingTile(
               icon: Icons.receipt_long_outlined,
               title: 'Order Book',
@@ -297,9 +297,17 @@ class _ProfileSections extends StatelessWidget {
     );
   }
 
+  Future<void> _openAccountFunds(BuildContext context) async {
+    await navigator?.openAccountFunds();
+    if (context.mounted) {
+      context.read<ProfileBloc>().add(const ProfileFundsRefreshRequested());
+    }
+  }
+
   Future<void> _showThemePicker(BuildContext context) async {
     final selection = await showModalBottomSheet<AppThemeMode>(
       context: context,
+      showDragHandle: true,
       builder: (_) => _ChoiceSheet<AppThemeMode>(
         title: 'Theme',
         selected: themeMode,
@@ -319,6 +327,7 @@ class _ProfileSections extends StatelessWidget {
   ) async {
     final selection = await showModalBottomSheet<PriceDisplayMode>(
       context: context,
+      showDragHandle: true,
       builder: (_) => _ChoiceSheet<PriceDisplayMode>(
         title: 'Price Display Preferences',
         selected: selected,
@@ -341,6 +350,7 @@ class _ProfileSections extends StatelessWidget {
     final result = await showModalBottomSheet<_OrderSelection>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: true,
       builder: (_) => _OrderPreferencesSheet(preferences: value),
     );
     if (result != null && context.mounted) {

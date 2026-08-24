@@ -8,6 +8,7 @@ import '../../../order_placement/presentation/bloc/order_placement_event.dart';
 import '../../../order_placement/presentation/bloc/order_placement_state.dart';
 import '../../../order_placement/presentation/widgets/order_action_bar.dart';
 import '../../../order_placement/presentation/widgets/order_confirmation.dart';
+import '../../../order_placement/presentation/widgets/order_failure.dart';
 import '../../../order_placement/presentation/widgets/order_instrument_header.dart';
 import '../../../order_placement/presentation/widgets/order_review.dart';
 import '../../../order_placement/presentation/widgets/order_ticket.dart';
@@ -36,9 +37,15 @@ class OrdersContent extends StatelessWidget {
                 if (state.status == OrderPlacementStatus.success) {
                   return OrderConfirmation(
                     order: state.placedOrder!,
-                    onViewOrderBook: navigator.openOrderBook,
+                    onViewOrderBook: () async {
+                      await navigator.pop();
+                      await navigator.openOrderBook();
+                    },
                     onDone: navigator.pop,
                   );
+                }
+                if (state.status == OrderPlacementStatus.failed) {
+                  return OrderFailure(state: state, onDone: navigator.pop);
                 }
                 if (state.instrument == null) {
                   return AppErrorState(

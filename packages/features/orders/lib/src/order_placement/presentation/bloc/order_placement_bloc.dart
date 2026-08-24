@@ -20,14 +20,9 @@ class OrderPlacementBloc
   OrderPlacementBloc(this._repository, [this._livePrices])
     : super(const OrderPlacementState()) {
     on<OrderPlacementStarted>(_start);
-    on<OrderSideChanged>((event, emit) {
-      final next = state.copyWith(side: event.side);
-      _edit(emit, next);
-      final error = _sellQuantityError(next);
-      if (error != null) {
-        emit(next.copyWith(fieldErrors: {'quantity': error}));
-      }
-    });
+    on<OrderSideChanged>(
+      (event, emit) => _edit(emit, state.copyWith(side: event.side)),
+    );
     on<OrderExchangeChanged>(_exchangeChanged);
     on<OrderQuantityIncremented>(
       (_, emit) => _changeQuantity(
@@ -76,6 +71,8 @@ class OrderPlacementBloc
     );
     on<OrderPlacementConfirmed>(_confirm);
     on<OrderPlacementRetryRequested>(_confirm);
+    on<OrderFundsAddedAndRetryRequested>(_addFundsAndRetry);
+    on<OrderSellAvailableRequested>(_sellAvailable);
     on<OrderLivePricesReceived>(_onLivePrices);
     on<OrderPositionAvailabilityChanged>(_refreshAvailability);
   }
@@ -167,19 +164,7 @@ class OrderPlacementBloc
   }
 
   void _changeQuantity(Emitter<OrderPlacementState> emit, int quantity) {
-    final next = state.copyWith(quantity: quantity);
-    _edit(emit, next);
-    if (next.side == OrderSide.sell) {
-      final error = _sellQuantityError(next);
-      if (error != null) {
-        emit(
-          next.copyWith(
-            status: OrderPlacementStatus.ready,
-            fieldErrors: {'quantity': error},
-          ),
-        );
-      }
-    }
+    _edit(emit, state.copyWith(quantity: quantity));
   }
 
   void _edit(Emitter<OrderPlacementState> emit, OrderPlacementState next) {
@@ -209,7 +194,8 @@ class OrderPlacementBloc
   ) async {
     if (state.isPlacingOrder ||
         (state.status != OrderPlacementStatus.review &&
-            state.status != OrderPlacementStatus.error)) {
+            state.status != OrderPlacementStatus.error &&
+            state.status != OrderPlacementStatus.failed)) {
       return;
     }
     var draft = state.draft;
@@ -238,6 +224,40 @@ class OrderPlacementBloc
       state.copyWith(status: OrderPlacementStatus.placing, clearError: true),
     );
     try {
+      if (draft.side == OrderSide.buy) {
+        final availableFunds = await _repository.getAvailableFunds();
+        final requiredFunds =
+            draft.estimatedOrderValue +
+            (draft.instrument.ltp * draft.quantity * 0.03);
+        if (requiredFunds > availableFunds) {
+          emit(
+            state.copyWith(
+              status: OrderPlacementStatus.failed,
+              availableFunds: availableFunds,
+              requiredFunds: requiredFunds,
+              errorMessage: 'Insufficient funds to place this buy order.',
+            ),
+          );
+          return;
+        }
+      } else {
+        final available = await _repository.getAvailableSellQuantity(
+          fundId: draft.instrument.id,
+          exchange: draft.exchange,
+        );
+        if (draft.quantity > available) {
+          emit(
+            state.copyWith(
+              status: OrderPlacementStatus.failed,
+              availableSellQuantity: available,
+              errorMessage: available <= 0
+                  ? 'No holdings available to sell.'
+                  : 'Only $available quantity available to sell.',
+            ),
+          );
+          return;
+        }
+      }
       final placed = await _repository.placeOrder(draft);
       emit(
         state.copyWith(
@@ -248,8 +268,7 @@ class OrderPlacementBloc
     } on InsufficientPositionException catch (error) {
       emit(
         state.copyWith(
-          status: OrderPlacementStatus.ready,
-          fieldErrors: {'quantity': error.message},
+          status: OrderPlacementStatus.failed,
           errorMessage: error.message,
         ),
       );
@@ -257,11 +276,68 @@ class OrderPlacementBloc
     } on Object {
       emit(
         state.copyWith(
-          status: OrderPlacementStatus.error,
+          status: OrderPlacementStatus.failed,
           errorMessage: 'Unable to place order.',
         ),
       );
     }
+  }
+
+  Future<void> _addFundsAndRetry(
+    OrderFundsAddedAndRetryRequested event,
+    Emitter<OrderPlacementState> emit,
+  ) async {
+    if (state.status != OrderPlacementStatus.failed ||
+        state.side != OrderSide.buy ||
+        state.isAddingFunds) {
+      return;
+    }
+    if (!event.amount.isFinite || event.amount <= 0) {
+      emit(state.copyWith(addFundsError: 'Enter an amount greater than ₹0.'));
+      return;
+    }
+    emit(state.copyWith(isAddingFunds: true, clearAddFundsError: true));
+    try {
+      final available = await _repository.addFunds(event.amount);
+      emit(
+        state.copyWith(
+          status: OrderPlacementStatus.review,
+          availableFunds: available,
+          isAddingFunds: false,
+          clearError: true,
+          clearAddFundsError: true,
+        ),
+      );
+      add(const OrderPlacementConfirmed());
+    } on Object {
+      emit(
+        state.copyWith(
+          isAddingFunds: false,
+          addFundsError: 'Unable to add funds. Try again.',
+        ),
+      );
+    }
+  }
+
+  void _sellAvailable(
+    OrderSellAvailableRequested event,
+    Emitter<OrderPlacementState> emit,
+  ) {
+    final available = state.availableSellQuantity;
+    if (state.status != OrderPlacementStatus.failed ||
+        state.side != OrderSide.sell ||
+        available <= 0 ||
+        available >= state.quantity) {
+      return;
+    }
+    emit(
+      state.copyWith(
+        status: OrderPlacementStatus.review,
+        quantity: available,
+        clearError: true,
+      ),
+    );
+    add(const OrderPlacementConfirmed());
   }
 
   Map<String, String> _validate(OrderPlacementState value) {
@@ -281,8 +357,6 @@ class OrderPlacementBloc
       errors['quantity'] =
           'Quantity must be in multiples of ${instrument.lotSize}.';
     }
-    final sellError = _sellQuantityError(value);
-    if (sellError != null) errors['quantity'] = sellError;
     if (!instrument.allowedProducts.contains(value.product)) {
       errors['product'] = 'Select a valid product.';
     }
@@ -328,15 +402,6 @@ class OrderPlacementBloc
     return errors;
   }
 
-  String? _sellQuantityError(OrderPlacementState value) {
-    if (value.side != OrderSide.sell || value.quantity <= 0) return null;
-    final available = value.availableSellQuantity;
-    if (value.quantity <= available) return null;
-    return available <= 0
-        ? 'No quantity available to sell.'
-        : 'Only $available quantity available to sell.';
-  }
-
   Future<void> _refreshAvailability(
     OrderPositionAvailabilityChanged event,
     Emitter<OrderPlacementState> emit,
@@ -348,13 +413,7 @@ class OrderPlacementBloc
       fundId: instrument.id,
       exchange: exchange,
     );
-    final next = state.copyWith(availableSellQuantity: available);
-    final error = _sellQuantityError(next);
-    emit(
-      next.copyWith(
-        fieldErrors: error == null ? const {} : {'quantity': error},
-      ),
-    );
+    emit(state.copyWith(availableSellQuantity: available));
   }
 
   void _validatePrice(

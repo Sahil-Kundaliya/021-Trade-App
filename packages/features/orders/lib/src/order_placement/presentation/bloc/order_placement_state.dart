@@ -10,6 +10,7 @@ enum OrderPlacementStatus {
   review,
   placing,
   success,
+  failed,
   error,
 }
 
@@ -29,6 +30,10 @@ class OrderPlacementState {
     this.errorMessage,
     this.placedOrder,
     this.availableSellQuantity = 0,
+    this.availableFunds = 0,
+    this.requiredFunds = 0,
+    this.isAddingFunds = false,
+    this.addFundsError,
   });
 
   final OrderPlacementStatus status;
@@ -45,6 +50,10 @@ class OrderPlacementState {
   final String? errorMessage;
   final PlacedOrder? placedOrder;
   final int availableSellQuantity;
+  final double availableFunds;
+  final double requiredFunds;
+  final bool isAddingFunds;
+  final String? addFundsError;
 
   bool get hasInstrument => instrument != null;
   bool get isPlacingOrder => status == OrderPlacementStatus.placing;
@@ -52,6 +61,8 @@ class OrderPlacementState {
   bool get showsTriggerPrice => orderType.requiresTriggerPrice;
   double get estimatedOrderValue =>
       quantity * (showsLimitPrice ? (limitPrice ?? 0) : (instrument?.ltp ?? 0));
+  double get fundShortfall =>
+      (requiredFunds - availableFunds).clamp(0, double.infinity);
   String? errorFor(String field) => fieldErrors[field];
 
   OrderDraft? get draft {
@@ -90,6 +101,11 @@ class OrderPlacementState {
     bool clearLimitPrice = false,
     bool clearTriggerPrice = false,
     int? availableSellQuantity,
+    double? availableFunds,
+    double? requiredFunds,
+    bool? isAddingFunds,
+    String? addFundsError,
+    bool clearAddFundsError = false,
   }) => OrderPlacementState(
     status: status ?? this.status,
     instrument: instrument ?? this.instrument,
@@ -109,5 +125,11 @@ class OrderPlacementState {
     errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     placedOrder: placedOrder ?? this.placedOrder,
     availableSellQuantity: availableSellQuantity ?? this.availableSellQuantity,
+    availableFunds: availableFunds ?? this.availableFunds,
+    requiredFunds: requiredFunds ?? this.requiredFunds,
+    isAddingFunds: isAddingFunds ?? this.isAddingFunds,
+    addFundsError: clearAddFundsError
+        ? null
+        : (addFundsError ?? this.addFundsError),
   );
 }

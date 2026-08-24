@@ -14,6 +14,16 @@ class AppIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(onPressed: onPressed, icon: icon, tooltip: tooltip);
+    return SizedBox.square(
+      dimension: 36,
+      child: IconButton(
+        onPressed: onPressed,
+        icon: icon,
+        tooltip: tooltip,
+        padding: const EdgeInsets.all(8),
+        constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+        visualDensity: VisualDensity.compact,
+      ),
+    );
   }
 }

@@ -26,6 +26,7 @@ void main() {
         tradingApi,
         store,
         PositionServiceImpl(store, tradingApi),
+        const _AccountFundsApi(),
       );
       expect(
         (await repository.getInstrument('RELIANCE_EQ')).instrumentType,
@@ -57,6 +58,7 @@ void main() {
         tradingApi,
         store,
         PositionServiceImpl(store, tradingApi),
+        const _AccountFundsApi(),
       );
       final instrument = await repository.getInstrument('RELIANCE_EQ');
 
@@ -114,6 +116,50 @@ void main() {
     },
   );
 
+  test('successful buy debits its order value from local funds', () async {
+    final api = _MemoryOrderBookApi();
+    final funds = _TrackingAccountFundsApi(5000);
+    final store = OrderStore(api);
+    final repository = OrderPlacementRepositoryImpl(
+      tradingApi,
+      store,
+      PositionServiceImpl(store, tradingApi),
+      funds,
+    );
+    final instrument = await repository.getInstrument('RELIANCE_EQ');
+    final placed = await repository.placeOrder(
+      OrderDraft(
+        instrument: instrument,
+        side: OrderSide.buy,
+        exchange: TradeExchange.nse,
+        quantity: 1,
+        orderType: TradeOrderType.market,
+        product: TradeProduct.delivery,
+        validity: OrderValidity.day,
+      ),
+    );
+
+    expect(funds.balance, 5000 - placed.orderValue);
+    expect(api.orders, hasLength(1));
+  });
+
+  test('large order top-up is split and credited as one total', () async {
+    final orderApi = _MemoryOrderBookApi();
+    final funds = _TrackingAccountFundsApi(5000);
+    final store = OrderStore(orderApi);
+    final repository = OrderPlacementRepositoryImpl(
+      tradingApi,
+      store,
+      PositionServiceImpl(store, tradingApi),
+      funds,
+    );
+
+    final balance = await repository.addFunds(25500);
+
+    expect(funds.addedAmounts, [10000, 10000, 5500]);
+    expect(balance, 30500);
+  });
+
   test(
     'sell placement validates ownership and active reservations atomically',
     () async {
@@ -124,6 +170,7 @@ void main() {
         tradingApi,
         store,
         positions,
+        const _AccountFundsApi(),
       );
       final instrument = await repository.getInstrument('RELIANCE_EQ');
       OrderDraft draft({
@@ -236,6 +283,49 @@ void main() {
     expect(repository.calls, 1);
     expect(repository.drafts.single.side, OrderSide.sell);
     await bloc.close();
+  });
+
+  test('final confirmation checks buy funds and sell holdings', () async {
+    final buyRepository = _BlocRepository(_instrument())..availableFunds = 50;
+    final buyBloc = OrderPlacementBloc(buyRepository)
+      ..add(const OrderPlacementStarted(fundId: 'equity'));
+    await buyBloc.stream.firstWhere(
+      (state) => state.status == OrderPlacementStatus.ready,
+    );
+    buyBloc.add(const OrderReviewRequested());
+    await buyBloc.stream.firstWhere(
+      (state) => state.status == OrderPlacementStatus.review,
+    );
+    expect(buyBloc.state.errorMessage, isNull);
+
+    buyBloc.add(const OrderPlacementConfirmed());
+    await buyBloc.stream.firstWhere((state) => state.errorMessage != null);
+    expect(buyBloc.state.status, OrderPlacementStatus.failed);
+    expect(buyBloc.state.errorMessage, contains('Insufficient funds'));
+    expect(buyBloc.state.requiredFunds, 103);
+    expect(buyRepository.calls, 0);
+    await buyBloc.close();
+
+    final sellRepository = _BlocRepository(_instrument())
+      ..availableSellQuantity = 0;
+    final sellBloc = OrderPlacementBloc(
+      sellRepository,
+    )..add(const OrderPlacementStarted(fundId: 'equity', side: TradeSide.sell));
+    await sellBloc.stream.firstWhere(
+      (state) => state.status == OrderPlacementStatus.ready,
+    );
+    sellBloc.add(const OrderReviewRequested());
+    await sellBloc.stream.firstWhere(
+      (state) => state.status == OrderPlacementStatus.review,
+    );
+    expect(sellBloc.state.errorMessage, isNull);
+
+    sellBloc.add(const OrderPlacementConfirmed());
+    await sellBloc.stream.firstWhere((state) => state.errorMessage != null);
+    expect(sellBloc.state.status, OrderPlacementStatus.failed);
+    expect(sellBloc.state.errorMessage, 'No holdings available to sell.');
+    expect(sellRepository.calls, 0);
+    await sellBloc.close();
   });
 
   test(
@@ -379,13 +469,25 @@ final class _BlocRepository implements OrderPlacementRepository {
   final OrderInstrument instrument;
   final drafts = <OrderDraft>[];
   int calls = 0;
+  double availableFunds = 1000000000;
+  int availableSellQuantity = 100000;
+
+  @override
+  Future<double> addFunds(double amount) async {
+    availableFunds += amount;
+    return availableFunds;
+  }
+
+  @override
+  Future<double> getAvailableFunds() async => availableFunds;
+
   @override
   Stream<void> get positionChanges => const Stream.empty();
   @override
   Future<int> getAvailableSellQuantity({
     required String fundId,
     required TradeExchange exchange,
-  }) async => 100000;
+  }) async => availableSellQuantity;
   @override
   Future<OrderInstrument> getInstrument(String fundId) async => instrument;
   @override
@@ -403,6 +505,64 @@ final class _BlocRepository implements OrderPlacementRepository {
       orderValue: draft.estimatedOrderValue,
       createdAt: DateTime(2026),
     );
+  }
+}
+
+final class _AccountFundsApi implements AccountFundsLocalApi {
+  const _AccountFundsApi();
+
+  @override
+  List<LinkedBankAccountDto> get linkedBanks => const [];
+
+  @override
+  Stream<double> get balanceChanges => const Stream.empty();
+
+  @override
+  Future<AccountFundsStorageDto> read() async =>
+      const AccountFundsStorageDto(availableBalance: 1000000000, deposits: []);
+
+  @override
+  Future<AccountFundsStorageDto> addFunds({
+    required String depositId,
+    required double amount,
+    required String bankId,
+  }) => read();
+
+  @override
+  Future<AccountFundsStorageDto> debitFunds({required double amount}) => read();
+}
+
+final class _TrackingAccountFundsApi implements AccountFundsLocalApi {
+  _TrackingAccountFundsApi(this.balance);
+
+  double balance;
+  final addedAmounts = <double>[];
+
+  @override
+  Stream<double> get balanceChanges => const Stream.empty();
+
+  @override
+  List<LinkedBankAccountDto> get linkedBanks => const [DemoLinkedBanks.hdfc];
+
+  @override
+  Future<AccountFundsStorageDto> read() async =>
+      AccountFundsStorageDto(availableBalance: balance, deposits: const []);
+
+  @override
+  Future<AccountFundsStorageDto> debitFunds({required double amount}) async {
+    balance -= amount;
+    return read();
+  }
+
+  @override
+  Future<AccountFundsStorageDto> addFunds({
+    required String depositId,
+    required double amount,
+    required String bankId,
+  }) async {
+    addedAmounts.add(amount);
+    balance += amount;
+    return read();
   }
 }
 

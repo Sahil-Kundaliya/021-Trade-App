@@ -9,6 +9,7 @@ import 'market_index_view_data.dart';
 import '../../privacy/privacy_mode_scope.dart';
 import '../../privacy/sensitive_value_text.dart';
 import 'market_price_change.dart';
+import 'market_price_display_scope.dart';
 
 class MarketIndexChip extends StatelessWidget {
   const MarketIndexChip({required this.item, this.onTap, super.key});
@@ -22,10 +23,16 @@ class MarketIndexChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final price = FinancialFormatter.price(item.ltp, symbol: false);
-    final changeLabel = FinancialFormatter.changeGroup(
-      item.change,
-      item.changePercent,
-    );
+    final changeLabel = switch (MarketPriceDisplayScope.of(context)) {
+      MarketPriceDisplayMode.absoluteAndPercent =>
+        FinancialFormatter.changeGroup(item.change, item.changePercent),
+      MarketPriceDisplayMode.percentOnly => FinancialFormatter.percentage(
+        item.changePercent,
+      ),
+      MarketPriceDisplayMode.absoluteOnly => FinancialFormatter.change(
+        item.change,
+      ),
+    };
 
     return Semantics(
       button: onTap != null,

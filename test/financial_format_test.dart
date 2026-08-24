@@ -57,4 +57,29 @@ void main() {
     expect(find.byIcon(Icons.arrow_upward), findsOneWidget);
     expect(find.byIcon(Icons.arrow_downward), findsOneWidget);
   });
+
+  testWidgets('MarketPriceChange follows every display preference', (
+    tester,
+  ) async {
+    Widget app(MarketPriceDisplayMode mode) => MaterialApp(
+      theme: AppTheme.light,
+      home: MarketPriceDisplayScope(
+        mode: mode,
+        child: const Scaffold(
+          body: MarketPriceChange(change: 3.05, changePercent: 0.23),
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(app(MarketPriceDisplayMode.absoluteAndPercent));
+    expect(find.text('+3.05 (+0.23%)'), findsOneWidget);
+
+    await tester.pumpWidget(app(MarketPriceDisplayMode.percentOnly));
+    expect(find.text('+0.23%'), findsOneWidget);
+    expect(find.text('+3.05 (+0.23%)'), findsNothing);
+
+    await tester.pumpWidget(app(MarketPriceDisplayMode.absoluteOnly));
+    expect(find.text('+3.05'), findsOneWidget);
+    expect(find.text('+0.23%'), findsNothing);
+  });
 }

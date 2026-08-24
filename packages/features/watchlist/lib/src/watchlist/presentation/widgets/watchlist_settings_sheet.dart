@@ -16,6 +16,7 @@ Future<void> showWatchlistSettingsSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    showDragHandle: true,
     builder: (_) => BlocProvider.value(
       value: bloc,
       child: const WatchlistSettingsSheet(),
@@ -31,6 +32,7 @@ class WatchlistSettingsSheet extends StatelessWidget {
     return SafeArea(
       child: Align(
         alignment: Alignment.bottomCenter,
+        heightFactor: 1,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
           child: Padding(

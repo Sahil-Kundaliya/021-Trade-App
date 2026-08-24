@@ -8,8 +8,9 @@ void main() {
   Future<void> pumpProfile(
     WidgetTester tester, {
     ThemeMode themeMode = ThemeMode.light,
-  }) {
-    return tester.pumpWidget(_ProfileHarness(initialThemeMode: themeMode));
+  }) async {
+    await tester.pumpWidget(_ProfileHarness(initialThemeMode: themeMode));
+    await tester.pumpAndSettle();
   }
 
   testWidgets('shows the complete static trading profile', (tester) async {
@@ -21,6 +22,8 @@ void main() {
     expect(find.text('Client ID: TRD102458'), findsOneWidget);
     expect(find.text('rahul.sharma@example.com'), findsOneWidget);
     expect(find.text('Verified'), findsOneWidget);
+    expect(find.text('Available Funds'), findsOneWidget);
+    expect(find.text('₹12,500.00'), findsOneWidget);
 
     for (final section in [
       'ACCOUNT',
@@ -44,7 +47,6 @@ void main() {
       'Two-Factor Authentication',
       'Change Password',
       'Active Sessions',
-      'Funds',
       'Order Book',
       'Order Preferences',
       'Price Display Preferences',
@@ -67,9 +69,18 @@ void main() {
   ) async {
     await pumpProfile(tester);
 
+    await tester.ensureVisible(find.text('Theme'));
     await tester.tap(find.text('Theme'));
     await tester.pumpAndSettle();
     expect(find.text('THEME'), findsOneWidget);
+    expect(
+      tester.widget<BottomSheet>(find.byType(BottomSheet)).showDragHandle,
+      isTrue,
+    );
+    expect(
+      tester.getSize(find.byType(BottomSheet)).height,
+      lessThan(tester.view.physicalSize.height / tester.view.devicePixelRatio),
+    );
     expect(find.text('System'), findsWidgets);
     expect(find.text('Light'), findsWidgets);
     expect(find.text('Dark'), findsOneWidget);
@@ -134,6 +145,7 @@ class _ProfileHarnessState extends State<_ProfileHarness> {
     ProfilePreferencesRepositoryImpl(
       AppPreferencesRepository(_MemoryPreferencesApi()),
     ),
+    const _ProfileFundsRepository(),
   )..add(const ProfileStarted());
 
   @override
@@ -178,4 +190,14 @@ final class _MemoryPreferencesApi implements AppPreferencesLocalApi {
   Future<void> write(AppPreferences preferences) async {
     value = preferences;
   }
+}
+
+final class _ProfileFundsRepository implements ProfileFundsRepository {
+  const _ProfileFundsRepository();
+
+  @override
+  Future<double> getAvailableBalance() async => 12500;
+
+  @override
+  Stream<double> watchAvailableBalance() => const Stream.empty();
 }

@@ -42,6 +42,13 @@ class OrderBookContent extends StatelessWidget {
                     duration: context.motionDuration(AppMotion.standard),
                     switchInCurve: AppMotionCurves.enter,
                     switchOutCurve: AppMotionCurves.exit,
+                    layoutBuilder: (currentChild, previousChildren) => Stack(
+                      alignment: Alignment.topCenter,
+                      children: [
+                        ...previousChildren,
+                        ?currentChild,
+                      ],
+                    ),
                     child: _Body(
                       key: ValueKey((
                         state.status,

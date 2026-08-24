@@ -48,28 +48,33 @@ class TradingApp extends StatelessWidget {
       child: AppConnectivityLifecycle(
         child: BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
           buildWhen: (previous, current) =>
-              previous.preferences.themeMode != current.preferences.themeMode,
-          builder: (context, state) => AppNavigationScope(
-            navigator: navigator,
-            child: MaterialApp.router(
-              title: '021 Trade',
-              theme: AppTheme.light,
-              darkTheme: AppTheme.dark,
-              themeMode: _flutterThemeMode(state.preferences.themeMode),
-              themeAnimationDuration: AppMotion.medium,
-              routerConfig: router.config(),
-              builder: (context, child) =>
-                  BlocListener<AppPreferencesBloc, AppPreferencesState>(
-                    listenWhen: (previous, current) =>
-                        previous.errorMessage != current.errorMessage &&
-                        current.errorMessage != null,
-                    listener: (context, state) {
-                      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                        SnackBar(content: Text(state.errorMessage!)),
-                      );
-                    },
-                    child: child ?? const SizedBox.shrink(),
-                  ),
+              previous.preferences.themeMode != current.preferences.themeMode ||
+              previous.preferences.priceDisplayMode !=
+                  current.preferences.priceDisplayMode,
+          builder: (context, state) => MarketPriceDisplayScope(
+            mode: _marketPriceDisplayMode(state.preferences.priceDisplayMode),
+            child: AppNavigationScope(
+              navigator: navigator,
+              child: MaterialApp.router(
+                title: '021 Trade',
+                theme: AppTheme.light,
+                darkTheme: AppTheme.dark,
+                themeMode: _flutterThemeMode(state.preferences.themeMode),
+                themeAnimationDuration: AppMotion.medium,
+                routerConfig: router.config(),
+                builder: (context, child) =>
+                    BlocListener<AppPreferencesBloc, AppPreferencesState>(
+                      listenWhen: (previous, current) =>
+                          previous.errorMessage != current.errorMessage &&
+                          current.errorMessage != null,
+                      listener: (context, state) {
+                        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+                          SnackBar(content: Text(state.errorMessage!)),
+                        );
+                      },
+                      child: child ?? const SizedBox.shrink(),
+                    ),
+              ),
             ),
           ),
         ),
@@ -83,3 +88,11 @@ ThemeMode _flutterThemeMode(AppThemeMode mode) => switch (mode) {
   AppThemeMode.light => ThemeMode.light,
   AppThemeMode.dark => ThemeMode.dark,
 };
+
+MarketPriceDisplayMode _marketPriceDisplayMode(PriceDisplayMode mode) =>
+    switch (mode) {
+      PriceDisplayMode.absoluteAndPercent =>
+        MarketPriceDisplayMode.absoluteAndPercent,
+      PriceDisplayMode.percentOnly => MarketPriceDisplayMode.percentOnly,
+      PriceDisplayMode.absoluteOnly => MarketPriceDisplayMode.absoluteOnly,
+    };

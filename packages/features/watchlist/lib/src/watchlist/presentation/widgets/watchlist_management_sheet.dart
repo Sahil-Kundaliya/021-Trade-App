@@ -16,6 +16,7 @@ Future<void> showWatchlistManagementSheet(
   final action = await showModalBottomSheet<WatchlistManagementAction>(
     context: context,
     useSafeArea: true,
+    showDragHandle: true,
     builder: (_) => WatchlistManagementSheet(watchlist: watchlist),
   );
   if (!context.mounted || action == null) return;

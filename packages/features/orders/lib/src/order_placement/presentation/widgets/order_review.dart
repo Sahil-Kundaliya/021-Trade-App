@@ -50,16 +50,6 @@ class OrderReview extends StatelessWidget {
                 const SizedBox(height: AppSpacing.md),
                 _SellAvailability(state: state),
               ],
-              if (state.errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.md),
-                  child: Text(
-                    state.errorMessage!,
-                    style: context.appTextStyles.bodySecondary.copyWith(
-                      color: context.appColors.negative,
-                    ),
-                  ),
-                ),
               const SizedBox(height: AppSpacing.xl),
               Row(
                 children: [

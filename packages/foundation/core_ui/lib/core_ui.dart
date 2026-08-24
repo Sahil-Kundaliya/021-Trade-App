@@ -10,6 +10,7 @@ export 'src/components/market/market_index_chip.dart';
 export 'src/components/market/market_index_view_data.dart';
 export 'src/components/market/market_indices_strip.dart';
 export 'src/components/market/market_price_change.dart';
+export 'src/components/market/market_price_display_scope.dart';
 export 'src/components/market/market_quote.dart';
 export 'src/components/market/market_quote_view_data.dart';
 export 'src/formatters/financial_formatter.dart';

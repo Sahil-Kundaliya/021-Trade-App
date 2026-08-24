@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:core_data/core_data.dart' hide TradeExchange;
 import 'package:injectable/injectable.dart';
 import 'package:uuid/uuid.dart';
@@ -17,11 +19,13 @@ final class OrderPlacementRepositoryImpl implements OrderPlacementRepository {
     this._tradingLocalApi,
     this._orderStore,
     this._positions,
+    this._accountFundsLocalApi,
   );
 
   final TradingLocalApi _tradingLocalApi;
   final OrderStore _orderStore;
   final PositionService _positions;
+  final AccountFundsLocalApi _accountFundsLocalApi;
   static const _uuid = Uuid();
 
   @override
@@ -44,6 +48,36 @@ final class OrderPlacementRepositoryImpl implements OrderPlacementRepository {
   }) => _positions.getAvailableSellQuantity(fundId: fundId, exchange: exchange);
 
   @override
+  Future<double> getAvailableFunds() async =>
+      (await _accountFundsLocalApi.read()).availableBalance;
+
+  @override
+  Future<double> addFunds(double amount) async {
+    final bank = _accountFundsLocalApi.linkedBanks.firstWhere(
+      (item) => item.isPrimary,
+      orElse: () => _accountFundsLocalApi.linkedBanks.first,
+    );
+    var remainingPaise = (amount * 100).round();
+    final credits = <Future<AccountFundsStorageDto>>[];
+    while (remainingPaise > 0) {
+      final partPaise = math.min(remainingPaise, 1000000);
+      remainingPaise -= partPaise;
+      credits.add(
+        _accountFundsLocalApi.addFunds(
+          depositId: 'deposit_${_uuid.v4()}',
+          amount: partPaise / 100,
+          bankId: bank.id,
+        ),
+      );
+    }
+    final updated = await Future.wait(credits);
+    if (updated.isEmpty) {
+      return getAvailableFunds();
+    }
+    return updated.last.availableBalance;
+  }
+
+  @override
   Future<PlacedOrder> placeOrder(OrderDraft draft) async {
     final placed = PlacedOrderMapper.create(
       id: 'order_${_uuid.v4()}',
@@ -51,6 +85,9 @@ final class OrderPlacementRepositoryImpl implements OrderPlacementRepository {
       createdAt: DateTime.now(),
     );
     final dto = PlacedOrderMapper.toDto(placed);
+    if (draft.side == OrderSide.buy) {
+      await _accountFundsLocalApi.debitFunds(amount: placed.orderValue);
+    }
     await _orderStore.mutate((orders) {
       if (draft.side == OrderSide.sell) {
         final available = _positions.availableSellQuantityFromOrders(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:core_data/core_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:profile/profile.dart';
@@ -45,6 +47,7 @@ void main() {
     final api = _MemoryPreferencesApi();
     final bloc = ProfileBloc(
       ProfilePreferencesRepositoryImpl(AppPreferencesRepository(api)),
+      const _ProfileFundsRepository(),
     )..add(const ProfileStarted());
     await bloc.stream.firstWhere(
       (state) => state.status == ProfileLoadStatus.ready,
@@ -84,6 +87,28 @@ void main() {
     expect(api.value!.priceDisplayMode, PriceDisplayMode.percentOnly);
     await bloc.close();
   });
+
+  test('profile reacts to locally available funds balance changes', () async {
+    final funds = _MutableProfileFundsRepository(1200);
+    final bloc = ProfileBloc(
+      ProfilePreferencesRepositoryImpl(
+        AppPreferencesRepository(_MemoryPreferencesApi()),
+      ),
+      funds,
+    )..add(const ProfileStarted());
+
+    await bloc.stream.firstWhere(
+      (state) =>
+          state.status == ProfileLoadStatus.ready &&
+          state.availableFunds == 1200,
+    );
+
+    funds.update(5000);
+    await bloc.stream.firstWhere((state) => state.availableFunds == 5000);
+
+    await bloc.close();
+    await funds.close();
+  });
 }
 
 final class _MemoryPreferencesApi implements AppPreferencesLocalApi {
@@ -98,4 +123,34 @@ final class _MemoryPreferencesApi implements AppPreferencesLocalApi {
     value = preferences;
     writeCount++;
   }
+}
+
+final class _ProfileFundsRepository implements ProfileFundsRepository {
+  const _ProfileFundsRepository();
+
+  @override
+  Future<double> getAvailableBalance() async => 0;
+
+  @override
+  Stream<double> watchAvailableBalance() => const Stream.empty();
+}
+
+final class _MutableProfileFundsRepository implements ProfileFundsRepository {
+  _MutableProfileFundsRepository(this.balance);
+
+  double balance;
+  final _changes = StreamController<double>.broadcast();
+
+  void update(double value) {
+    balance = value;
+    _changes.add(value);
+  }
+
+  Future<void> close() => _changes.close();
+
+  @override
+  Future<double> getAvailableBalance() async => balance;
+
+  @override
+  Stream<double> watchAvailableBalance() => _changes.stream;
 }

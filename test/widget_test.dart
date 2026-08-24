@@ -132,8 +132,8 @@ void main() {
 
     app.navigator.goToProfile();
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Funds'));
-    await tester.tap(find.text('Funds'));
+    await tester.ensureVisible(find.text('Available Funds'));
+    await tester.tap(find.text('Available Funds'));
     await tester.pumpAndSettle();
 
     expect(find.byType(AccountFundsScreen), findsOneWidget);
@@ -145,10 +145,22 @@ void main() {
     expect(find.text('PRIMARY'), findsOneWidget);
     expect(find.text('Add New Bank Account'), findsOneWidget);
 
-    await app.navigator.pop();
+    await tester.tap(find.text('+₹5,000.00'));
+    await tester.pump();
+    await tester.tap(find.text('ADD ₹5,000.00'));
     await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.check_circle), findsOneWidget);
+    expect(find.text('Funds Added'), findsOneWidget);
+    expect(find.text('Amount Added'), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
     expect(find.byType(AccountFundsScreen), findsNothing);
     expect(find.text('Profile'), findsExactly(2));
+    expect(find.text('Available Funds'), findsOneWidget);
+    expect(find.text('₹5,000.00'), findsOneWidget);
   });
 
   testWidgets('profile opens fictional licence information and returns', (

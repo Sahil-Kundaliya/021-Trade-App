@@ -31,6 +31,7 @@ _i174.GetIt configureOrdersDependencies(
       gh<_i607.TradingLocalApi>(),
       gh<_i607.OrderStore>(),
       gh<_i607.PositionService>(),
+      gh<_i607.AccountFundsLocalApi>(),
     ),
   );
   gh.factory<_i41.OrderPlacementBloc>(

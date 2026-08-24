@@ -85,9 +85,7 @@ void main() {
     expect(repository.banks.length, 2);
   });
 
-  testWidgets('successful add updates the balance and shows feedback', (
-    tester,
-  ) async {
+  testWidgets('successful add shows a confirmation screen', (tester) async {
     await _pump(tester, _Repository());
 
     await tester.tap(find.text('+₹5,000.00'));
@@ -95,9 +93,13 @@ void main() {
     await tester.tap(find.text('ADD ₹5,000.00'));
     await tester.pumpAndSettle();
 
-    expect(find.text('₹5,000.00'), findsOneWidget);
-    expect(find.text('Funds added successfully.'), findsOneWidget);
-    expect(find.text('ADD FUNDS'), findsOneWidget);
+    expect(find.byIcon(Icons.check_circle), findsOneWidget);
+    expect(find.text('Funds Added'), findsOneWidget);
+    expect(find.text('Amount Added'), findsOneWidget);
+    expect(find.text('Available Funds'), findsOneWidget);
+    expect(find.text('₹5,000.00'), findsNWidgets(2));
+    expect(find.text('Done'), findsOneWidget);
+    expect(find.text('ADD FUNDS'), findsNothing);
   });
 }
 

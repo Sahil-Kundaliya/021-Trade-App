@@ -8,6 +8,15 @@ final class ProfileStarted extends ProfileEvent {
   const ProfileStarted();
 }
 
+final class ProfileFundsRefreshRequested extends ProfileEvent {
+  const ProfileFundsRefreshRequested();
+}
+
+final class ProfileAvailableFundsChanged extends ProfileEvent {
+  const ProfileAvailableFundsChanged(this.balance);
+  final double balance;
+}
+
 final class ProfilePrivacyModeChanged extends ProfileEvent {
   const ProfilePrivacyModeChanged(this.enabled);
   final bool enabled;

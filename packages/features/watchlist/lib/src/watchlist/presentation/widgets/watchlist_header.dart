@@ -17,12 +17,12 @@ class WatchlistHeader extends StatelessWidget {
         AppIconButton(
           tooltip: 'Watchlist settings',
           onPressed: onSettings,
-          icon: const Icon(Icons.settings_outlined, size: AppSizes.iconSm),
+          icon: const Icon(Icons.settings_outlined, size: AppSizes.iconXs),
         ),
         AppIconButton(
           tooltip: 'Search funds',
           onPressed: onSearch,
-          icon: const Icon(Icons.search, size: AppSizes.iconSm),
+          icon: const Icon(Icons.search, size: AppSizes.iconXs),
         ),
       ],
     ),

@@ -82,6 +82,15 @@ final class OrderPlacementRetryRequested extends OrderPlacementEvent {
   const OrderPlacementRetryRequested();
 }
 
+final class OrderFundsAddedAndRetryRequested extends OrderPlacementEvent {
+  const OrderFundsAddedAndRetryRequested(this.amount);
+  final double amount;
+}
+
+final class OrderSellAvailableRequested extends OrderPlacementEvent {
+  const OrderSellAvailableRequested();
+}
+
 final class OrderLivePricesReceived extends OrderPlacementEvent {
   const OrderLivePricesReceived(this.batch);
   final LivePriceBatch batch;

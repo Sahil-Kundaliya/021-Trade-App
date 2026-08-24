@@ -14,6 +14,7 @@ class AccountFundsState {
     this.isAdding = false,
     this.addError,
     this.successMessage,
+    this.addedAmount,
     this.loadError,
     this.feedbackEpoch = 0,
   });
@@ -27,6 +28,7 @@ class AccountFundsState {
   final bool isAdding;
   final String? addError;
   final String? successMessage;
+  final double? addedAmount;
   final String? loadError;
   final int feedbackEpoch;
 
@@ -51,6 +53,7 @@ class AccountFundsState {
     bool? isAdding,
     String? addError,
     String? successMessage,
+    double? addedAmount,
     String? loadError,
     int? feedbackEpoch,
     bool clearValidation = false,
@@ -69,6 +72,7 @@ class AccountFundsState {
     isAdding: isAdding ?? this.isAdding,
     addError: clearAddError ? null : addError ?? this.addError,
     successMessage: clearSuccess ? null : successMessage ?? this.successMessage,
+    addedAmount: clearSuccess ? null : addedAmount ?? this.addedAmount,
     loadError: clearLoadError ? null : loadError ?? this.loadError,
     feedbackEpoch: feedbackEpoch ?? this.feedbackEpoch,
   );

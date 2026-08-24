@@ -106,9 +106,12 @@ class OrderConfirmation extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
-              OutlinedButton(
-                onPressed: onViewOrderBook,
-                child: const Text('View Order Book'),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: onViewOrderBook,
+                  child: const Text('View Order Book'),
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
               AppButton(label: 'Done', onPressed: onDone, expand: true),
