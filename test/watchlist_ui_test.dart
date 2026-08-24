@@ -1,4 +1,5 @@
 import 'package:core_ui/core_ui.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:watchlist/watchlist.dart';
@@ -154,5 +155,61 @@ void main() {
     expect(find.text('Pinned'), findsOneWidget);
     expect(find.byIcon(Icons.drag_handle), findsOneWidget);
     expect(find.byIcon(Icons.push_pin_outlined), findsOneWidget);
+  });
+
+  testWidgets('fund reorder keeps a single LTP after long press', (
+    tester,
+  ) async {
+    await pumpWatchlist(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.drag_indicator), findsWidgets);
+    expect(find.text('\u20B91,316.00'), findsOneWidget);
+    final quoteCount = tester.widgetList(find.byType(MarketQuote)).length;
+    expect(quoteCount, greaterThan(0));
+
+    for (var i = 0; i < 3; i++) {
+      await tester.longPress(find.text('RELIANCE'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(
+        tester.widgetList(find.text('\u20B91,316.00')).length,
+        lessThanOrEqualTo(1),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('\u20B91,316.00'), findsOneWidget);
+      expect(find.byType(MarketQuote), findsNWidgets(quoteCount));
+    }
+  });
+
+  testWidgets('dragging a fund reorders it without duplicating LTP', (
+    tester,
+  ) async {
+    await pumpWatchlist(tester);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getTopLeft(find.text('RELIANCE')).dy,
+      lessThan(tester.getTopLeft(find.text('TCS')).dy),
+    );
+
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.text('RELIANCE')),
+    );
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+    await gesture.moveBy(const Offset(0, 140));
+    await tester.pump();
+    expect(
+      tester.widgetList(find.text('\u20B91,316.00')).length,
+      lessThanOrEqualTo(1),
+    );
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(find.text('\u20B91,316.00'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('TCS')).dy,
+      lessThan(tester.getTopLeft(find.text('RELIANCE')).dy),
+    );
   });
 }

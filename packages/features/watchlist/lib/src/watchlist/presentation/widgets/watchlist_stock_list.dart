@@ -28,34 +28,33 @@ class WatchlistStockList extends StatelessWidget {
 
     if (onReorder != null) {
       return ReorderableListView.builder(
+        padding: EdgeInsets.zero,
+        buildDefaultDragHandles: false,
         itemCount: stocks.length,
-        onReorderItem: (oldIndex, newIndex) {
-          onReorder!(
-            oldIndex,
-            newIndex >= oldIndex ? newIndex + 1 : newIndex,
+        onReorderItem: onReorder,
+        proxyDecorator: (_, index, animation) => _WatchlistFundReorderProxy(
+          stock: stocks[index],
+          index: index,
+          animation: animation,
+        ),
+        itemBuilder: (context, index) {
+          final stock = stocks[index];
+          return ReorderableDelayedDragStartListener(
+            key: ValueKey(stock.marketKey),
+            index: index,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                WatchlistStockTile(
+                  stock: stock,
+                  reorderIndex: index,
+                  onTap: onStockTap == null ? null : () => onStockTap!(stock),
+                ),
+                if (index != stocks.length - 1) const AppDivider(),
+              ],
+            ),
           );
         },
-        proxyDecorator: (child, index, animation) => AnimatedBuilder(
-          animation: animation,
-          builder: (context, _) => Material(
-            elevation: animation.value * 2,
-            borderRadius: AppRadius.mdBorderRadius,
-            clipBehavior: Clip.antiAlias,
-            child: child,
-          ),
-        ),
-        itemBuilder: (context, index) => Column(
-          key: ValueKey(stocks[index].marketKey),
-          children: [
-            WatchlistStockTile(
-              stock: stocks[index],
-              onTap: onStockTap == null
-                  ? null
-                  : () => onStockTap!(stocks[index]),
-            ),
-            if (index != stocks.length - 1) const AppDivider(),
-          ],
-        ),
       );
     }
 
@@ -70,6 +69,55 @@ class WatchlistStockList extends StatelessWidget {
           onTap: onStockTap == null ? null : () => onStockTap!(stock),
         );
       },
+    );
+  }
+}
+
+class _WatchlistFundReorderProxy extends StatelessWidget {
+  const _WatchlistFundReorderProxy({
+    required this.stock,
+    required this.index,
+    required this.animation,
+  });
+
+  final WatchlistFund stock;
+  final int index;
+  final Animation<double> animation;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final highlight = Color.lerp(
+          context.appColors.selection.withValues(alpha: 0.45),
+          context.appColors.selection,
+          animation.value,
+        )!;
+        return Align(
+          alignment: Alignment.topCenter,
+          widthFactor: 1,
+          heightFactor: 1,
+          child: Material(
+            type: MaterialType.transparency,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: context.appColors.surface,
+                borderRadius: AppRadius.mdBorderRadius,
+                border: Border.all(color: highlight, width: AppBorders.strong),
+              ),
+              child: child,
+            ),
+          ),
+        );
+      },
+      child: IgnorePointer(
+        child: WatchlistStockTile(
+          stock: stock,
+          reorderIndex: index,
+          enableLiveQuote: false,
+        ),
+      ),
     );
   }
 }

@@ -7,22 +7,42 @@ import '../bloc/watchlist_bloc.dart';
 import '../bloc/watchlist_state.dart';
 
 class WatchlistStockTile extends StatelessWidget {
-  const WatchlistStockTile({required this.stock, this.onTap, super.key});
+  const WatchlistStockTile({
+    required this.stock,
+    this.onTap,
+    this.reorderIndex,
+    this.enableLiveQuote = true,
+    super.key,
+  });
 
   final WatchlistFund stock;
   final VoidCallback? onTap;
+  final int? reorderIndex;
+  final bool enableLiveQuote;
 
   @override
   Widget build(BuildContext context) {
-    return _TileBody(stock: stock, onTap: onTap);
+    return _TileBody(
+      stock: stock,
+      onTap: onTap,
+      reorderIndex: reorderIndex,
+      enableLiveQuote: enableLiveQuote,
+    );
   }
 }
 
 class _TileBody extends StatelessWidget {
-  const _TileBody({required this.stock, this.onTap});
+  const _TileBody({
+    required this.stock,
+    this.onTap,
+    this.reorderIndex,
+    this.enableLiveQuote = true,
+  });
 
   final WatchlistFund stock;
   final VoidCallback? onTap;
+  final int? reorderIndex;
+  final bool enableLiveQuote;
 
   @override
   Widget build(BuildContext context) {
@@ -35,8 +55,13 @@ class _TileBody extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (reorderIndex != null) ...[
+                _FundDragHandle(index: reorderIndex!, symbol: stock.symbol),
+                const SizedBox(width: AppSpacing.sm),
+              ],
               Expanded(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -68,8 +93,43 @@ class _TileBody extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              _WatchlistLiveQuote(stock: stock),
+              enableLiveQuote
+                  ? _WatchlistLiveQuote(stock: stock)
+                  : MarketQuote(
+                      ltp: stock.ltp,
+                      change: stock.change,
+                      changePercent: stock.changePercent,
+                    ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FundDragHandle extends StatelessWidget {
+  const _FundDragHandle({required this.index, required this.symbol});
+
+  final int index;
+  final String symbol;
+
+  @override
+  Widget build(BuildContext context) {
+    return ReorderableDragStartListener(
+      index: index,
+      child: Semantics(
+        label: 'Reorder $symbol',
+        button: true,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.grab,
+          child: Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xxs),
+            child: Icon(
+              Icons.drag_indicator,
+              size: AppSizes.iconSm,
+              color: context.appColors.textTertiary,
+            ),
           ),
         ),
       ),
