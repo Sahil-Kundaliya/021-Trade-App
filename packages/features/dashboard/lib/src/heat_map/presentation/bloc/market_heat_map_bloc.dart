@@ -50,13 +50,19 @@ class MarketHeatMapBloc extends Bloc<MarketHeatMapEvent, MarketHeatMapState> {
         state.status == MarketHeatMapStatus.loaded) {
       return;
     }
-    await _load(emit, event.exchange);
+    await _load(
+      emit,
+      event.exchange,
+      minimumLoadingTime: const Duration(milliseconds: 650),
+    );
   }
 
   Future<void> _load(
     Emitter<MarketHeatMapState> emit,
-    TradeExchange exchange,
-  ) async {
+    TradeExchange exchange, {
+    Duration minimumLoadingTime = Duration.zero,
+  }) async {
+    final loadingStarted = DateTime.now();
     final generation = ++_loadGeneration;
     emit(
       state.copyWith(
@@ -67,6 +73,10 @@ class MarketHeatMapBloc extends Bloc<MarketHeatMapEvent, MarketHeatMapState> {
     );
     try {
       final loaded = await _repository.getEquityFunds(exchange: exchange);
+      if (generation != _loadGeneration) return;
+      final remaining =
+          minimumLoadingTime - DateTime.now().difference(loadingStarted);
+      if (remaining > Duration.zero) await Future<void>.delayed(remaining);
       if (generation != _loadGeneration) return;
       final funds = List<HeatMapFund>.unmodifiable(loaded);
       final fundsByKey = <String, HeatMapFund>{

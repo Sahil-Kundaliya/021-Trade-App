@@ -76,4 +76,21 @@ void main() {
     await pump(false);
     expect(find.text('₹1,316.20'), findsOneWidget);
   });
+
+  testWidgets('privacy mode never masks market LTP or change', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: const PrivacyModeScope(
+          enabled: true,
+          child: MarketQuote(ltp: 1316.20, change: 3.05, changePercent: 0.23),
+        ),
+      ),
+    );
+
+    expect(find.text('₹1,316.20'), findsOneWidget);
+    expect(find.text('+3.05 (+0.23%)'), findsOneWidget);
+    expect(find.text(PrivacyMask.currency), findsNothing);
+    expect(find.text(PrivacyMask.percentage), findsNothing);
+  });
 }

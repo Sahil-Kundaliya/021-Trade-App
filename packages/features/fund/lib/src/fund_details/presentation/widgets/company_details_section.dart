@@ -1,12 +1,20 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../domain/entities/fund_details.dart';
 
+typedef CompanyContactLauncher = Future<bool> Function(Uri uri);
+
 class CompanyDetailsSection extends StatelessWidget {
-  const CompanyDetailsSection({required this.profile, super.key});
+  const CompanyDetailsSection({
+    required this.profile,
+    this.contactLauncher,
+    super.key,
+  });
 
   final CompanyProfile profile;
+  final CompanyContactLauncher? contactLauncher;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -33,7 +41,10 @@ class CompanyDetailsSection extends StatelessWidget {
       const SizedBox(height: AppSpacing.lg),
       const AppDivider(),
       const SizedBox(height: AppSpacing.lg),
-      _ContactInformation(profile: profile),
+      _ContactInformation(
+        profile: profile,
+        launcher: contactLauncher ?? _launchExternally,
+      ),
     ],
   );
 }
@@ -172,9 +183,10 @@ class _PersonRow extends StatelessWidget {
 }
 
 class _ContactInformation extends StatelessWidget {
-  const _ContactInformation({required this.profile});
+  const _ContactInformation({required this.profile, required this.launcher});
 
   final CompanyProfile profile;
+  final CompanyContactLauncher launcher;
 
   @override
   Widget build(BuildContext context) => _DetailBlock(
@@ -186,18 +198,24 @@ class _ContactInformation extends StatelessWidget {
           icon: Icons.language_rounded,
           label: 'Website',
           value: profile.website,
+          uri: _websiteUri(profile.website),
+          launcher: launcher,
         ),
         const AppDivider(),
         _ContactRow(
           icon: Icons.mail_outline_rounded,
           label: 'Email',
           value: profile.email,
+          uri: Uri(scheme: 'mailto', path: profile.email),
+          launcher: launcher,
         ),
         const AppDivider(),
         _ContactRow(
           icon: Icons.phone_outlined,
           label: 'Phone',
           value: profile.phone,
+          uri: Uri(scheme: 'tel', path: profile.phone.replaceAll(' ', '')),
+          launcher: launcher,
         ),
       ],
     ),
@@ -209,43 +227,72 @@ class _ContactRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    required this.uri,
+    required this.launcher,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final Uri uri;
+  final CompanyContactLauncher launcher;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: AppSizes.iconXs, color: context.appColors.primary),
-        const SizedBox(width: AppSpacing.sm),
-        SizedBox(
-          width: 64,
-          child: Text(
-            label,
-            style: context.textTheme.bodySmall?.copyWith(
-              color: context.appColors.textSecondary,
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: 'Open $label $value',
+    child: InkWell(
+      borderRadius: AppRadius.smBorderRadius,
+      onTap: () => _open(context),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: AppSizes.iconXs, color: context.appColors.primary),
+            const SizedBox(width: AppSpacing.sm),
+            SizedBox(
+              width: 64,
+              child: Text(
+                label,
+                style: context.textTheme.bodySmall?.copyWith(
+                  color: context.appColors.textSecondary,
+                ),
+              ),
             ),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.end,
-            style: context.textTheme.bodySmall?.copyWith(
-              color: context.appColors.textPrimary,
-              fontWeight: FontWeight.w500,
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                value,
+                textAlign: TextAlign.end,
+                style: context.textTheme.bodySmall?.copyWith(
+                  color: context.appColors.primary,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.underline,
+                  decorationColor: context.appColors.primary,
+                ),
+              ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     ),
   );
+
+  Future<void> _open(BuildContext context) async {
+    try {
+      final opened = await launcher(uri);
+      if (!opened && context.mounted) _showFailure(context);
+    } on Object {
+      if (context.mounted) _showFailure(context);
+    }
+  }
+
+  void _showFailure(BuildContext context) {
+    ScaffoldMessenger.maybeOf(
+      context,
+    )?.showSnackBar(SnackBar(content: Text('Unable to open $label.')));
+  }
 }
 
 class _DetailBlock extends StatelessWidget {
@@ -293,3 +340,12 @@ class _IconBox extends StatelessWidget {
     child: Icon(icon, color: context.appColors.primary),
   );
 }
+
+Uri _websiteUri(String value) {
+  final parsed = Uri.tryParse(value);
+  if (parsed != null && parsed.hasScheme) return parsed;
+  return Uri.https(value, '');
+}
+
+Future<bool> _launchExternally(Uri uri) =>
+    launchUrl(uri, mode: LaunchMode.externalApplication);

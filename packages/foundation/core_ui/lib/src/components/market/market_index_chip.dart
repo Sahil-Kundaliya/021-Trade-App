@@ -6,7 +6,6 @@ import '../../theme/tokens/app_radius.dart';
 import '../../theme/tokens/app_spacing.dart';
 import '../../theme/tokens/app_sizes.dart';
 import 'market_index_view_data.dart';
-import '../../privacy/privacy_mode_scope.dart';
 import '../../privacy/sensitive_value_text.dart';
 import 'market_price_change.dart';
 import 'market_price_display_scope.dart';
@@ -36,9 +35,7 @@ class MarketIndexChip extends StatelessWidget {
 
     return Semantics(
       button: onTap != null,
-      label: PrivacyModeScope.of(context)
-          ? '${item.name}, values hidden'
-          : '${item.name}, $price, $changeLabel',
+      label: '${item.name}, $price, $changeLabel',
       child: SizedBox(
         width: width,
         height: height,
@@ -68,6 +65,7 @@ class MarketIndexChip extends StatelessWidget {
                   SensitiveValueText(
                     price,
                     type: SensitiveValueType.number,
+                    isMasked: false,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.appTextStyles.financialSmall.copyWith(
@@ -81,6 +79,7 @@ class MarketIndexChip extends StatelessWidget {
                     child: MarketPriceChange(
                       change: item.change,
                       changePercent: item.changePercent,
+                      isMasked: false,
                     ),
                   ),
                 ],

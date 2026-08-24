@@ -92,7 +92,10 @@ class _BuyDetails extends StatelessWidget {
       children: [
         _DetailRow(label: 'Available Funds', value: state.availableFunds),
         const AppDivider(),
-        _DetailRow(label: 'Order Value', value: state.estimatedOrderValue),
+        _DetailRow(
+          label: 'Latest LTP Value',
+          value: state.instrument!.ltp * state.quantity,
+        ),
         _DetailRow(
           label: '3% LTP Buffer',
           value: state.instrument!.ltp * state.quantity * 0.03,
@@ -165,7 +168,7 @@ Future<void> showAddFundsAndRetrySheet(
   OrderPlacementState state,
 ) {
   final bloc = context.read<OrderPlacementBloc>();
-  final suggestedAmount = (state.fundShortfall * 100).ceil() / 100;
+  final suggestedAmount = (state.fundShortfall * 100 - 0.0000001).ceil() / 100;
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -249,7 +252,7 @@ class _AddFundsAndRetrySheetState extends State<_AddFundsAndRetrySheet> {
             const SizedBox(height: AppSpacing.lg),
             AppTextField(
               controller: _controller,
-              label: 'Amount',
+              label: 'Required amount',
               prefixIcon: const Icon(Icons.currency_rupee),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,

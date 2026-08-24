@@ -17,10 +17,13 @@ void main() {
     await pumpProfile(tester);
 
     expect(find.text('Profile'), findsOneWidget);
-    expect(find.text('RS'), findsOneWidget);
+    expect(find.text('SK'), findsOneWidget);
     expect(find.text('Sahil Kundaliya'), findsOneWidget);
     expect(find.text('Client ID: TRD102458'), findsOneWidget);
-    expect(find.text('rahul.sharma@example.com'), findsOneWidget);
+    expect(
+      find.text('sahilkundaliya.dev@gmail.com'),
+      findsOneWidget,
+    );
     expect(find.text('Verified'), findsOneWidget);
     expect(find.text('Available Funds'), findsOneWidget);
     expect(find.text('₹12,500.00'), findsOneWidget);

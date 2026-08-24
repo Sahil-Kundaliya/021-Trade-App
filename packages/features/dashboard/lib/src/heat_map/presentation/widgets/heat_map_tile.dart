@@ -74,11 +74,10 @@ class _HeatMapTileSurface extends StatelessWidget {
       return true;
     }());
 
-    final private = PrivacyModeScope.of(context);
     final colors = context.appColors;
     final swatch = colors.heatMapSwatch(live.changePercent);
     final density = HeatMapTile.densityFor(size);
-    final tooltip = _tooltip(private, live);
+    final tooltip = _tooltip(live);
 
     return RepaintBoundary(
       child: _maybeTooltip(
@@ -109,7 +108,6 @@ class _HeatMapTileSurface extends StatelessWidget {
                     live: live,
                     onFill: swatch.onFill,
                     density: density,
-                    private: private,
                   ),
                 ),
               ),
@@ -120,13 +118,12 @@ class _HeatMapTileSurface extends StatelessWidget {
     );
   }
 
-  String _tooltip(bool private, HeatMapTileLiveViewData live) {
-    final ltp = private
-        ? PrivacyMask.currency
-        : FinancialFormatter.price(live.ltp);
-    final change = private
-        ? '${PrivacyMask.number} (${PrivacyMask.percentage})'
-        : FinancialFormatter.changeGroup(live.change, live.changePercent);
+  String _tooltip(HeatMapTileLiveViewData live) {
+    final ltp = FinancialFormatter.price(live.ltp);
+    final change = FinancialFormatter.changeGroup(
+      live.change,
+      live.changePercent,
+    );
     return '${fund.symbol}\n'
         '${fund.companyName}\n'
         'LTP\n'
@@ -163,14 +160,12 @@ class _HeatMapTileBody extends StatelessWidget {
     required this.live,
     required this.onFill,
     required this.density,
-    required this.private,
   });
 
   final String symbol;
   final HeatMapTileLiveViewData live;
   final Color onFill;
   final HeatMapTileDensity density;
-  final bool private;
 
   @override
   Widget build(BuildContext context) {
@@ -196,7 +191,7 @@ class _HeatMapTileBody extends StatelessWidget {
           SensitiveValueText(
             FinancialFormatter.price(live.ltp),
             type: SensitiveValueType.currency,
-            isMasked: private,
+            isMasked: false,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: styles.financialSmall.copyWith(color: onFill),
@@ -204,7 +199,7 @@ class _HeatMapTileBody extends StatelessWidget {
         ],
         if (density != HeatMapTileDensity.small) ...[
           const SizedBox(height: AppSpacing.xxs),
-          _HeatMapChange(live: live, onFill: onFill, private: private),
+          _HeatMapChange(live: live, onFill: onFill),
         ],
       ],
     );
@@ -212,15 +207,10 @@ class _HeatMapTileBody extends StatelessWidget {
 }
 
 class _HeatMapChange extends StatelessWidget {
-  const _HeatMapChange({
-    required this.live,
-    required this.onFill,
-    required this.private,
-  });
+  const _HeatMapChange({required this.live, required this.onFill});
 
   final HeatMapTileLiveViewData live;
   final Color onFill;
-  final bool private;
 
   @override
   Widget build(BuildContext context) {
@@ -235,7 +225,7 @@ class _HeatMapChange extends StatelessWidget {
           child: SensitiveValueText(
             FinancialFormatter.percentage(live.changePercent),
             type: SensitiveValueType.percentage,
-            isMasked: private,
+            isMasked: false,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: style,

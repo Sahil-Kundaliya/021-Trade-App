@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:navigation_contract/navigation_contract.dart';
 
-import '../../../market/presentation/bloc/market_bloc.dart';
-import '../../../market/presentation/bloc/market_state.dart';
 import '../../domain/entities/heat_map_fund.dart';
 import '../bloc/market_heat_map_bloc.dart';
 import '../bloc/market_heat_map_event.dart';
@@ -20,21 +18,14 @@ class DashboardHeatMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<MarketBloc, MarketState>(
-      listenWhen: (previous, current) =>
-          previous.selectedExchange != current.selectedExchange,
-      listener: (context, state) {
-        context.read<MarketHeatMapBloc>().add(
-          MarketHeatMapExchangeChanged(state.selectedExchange),
-        );
-      },
-      child: BlocBuilder<MarketHeatMapBloc, MarketHeatMapState>(
-        buildWhen: (previous, current) =>
-            previous.status != current.status ||
-            previous.exchange != current.exchange ||
-            !identical(previous.funds, current.funds) ||
-            previous.errorMessage != current.errorMessage,
-        builder: (context, state) => AppCard(
+    return BlocBuilder<MarketHeatMapBloc, MarketHeatMapState>(
+      buildWhen: (previous, current) =>
+          previous.status != current.status ||
+          previous.exchange != current.exchange ||
+          !identical(previous.funds, current.funds) ||
+          previous.errorMessage != current.errorMessage,
+      builder: (context, state) {
+        return AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -42,17 +33,17 @@ class DashboardHeatMap extends StatelessWidget {
                 title: 'MARKET HEAT MAP',
                 subtitle: 'Size by Amount · Color by Change %',
                 level: AppSectionHeaderLevel.section,
-                trailing: Text(
-                  'Equity · ${state.exchange.code}',
-                  style: context.appTextStyles.label.copyWith(
-                    color: context.appColors.textSecondary,
-                  ),
+                trailing: _ExchangeSwitch(
+                  selected: state.exchange,
+                  onSelected: (exchange) => context
+                      .read<MarketHeatMapBloc>()
+                      .add(MarketHeatMapExchangeChanged(exchange)),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
               switch (state.status) {
                 MarketHeatMapStatus.initial ||
-                MarketHeatMapStatus.loading => const HeatMapSkeleton(),
+                MarketHeatMapStatus.loading => const _HeatMapLoading(),
                 MarketHeatMapStatus.error => _HeatMapError(
                   onRetry: () => context.read<MarketHeatMapBloc>().add(
                     const MarketHeatMapRetryRequested(),
@@ -71,10 +62,63 @@ class DashboardHeatMap extends StatelessWidget {
               },
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
+}
+
+class _HeatMapLoading extends StatelessWidget {
+  const _HeatMapLoading();
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final width = constraints.maxWidth
+          .clamp(0, _HeatMapBody.maxWidth)
+          .toDouble();
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: SizedBox(
+          width: width,
+          child: HeatMapSkeleton(
+            key: const Key('heat-map-loading-skeleton'),
+            height: _heatMapHeight(width),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _ExchangeSwitch extends StatelessWidget {
+  const _ExchangeSwitch({required this.selected, required this.onSelected});
+
+  final TradeExchange selected;
+  final ValueChanged<TradeExchange> onSelected;
+
+  @override
+  Widget build(BuildContext context) => SegmentedButton<TradeExchange>(
+    key: const Key('heat-map-exchange-switch'),
+    showSelectedIcon: false,
+    segments: [
+      for (final exchange in TradeExchange.values)
+        ButtonSegment<TradeExchange>(
+          value: exchange,
+          label: Text(
+            exchange.code,
+            key: Key('heat-map-exchange-${exchange.code.toLowerCase()}'),
+          ),
+        ),
+    ],
+    selected: {selected},
+    onSelectionChanged: (selection) => onSelected(selection.single),
+    style: ButtonStyle(
+      visualDensity: VisualDensity.compact,
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      textStyle: WidgetStatePropertyAll(context.appTextStyles.label),
+    ),
+  );
 }
 
 class _HeatMapBody extends StatelessWidget {
@@ -83,7 +127,7 @@ class _HeatMapBody extends StatelessWidget {
   final List<HeatMapFund> funds;
   final ValueChanged<HeatMapFund>? onTileTap;
 
-  static const double _maxWidth = 960;
+  static const double maxWidth = 960;
 
   @override
   Widget build(BuildContext context) {
@@ -91,11 +135,8 @@ class _HeatMapBody extends StatelessWidget {
       children: [
         LayoutBuilder(
           builder: (context, constraints) {
-            final width = constraints.maxWidth.clamp(0, _maxWidth).toDouble();
-            final height = (width * 0.68).clamp(
-              AppSizes.heatMapMinHeight,
-              AppSizes.heatMapMaxHeight,
-            );
+            final width = constraints.maxWidth.clamp(0, maxWidth).toDouble();
+            final height = _heatMapHeight(width);
             return Align(
               alignment: Alignment.centerLeft,
               child: SizedBox(
@@ -112,6 +153,10 @@ class _HeatMapBody extends StatelessWidget {
     );
   }
 }
+
+double _heatMapHeight(double width) => (width * 0.68)
+    .clamp(AppSizes.heatMapMinHeight, AppSizes.heatMapMaxHeight)
+    .toDouble();
 
 class _HeatMapError extends StatelessWidget {
   const _HeatMapError({required this.onRetry});

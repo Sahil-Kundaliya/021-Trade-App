@@ -227,9 +227,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
         allFunds: rankingChanged
             ? List<MarketInstrument>.unmodifiable(tagged)
             : state.allFunds,
-        visibleFunds: rankingChanged
-            ? visible
-            : state.visibleFunds,
+        visibleFunds: rankingChanged ? visible : state.visibleFunds,
       ),
     );
   }
@@ -280,7 +278,9 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
   ) {
     final candidates = _categoryFunds(funds, category, exchange);
     final gainers =
-        candidates.where((fund) => _changePercent(fund, livePrices) > 0).toList()
+        candidates
+            .where((fund) => _changePercent(fund, livePrices) > 0)
+            .toList()
           ..sort(
             (a, b) => _changePercent(
               b,
@@ -288,7 +288,9 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
             ).compareTo(_changePercent(a, livePrices)),
           );
     final losers =
-        candidates.where((fund) => _changePercent(fund, livePrices) < 0).toList()
+        candidates
+            .where((fund) => _changePercent(fund, livePrices) < 0)
+            .toList()
           ..sort(
             (a, b) => _changePercent(
               a,

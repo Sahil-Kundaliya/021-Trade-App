@@ -2,7 +2,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
-        android:label="zero_two_one_trade_assignment"
+        android:label="021 Trade - Demo"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -151,15 +151,7 @@ class AccountFundsRoutePage extends StatelessWidget {
   const AccountFundsRoutePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final privacyMode = context.select<AppPreferencesBloc, bool>(
-      (bloc) => bloc.state.preferences.privacyMode,
-    );
-    return PrivacyModeScope(
-      enabled: privacyMode,
-      child: const AccountFundsScreen(),
-    );
-  }
+  Widget build(BuildContext context) => const AccountFundsScreen();
 }
 
 @RoutePage(name: 'OrderBookRoute')
@@ -186,19 +178,10 @@ class SearchRoutePage extends StatelessWidget {
   const SearchRoutePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final privacyMode = context.select<AppPreferencesBloc, bool>(
-      (bloc) => bloc.state.preferences.privacyMode,
-    );
-    return _internetRequired(
-      InternetRequiredFeature.search,
-      (key) => PrivacyModeScope(
-        key: key,
-        enabled: privacyMode,
-        child: SearchScreen(navigator: AppNavigationScope.of(context)),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => _internetRequired(
+    InternetRequiredFeature.search,
+    (key) => SearchScreen(key: key, navigator: AppNavigationScope.of(context)),
+  );
 }
 
 Widget _internetRequired(

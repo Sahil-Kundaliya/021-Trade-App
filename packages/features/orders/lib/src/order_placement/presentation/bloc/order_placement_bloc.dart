@@ -226,13 +226,12 @@ class OrderPlacementBloc
     try {
       if (draft.side == OrderSide.buy) {
         final availableFunds = await _repository.getAvailableFunds();
-        final requiredFunds =
-            draft.estimatedOrderValue +
-            (draft.instrument.ltp * draft.quantity * 0.03);
-        if (requiredFunds > availableFunds) {
+        final requiredFunds = _bufferedBuyFunds(draft);
+        if (draft.estimatedOrderValue > availableFunds) {
           emit(
             state.copyWith(
               status: OrderPlacementStatus.failed,
+              instrument: draft.instrument,
               availableFunds: availableFunds,
               requiredFunds: requiredFunds,
               errorMessage: 'Insufficient funds to place this buy order.',
@@ -298,11 +297,29 @@ class OrderPlacementBloc
     }
     emit(state.copyWith(isAddingFunds: true, clearAddFundsError: true));
     try {
-      final available = await _repository.addFunds(event.amount);
+      var instrument = state.instrument!;
+      final latest = _livePrices?.latestFor(instrument.marketKey);
+      if (latest != null) instrument = instrument.withLivePrice(latest);
+      final availableBeforeAdd = await _repository.getAvailableFunds();
+      final requiredFunds = instrument.ltp * state.quantity * 1.03;
+      final latestShortfall =
+          ((requiredFunds - availableBeforeAdd).clamp(0, double.infinity) *
+                      100 -
+                  0.0000001)
+              .ceil() /
+          100;
+      final amountToAdd = event.amount > latestShortfall
+          ? event.amount
+          : latestShortfall;
+      final available = amountToAdd == 0
+          ? availableBeforeAdd
+          : await _repository.addFunds(amountToAdd);
       emit(
         state.copyWith(
           status: OrderPlacementStatus.review,
+          instrument: instrument,
           availableFunds: available,
+          requiredFunds: requiredFunds,
           isAddingFunds: false,
           clearError: true,
           clearAddFundsError: true,
@@ -485,9 +502,22 @@ class OrderPlacementBloc
     if (instrument == null) return;
     for (final tick in event.batch.updates) {
       if (tick.instrumentId == instrument.marketKey) {
-        emit(state.copyWith(instrument: instrument.withLivePrice(tick)));
+        final updated = instrument.withLivePrice(tick);
+        emit(
+          state.copyWith(
+            instrument: updated,
+            requiredFunds:
+                state.status == OrderPlacementStatus.failed &&
+                    state.side == OrderSide.buy
+                ? updated.ltp * state.quantity * 1.03
+                : null,
+          ),
+        );
         return;
       }
     }
   }
+
+  double _bufferedBuyFunds(OrderDraft draft) =>
+      draft.instrument.ltp * draft.quantity * 1.03;
 }

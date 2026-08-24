@@ -146,6 +146,9 @@ void main() {
     );
     expect(find.text('8554.80'), findsOneWidget);
 
+    // A manually lowered value must not underfund the buffered retry.
+    await tester.enterText(find.byType(TextField).last, '1');
+
     await tester.tap(find.text('Add & Retry'));
     await tester.pumpAndSettle();
 

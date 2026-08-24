@@ -10,36 +10,41 @@ class HeatMapLegend extends StatelessWidget {
     final negative = colors.heatMapSwatch(-2);
     final neutral = colors.heatMapSwatch(0);
     final positive = colors.heatMapSwatch(2);
-    final labelStyle = context.appTextStyles.caption.copyWith(
-      color: context.appColors.textSecondary,
-    );
-
-    return Column(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ClipRRect(
-          borderRadius: AppRadius.xsBorderRadius,
-          child: SizedBox(
-            height: AppSpacing.sm,
-            child: Row(
-              children: [
-                Expanded(child: ColoredBox(color: negative.fill)),
-                Expanded(child: ColoredBox(color: neutral.fill)),
-                Expanded(child: ColoredBox(color: positive.fill)),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Row(
-          children: [
-            Text('-2%', style: labelStyle),
-            const Spacer(),
-            Text('0%', style: labelStyle),
-            const Spacer(),
-            Text('+2%', style: labelStyle),
-          ],
-        ),
+        _LegendItem(label: 'Decline', color: negative.fill),
+        const SizedBox(width: AppSpacing.md),
+        _LegendItem(label: 'Neutral', color: neutral.fill),
+        const SizedBox(width: AppSpacing.md),
+        _LegendItem(label: 'Advance', color: positive.fill),
       ],
     );
   }
+}
+
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(
+        width: AppSpacing.sm,
+        height: AppSpacing.sm,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
+      const SizedBox(width: AppSpacing.xxs),
+      Text(
+        label,
+        style: context.appTextStyles.caption.copyWith(
+          color: context.appColors.textSecondary,
+        ),
+      ),
+    ],
+  );
 }

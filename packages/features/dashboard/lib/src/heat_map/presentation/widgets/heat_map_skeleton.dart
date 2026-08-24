@@ -9,8 +9,14 @@ class HeatMapSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mapHeight = height ?? AppSizes.heatMapMinHeight;
+    final requestedHeight = height ?? AppSizes.heatMapMinHeight;
+    final mapHeight = requestedHeight.isFinite && requestedHeight > 0
+        ? requestedHeight
+              .clamp(AppSizes.heatMapMinHeight, AppSizes.heatMapMaxHeight)
+              .toDouble()
+        : AppSizes.heatMapMinHeight;
     final grid = SizedBox(
+      width: double.infinity,
       height: mapHeight,
       child: const _HeatMapSkeletonGrid(),
     );
@@ -25,32 +31,51 @@ class _HeatMapSkeletonGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Row(
       children: [
-        Expanded(flex: 5, child: _Cell()),
-        SizedBox(width: AppBorders.thin),
+        Expanded(
+          flex: 5,
+          child: Column(
+            children: [
+              Expanded(flex: 3, child: _Cell()),
+              SizedBox(height: AppSpacing.xxs),
+              Expanded(
+                flex: 2,
+                child: Row(
+                  children: [
+                    Expanded(flex: 3, child: _Cell()),
+                    SizedBox(width: AppSpacing.xxs),
+                    Expanded(flex: 2, child: _Cell()),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(width: AppSpacing.xxs),
         Expanded(
           flex: 4,
           child: Column(
             children: [
-              Expanded(flex: 3, child: _Cell()),
-              SizedBox(height: AppBorders.thin),
+              Expanded(flex: 2, child: _Cell()),
+              SizedBox(height: AppSpacing.xxs),
               Expanded(
                 flex: 2,
                 child: Row(
                   children: [
                     Expanded(child: _Cell()),
-                    SizedBox(width: AppBorders.thin),
+                    SizedBox(width: AppSpacing.xxs),
                     Expanded(child: _Cell()),
                   ],
                 ),
               ),
-              SizedBox(height: AppBorders.thin),
+              SizedBox(height: AppSpacing.xxs),
               Expanded(
+                flex: 2,
                 child: Row(
                   children: [
                     Expanded(flex: 2, child: _Cell()),
-                    SizedBox(width: AppBorders.thin),
+                    SizedBox(width: AppSpacing.xxs),
                     Expanded(child: _Cell()),
-                    SizedBox(width: AppBorders.thin),
+                    SizedBox(width: AppSpacing.xxs),
                     Expanded(child: _Cell()),
                   ],
                 ),
@@ -67,10 +92,9 @@ class _Cell extends StatelessWidget {
   const _Cell();
 
   @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: shimmerColorOf(context),
-      borderRadius: AppRadius.xsBorderRadius,
-    ),
+  Widget build(BuildContext context) => const SkeletonBox(
+    width: double.infinity,
+    height: double.infinity,
+    borderRadius: AppRadius.xsBorderRadius,
   );
 }

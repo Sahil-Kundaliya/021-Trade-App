@@ -35,6 +35,7 @@ class MarketQuote extends StatelessWidget {
         SensitiveValueText(
           FinancialFormatter.price(ltp),
           type: SensitiveValueType.currency,
+          isMasked: false,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style:
@@ -47,6 +48,7 @@ class MarketQuote extends StatelessWidget {
         MarketPriceChange(
           change: change,
           changePercent: changePercent,
+          isMasked: false,
           showDirection: showDirection,
           style: changeStyle,
           textAlign: alignment == CrossAxisAlignment.end

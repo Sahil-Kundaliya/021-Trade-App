@@ -18,6 +18,7 @@ dependencies:
   injectable: ^2.5.2
   navigation_contract:
     path: ../../navigation/navigation_contract
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   bloc_test: ^10.0.0

@@ -31,13 +31,6 @@ void main() {
     );
   }
 
-  Future<void> tapVisible(WidgetTester tester, Finder finder) async {
-    await tester.ensureVisible(finder);
-    await tester.pump();
-    await tester.tap(finder);
-    await tester.pumpAndSettle();
-  }
-
   testWidgets('shows equity gainers by default and limits the list to five', (
     tester,
   ) async {
@@ -59,7 +52,13 @@ void main() {
       findsNothing,
     );
     expect(find.text('MARKET HEAT MAP'), findsOneWidget);
-    expect(find.text('Equity · NSE'), findsOneWidget);
+    expect(find.byKey(const Key('heat-map-exchange-nse')), findsOneWidget);
+    expect(find.text('Decline'), findsOneWidget);
+    expect(find.text('Neutral'), findsOneWidget);
+    expect(find.text('Advance'), findsOneWidget);
+    expect(find.text('-2%'), findsNothing);
+    expect(find.text('0%'), findsNothing);
+    expect(find.text('+2%'), findsNothing);
     for (final symbol in [
       'RELIANCE',
       'TCS',
@@ -121,11 +120,6 @@ void main() {
     await pumpDashboard(tester);
     await finishLoading(tester);
 
-    await tapVisible(tester, find.text('Most Active'));
-    expect(find.text('HDFCBANK'), findsOneWidget);
-
-    await tapVisible(tester, find.text('Top Losers'));
-    expect(find.text('INFY'), findsOneWidget);
     await tapScreenerLabel(tester, 'Most Active');
     expect(
       find.descendant(
@@ -135,7 +129,6 @@ void main() {
       findsOneWidget,
     );
 
-    await tapVisible(tester, find.text('Futures'));
     await tapScreenerLabel(tester, 'Top Losers');
     expect(
       find.descendant(
@@ -144,28 +137,24 @@ void main() {
       ),
       findsOneWidget,
     );
-
     await tapScreenerLabel(tester, 'Futures');
     expect(find.text('SBIN AUG FUT'), findsOneWidget);
 
-    await tapVisible(tester, find.text('Top Losers'));
     await tapScreenerLabel(tester, 'Top Losers');
     expect(find.text('RELIANCE AUG FUT'), findsOneWidget);
 
-    await tapVisible(tester, find.text('Most Active'));
     await tapScreenerLabel(tester, 'Most Active');
     expect(find.text('ITC AUG FUT'), findsOneWidget);
 
-    await tapVisible(tester, find.text('Options'));
     await tapScreenerLabel(tester, 'Options');
     expect(find.text('HDFCBANK 730.00 CE'), findsOneWidget);
     expect(find.text('Call Movers'), findsOneWidget);
     expect(find.text('Put Movers'), findsOneWidget);
 
-    await tapVisible(tester, find.text('Call Movers'));
+    await tapScreenerLabel(tester, 'Call Movers');
     expect(find.text('HDFCBANK 730.00 CE'), findsOneWidget);
 
-    await tapVisible(tester, find.text('Put Movers'));
+    await tapScreenerLabel(tester, 'Put Movers');
     expect(find.text('ITC 270.00 PE'), findsOneWidget);
     await tapScreenerLabel(tester, 'Call Movers');
     expect(find.text('HDFCBANK 730.00 CE'), findsOneWidget);
@@ -174,7 +163,7 @@ void main() {
     expect(find.text('ITC 270.00 PE'), findsOneWidget);
   });
 
-  testWidgets('switching exchange updates the heat map subtitle', (
+  testWidgets('heat map and market screener exchanges are independent', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(800, 1400);
@@ -185,14 +174,32 @@ void main() {
     await pumpDashboard(tester);
     await finishLoading(tester);
 
-    expect(find.text('Equity · NSE'), findsOneWidget);
-    final exchange = find.byKey(const Key('market-screener-exchange'));
+    final exchange = find.byKey(const Key('heat-map-exchange-bse'));
     await tester.ensureVisible(exchange);
     await tester.tap(exchange);
+    await tester.pump();
+    expect(find.byType(AppShimmer), findsOneWidget);
+    expect(find.byKey(const Key('heat-map-loading-skeleton')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const Key('heat-map-loading-skeleton')), findsOneWidget);
+    await tester.pumpAndSettle();
+    final screener = find.byKey(const Key('market-screener'));
+    expect(
+      find.descendant(of: screener, matching: find.textContaining('NSE')),
+      findsWidgets,
+    );
+    expect(find.byKey(const Key('market-screener-exchange')), findsOneWidget);
+
+    final screenerExchange = find.byKey(const Key('market-screener-exchange'));
+    await tester.ensureVisible(screenerExchange);
+    await tester.tap(screenerExchange);
     await tester.pumpAndSettle();
     await tester.tap(find.text('BSE').last);
     await tester.pumpAndSettle();
-    expect(find.text('Equity · BSE'), findsOneWidget);
+    expect(
+      find.descendant(of: screener, matching: find.textContaining('BSE')),
+      findsWidgets,
+    );
   });
 
   testWidgets('renders with the dark core_ui theme', (tester) async {

@@ -344,7 +344,7 @@ class EquityMarketListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final secondary = PrivacyModeScope.of(context) || item.volume == null
+    final secondary = item.volume == null
         ? '${item.exchange.code} • ${item.title}'
         : '${item.exchange.code} • ${item.title} • Vol ${item.volume}';
     return _MarketRow(primary: item.symbol, secondary: secondary, item: item);
@@ -358,9 +358,7 @@ class FutureMarketListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final volume = PrivacyModeScope.of(context) || item.volume == null
-        ? ''
-        : ' • Vol ${item.volume}';
+    final volume = item.volume == null ? '' : ' • Vol ${item.volume}';
     return _MarketRow(
       primary: item.symbol,
       secondary: '${item.title} • Expiry ${item.expiry}$volume',
@@ -377,9 +375,7 @@ class OptionMarketListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _MarketRow(
-      primary: PrivacyModeScope.of(context)
-          ? '${item.symbol} ${item.optionType}'
-          : '${item.symbol} ${item.strike} ${item.optionType}',
+      primary: '${item.symbol} ${item.strike} ${item.optionType}',
       secondary: '${item.title} • ${item.expiry}',
       item: item,
     );
