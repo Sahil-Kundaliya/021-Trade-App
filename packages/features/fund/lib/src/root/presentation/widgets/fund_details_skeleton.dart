@@ -45,7 +45,15 @@ class FundDetailsSkeleton extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
-          for (final height in [156.0, 196.0, 180.0, 132.0, 132.0, 168.0]) ...[
+          for (final height in [
+            156.0,
+            196.0,
+            180.0,
+            132.0,
+            132.0,
+            168.0,
+            360.0,
+          ]) ...[
             const SkeletonLine(widthFactor: .34, height: 18),
             const SizedBox(height: AppSpacing.sm),
             SkeletonBox(height: height),

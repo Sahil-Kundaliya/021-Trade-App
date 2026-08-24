@@ -25,6 +25,7 @@ class LivePriceStreamManager with WidgetsBindingObserver {
   int _nextConsumerId = 0;
   int _lastSequence = -1;
   bool _observingLifecycle = false;
+  bool _streamerPaused = false;
 
   Map<String, LivePriceTick> get latestByInstrumentId =>
       Map<String, LivePriceTick>.unmodifiable(_latest);
@@ -54,6 +55,11 @@ class LivePriceStreamManager with WidgetsBindingObserver {
     if (!_observingLifecycle) {
       WidgetsBinding.instance.addObserver(this);
       _observingLifecycle = true;
+      final lifecycleState = WidgetsBinding.instance.lifecycleState;
+      if (lifecycleState != null &&
+          lifecycleState != AppLifecycleState.resumed) {
+        _setStreamerPaused(true);
+      }
     }
     _nativeSubscription = _platform.batches.listen(
       _handleNativeBatch,
@@ -195,15 +201,28 @@ class LivePriceStreamManager with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    switch (state) {
-      case AppLifecycleState.resumed:
-        unawaited(_platform.resume());
-      case AppLifecycleState.inactive ||
-          AppLifecycleState.hidden ||
-          AppLifecycleState.paused ||
-          AppLifecycleState.detached:
-        unawaited(_platform.pause());
-    }
+    _setStreamerPaused(state != AppLifecycleState.resumed);
+  }
+
+  void _setStreamerPaused(bool paused) {
+    if (_streamerPaused == paused) return;
+    _streamerPaused = paused;
+    unawaited(
+      _serialize(paused ? _platform.pause : _platform.resume).catchError((
+        Object error,
+        StackTrace stackTrace,
+      ) {
+        final exception = LivePriceException(
+          paused
+              ? 'Unable to pause live prices.'
+              : 'Unable to resume live prices.',
+          error,
+        );
+        for (final lease in _leases.values) {
+          lease.addError(exception, stackTrace);
+        }
+      }),
+    );
   }
 }
 

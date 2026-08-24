@@ -307,6 +307,32 @@ void main() {
     expect(tester.getTopLeft(stickyHeader).dy, closeTo(pinnedTop, 1));
   });
 
+  testWidgets('fund details end with the underlying company profile', (
+    tester,
+  ) async {
+    final app = TradingApp();
+    await tester.pumpWidget(app);
+    await tester.pumpAndSettle();
+
+    app.navigator.openFund(fundId: 'RELIANCE_EQ', exchange: TradeExchange.nse);
+    await tester.pumpAndSettle();
+
+    final companyDetails = find.text('COMPANY DETAILS');
+    await tester.ensureVisible(companyDetails);
+    await tester.pumpAndSettle();
+
+    expect(companyDetails, findsOneWidget);
+    expect(find.text('Reliance Industries Limited'), findsOneWidget);
+    expect(find.text('REGISTERED OFFICE'), findsOneWidget);
+    expect(find.text('DIRECTORS'), findsOneWidget);
+    expect(find.text('KEY MANAGEMENT'), findsOneWidget);
+    expect(find.text('CONTACT INFORMATION'), findsOneWidget);
+    expect(
+      tester.getTopLeft(companyDetails).dy,
+      greaterThan(tester.getTopLeft(find.text('RECENT ACTIVITY')).dy),
+    );
+  });
+
   testWidgets('fund buy and sell close the sheet before opening orders', (
     tester,
   ) async {

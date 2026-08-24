@@ -41,6 +41,19 @@ void main() {
     },
   );
 
+  test('repository attaches the underlying company profile', () async {
+    final tcsFuture = await realFundRepository.getFundById('TCS_FUT_20260825');
+
+    expect(reliance.companyProfile.legalName, 'Reliance Industries Limited');
+    expect(reliance.companyProfile.directors, isNotEmpty);
+    expect(reliance.companyProfile.management, isNotEmpty);
+    expect(
+      tcsFuture.companyProfile.legalName,
+      'Tata Consultancy Services Limited',
+    );
+    expect(tcsFuture.companyProfile.corporateIdentityNumber, isNotEmpty);
+  });
+
   test(
     'watchlist repository reads, persists, and prevents duplicates',
     () async {

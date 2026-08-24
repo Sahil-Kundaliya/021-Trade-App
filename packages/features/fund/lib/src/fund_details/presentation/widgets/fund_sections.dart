@@ -11,6 +11,7 @@ import '../bloc/fund_details_bloc.dart';
 import '../bloc/fund_details_event.dart';
 import '../bloc/fund_details_state.dart';
 import 'chart/fund_live_chart.dart';
+import 'company_details_section.dart';
 import 'derivatives/option_chain_section.dart';
 import 'fund_format.dart';
 
@@ -86,6 +87,10 @@ class FundLoadedSections extends StatelessWidget {
                 const SizedBox(height: AppSpacing.lg),
                 _SectionCard(
                   child: _RecentActivity(activities: fund.recentActivity),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _SectionCard(
+                  child: CompanyDetailsSection(profile: fund.companyProfile),
                 ),
                 const SizedBox(height: AppSpacing.lg),
               ],

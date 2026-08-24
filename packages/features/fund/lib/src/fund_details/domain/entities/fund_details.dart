@@ -32,6 +32,7 @@ class FundDetails {
     required this.priceHistory,
     required this.marginDetails,
     required this.collateralDetails,
+    required this.companyProfile,
     required List<FundActivity> recentActivity,
   }) : tags = List.unmodifiable(tags),
        recentActivity = List.unmodifiable(recentActivity);
@@ -66,6 +67,7 @@ class FundDetails {
   final FundPriceHistory priceHistory;
   final FundMarginDetails marginDetails;
   final FundCollateralDetails collateralDetails;
+  final CompanyProfile companyProfile;
   final List<FundActivity> recentActivity;
 
   FundDetails withLivePrice(LivePriceTick tick) => FundDetails(
@@ -97,6 +99,7 @@ class FundDetails {
     priceHistory: priceHistory,
     marginDetails: marginDetails,
     collateralDetails: collateralDetails,
+    companyProfile: companyProfile,
     recentActivity: recentActivity,
   );
 
@@ -129,8 +132,40 @@ class FundDetails {
     priceHistory: priceHistory,
     marginDetails: marginDetails,
     collateralDetails: collateralDetails,
+    companyProfile: companyProfile,
     recentActivity: activity,
   );
+}
+
+class CompanyProfile {
+  const CompanyProfile({
+    required this.legalName,
+    required this.industry,
+    required this.registeredOffice,
+    required this.corporateIdentityNumber,
+    required this.website,
+    required this.email,
+    required this.phone,
+    required this.directors,
+    required this.management,
+  });
+
+  final String legalName;
+  final String industry;
+  final String registeredOffice;
+  final String corporateIdentityNumber;
+  final String website;
+  final String email;
+  final String phone;
+  final List<CompanyPerson> directors;
+  final List<CompanyPerson> management;
+}
+
+class CompanyPerson {
+  const CompanyPerson({required this.name, required this.role});
+
+  final String name;
+  final String role;
 }
 
 class FundMarketDepth {

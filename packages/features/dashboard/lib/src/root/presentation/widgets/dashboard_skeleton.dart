@@ -22,7 +22,82 @@ class DashboardSkeleton extends StatelessWidget {
         const SizedBox(height: AppSpacing.lg),
         const _IndexStripSkeleton(),
         const SizedBox(height: AppSpacing.lg),
+        const AppCard(child: _PortfolioSummarySkeleton()),
+        const SizedBox(height: AppSpacing.lg),
+        const SkeletonBox(height: 156),
+        const SizedBox(height: AppSpacing.lg),
         const AppCard(child: _MarketScreenerSkeleton()),
+        const SizedBox(height: AppSpacing.lg),
+        const AppCard(child: _NewsSkeleton()),
+      ],
+    ),
+  );
+}
+
+class _PortfolioSummarySkeleton extends StatelessWidget {
+  const _PortfolioSummarySkeleton();
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SkeletonLine(width: 132, height: 18),
+      SizedBox(height: AppSpacing.lg),
+      SkeletonLine(width: 96),
+      SizedBox(height: AppSpacing.sm),
+      SkeletonLine(width: 190, height: 28),
+      SizedBox(height: AppSpacing.lg),
+      AppDivider(),
+      SizedBox(height: AppSpacing.md),
+      SkeletonLine(width: 88),
+      SizedBox(height: AppSpacing.xs),
+      SkeletonLine(width: 140, height: 18),
+    ],
+  );
+}
+
+class _NewsSkeleton extends StatelessWidget {
+  const _NewsSkeleton();
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SkeletonLine(width: 132, height: 18),
+      SizedBox(height: AppSpacing.lg),
+      for (var index = 0; index < 4; index++) ...[
+        const _NewsRowSkeleton(),
+        if (index < 3) const AppDivider(),
+      ],
+    ],
+  );
+}
+
+class _NewsRowSkeleton extends StatelessWidget {
+  const _NewsRowSkeleton();
+
+  @override
+  Widget build(BuildContext context) => const Padding(
+    padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SkeletonBox(width: AppSizes.touchTarget, height: AppSizes.touchTarget),
+        SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SkeletonLine(width: 120, height: 10),
+              SizedBox(height: AppSpacing.sm),
+              SkeletonLine(widthFactor: .8, height: 14),
+              SizedBox(height: AppSpacing.sm),
+              SkeletonLine(widthFactor: .95),
+              SizedBox(height: AppSpacing.xs),
+              SkeletonLine(widthFactor: .7),
+            ],
+          ),
+        ),
       ],
     ),
   );

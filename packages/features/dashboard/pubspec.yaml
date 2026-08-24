@@ -18,6 +18,8 @@ dependencies:
   injectable: ^2.5.2
   navigation_contract:
     path: ../../navigation/navigation_contract
+  portfolio:
+    path: ../portfolio
 
 dev_dependencies:
   build_runner: ^2.15.1

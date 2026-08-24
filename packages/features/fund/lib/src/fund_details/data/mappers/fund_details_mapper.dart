@@ -1,6 +1,7 @@
 import 'package:core_data/core_data.dart';
 
 import '../../domain/entities/fund_details.dart';
+import 'company_profile_catalog.dart';
 
 abstract final class FundDetailsMapper {
   static FundDetails toDomain(FundDto dto) => FundDetails(
@@ -81,6 +82,10 @@ abstract final class FundDetailsMapper {
       haircutPercent: dto.collateralDetails.haircutPercent,
       eligibleValue: dto.collateralDetails.eligibleValue,
       postHaircutValue: dto.collateralDetails.postHaircutValue,
+    ),
+    companyProfile: CompanyProfileCatalog.forFund(
+      symbol: dto.underlyingSymbol ?? dto.symbol,
+      companyName: dto.companyName,
     ),
     recentActivity: const [],
   );

@@ -2,12 +2,15 @@ import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:navigation_contract/navigation_contract.dart';
+import 'package:portfolio/portfolio.dart';
 
 import '../../../market/presentation/bloc/market_bloc.dart';
 import '../../../market/presentation/bloc/market_event.dart';
 import '../../../market/presentation/bloc/market_state.dart';
 import '../../../market/presentation/widgets/market_screener.dart';
 import 'dashboard_market_indices.dart';
+import 'dashboard_banner_carousel.dart';
+import 'dashboard_market_news.dart';
 import 'dashboard_skeleton.dart';
 
 class DashboardContent extends StatelessWidget {
@@ -48,6 +51,12 @@ class DashboardContent extends StatelessWidget {
                       const SizedBox(height: AppSpacing.lg),
                       const DashboardMarketIndices(),
                       const SizedBox(height: AppSpacing.lg),
+                      DashboardPortfolioSummary(
+                        onTap: navigator?.goToPortfolio,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      const DashboardBannerCarousel(),
+                      const SizedBox(height: AppSpacing.lg),
                       switch (state.status) {
                         MarketStatus.initial ||
                         MarketStatus.loading => const SizedBox.shrink(),
@@ -77,6 +86,8 @@ class DashboardContent extends StatelessWidget {
                           ),
                         ),
                       },
+                      const SizedBox(height: AppSpacing.lg),
+                      const DashboardMarketNews(),
                     ],
                   ),
           ),

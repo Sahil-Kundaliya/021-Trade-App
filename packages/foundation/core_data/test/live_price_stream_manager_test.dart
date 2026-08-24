@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:core_data/core_data.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -160,6 +161,36 @@ void main() {
       await platform.close();
     },
   );
+
+  test(
+    'pauses once in background and resumes the existing live session',
+    () async {
+      final platform = _FakePlatform();
+      final manager = LivePriceStreamManager(platform);
+      final lease = manager.acquire(instruments: [tcs]);
+      await _flush();
+
+      manager.didChangeAppLifecycleState(AppLifecycleState.inactive);
+      manager.didChangeAppLifecycleState(AppLifecycleState.hidden);
+      manager.didChangeAppLifecycleState(AppLifecycleState.paused);
+      await _flush();
+
+      expect(platform.pauseCalls, 1);
+      expect(platform.resumeCalls, 0);
+
+      manager.didChangeAppLifecycleState(AppLifecycleState.resumed);
+      await _flush();
+
+      expect(platform.resumeCalls, 1);
+      expect(platform.subscribed, [
+        const ['TCS_EQ'],
+      ]);
+      expect(platform.unsubscribed, isEmpty);
+
+      await lease.dispose();
+      await platform.close();
+    },
+  );
 }
 
 Future<void> _flush() => Future<void>.delayed(Duration.zero);
@@ -193,6 +224,8 @@ final class _FakePlatform implements LivePricePlatformApi {
   final _controller = StreamController<Object?>.broadcast();
   final List<List<String>> subscribed = [];
   final List<List<String>> unsubscribed = [];
+  int pauseCalls = 0;
+  int resumeCalls = 0;
 
   @override
   Stream<Object?> get batches => _controller.stream;
@@ -210,10 +243,14 @@ final class _FakePlatform implements LivePricePlatformApi {
   }
 
   @override
-  Future<void> pause() async {}
+  Future<void> pause() async {
+    pauseCalls++;
+  }
 
   @override
-  Future<void> resume() async {}
+  Future<void> resume() async {
+    resumeCalls++;
+  }
 
   void emit(Object value) => _controller.add(value);
   Future<void> close() => _controller.close();
