@@ -23,10 +23,19 @@ class DashboardRoutePage extends StatelessWidget {
   const DashboardRoutePage({super.key});
 
   @override
-  Widget build(BuildContext context) => _internetRequired(
-    InternetRequiredFeature.dashboard,
-    (key) => DashboardPage(key: key, navigator: AppNavigationScope.of(context)),
-  );
+  Widget build(BuildContext context) {
+    final privacyMode = context.select<AppPreferencesBloc, bool>(
+      (bloc) => bloc.state.preferences.privacyMode,
+    );
+    return _internetRequired(
+      InternetRequiredFeature.dashboard,
+      (key) => PrivacyModeScope(
+        key: key,
+        enabled: privacyMode,
+        child: DashboardPage(navigator: AppNavigationScope.of(context)),
+      ),
+    );
+  }
 }
 
 @RoutePage(name: 'WatchlistRoute')

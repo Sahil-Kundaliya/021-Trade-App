@@ -204,7 +204,7 @@ void main() {
       expect(find.byType(FundSheet), findsNothing);
     }
 
-    await openAndCloseFunds(find.text('RELIANCE'));
+    await openAndCloseFunds(find.text('RELIANCE').first);
 
     await tester.tap(find.text('Watchlist').last);
     await tester.pumpAndSettle();
@@ -340,8 +340,8 @@ void main() {
     await tester.pumpAndSettle();
 
     Future<void> verifyQuickTrade(String action) async {
-      await tester.ensureVisible(find.text('RELIANCE'));
-      await tester.tap(find.text('RELIANCE'));
+      await tester.ensureVisible(find.text('RELIANCE').first);
+      await tester.tap(find.text('RELIANCE').first);
       await tester.pumpAndSettle();
       await tester.tap(find.text(action));
       await tester.pumpAndSettle();

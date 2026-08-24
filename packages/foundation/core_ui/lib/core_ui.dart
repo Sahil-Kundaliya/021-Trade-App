@@ -29,6 +29,7 @@ export 'src/theme/app_color_scheme.dart';
 export 'src/theme/app_theme.dart';
 export 'src/theme/extensions/app_colors.dart';
 export 'src/theme/extensions/app_text_styles.dart';
+export 'src/theme/heat_map_color_resolver.dart';
 export 'src/theme/extensions/theme_context_extension.dart';
 export 'src/theme/tokens/app_durations.dart';
 export 'src/theme/tokens/app_borders.dart';

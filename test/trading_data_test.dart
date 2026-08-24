@@ -20,7 +20,12 @@ void main() {
     expect(fundsWatch.elapsedMilliseconds, greaterThanOrEqualTo(790));
     expect(holdingsWatch.elapsedMilliseconds, greaterThanOrEqualTo(790));
     expect(funds, hasLength(39));
-    expect(funds.where((fund) => fund.category == 'Equity'), hasLength(10));
+    expect(
+      funds
+          .where((fund) => fund.category == 'Equity')
+          .every((fund) => (fund.heatmapWeight ?? 0) > 0),
+      isTrue,
+    );
     expect(funds.where((fund) => fund.category == 'Future'), hasLength(10));
     expect(funds.where((fund) => fund.category == 'Options'), hasLength(19));
     expect(holdings, hasLength(6));
@@ -59,6 +64,7 @@ void main() {
     expect(funds.every((fund) => fund.intradayCandles.length == 75), isTrue);
     expect(funds.every((fund) => fund.dailyCandles.length >= 60), isTrue);
     final reliance = funds.firstWhere((fund) => fund.id == 'RELIANCE_EQ');
+    expect(reliance.heatmapWeight, 1785);
     expect(reliance.dailyCandles.last.close, reliance.ltp);
     final bse = reliance.listingFor(TradeExchange.bse)!;
     expect(bse.dailyCandles, isNotEmpty);

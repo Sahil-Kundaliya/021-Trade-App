@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:navigation_contract/navigation_contract.dart';
 import 'package:portfolio/portfolio.dart';
 
+import '../../../heat_map/presentation/widgets/dashboard_heat_map.dart';
 import '../../../market/presentation/bloc/market_bloc.dart';
 import '../../../market/presentation/bloc/market_event.dart';
 import '../../../market/presentation/bloc/market_state.dart';
@@ -57,6 +58,8 @@ class DashboardContent extends StatelessWidget {
                       const SizedBox(height: AppSpacing.lg),
                       const DashboardBannerCarousel(),
                       const SizedBox(height: AppSpacing.lg),
+                      DashboardHeatMap(navigator: navigator),
+                      const SizedBox(height: AppSpacing.lg),
                       switch (state.status) {
                         MarketStatus.initial ||
                         MarketStatus.loading => const SizedBox.shrink(),
@@ -67,6 +70,7 @@ class DashboardContent extends StatelessWidget {
                         ),
                         MarketStatus.empty => const _MarketEmpty(),
                         MarketStatus.loaded => MarketScreener(
+                          key: const Key('market-screener'),
                           selectedCategory: state.selectedCategory,
                           selectedSubcategory: state.selectedSubcategory,
                           selectedExchange: state.selectedExchange,

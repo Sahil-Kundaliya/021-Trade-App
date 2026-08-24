@@ -18,4 +18,6 @@ abstract final class AppSizes {
 
   static const double marketIndexWidth = 148;
   static const double marketIndexHeight = 76;
+  static const double heatMapMinHeight = 220;
+  static const double heatMapMaxHeight = 320;
 }

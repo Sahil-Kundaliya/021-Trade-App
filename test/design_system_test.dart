@@ -55,6 +55,8 @@ void main() {
       expect(AppSizes.buttonHeightMd, 44);
       expect(AppSizes.inputHeight, 44);
       expect(AppSizes.touchTarget, 48);
+      expect(AppSizes.heatMapMinHeight, 220);
+      expect(AppSizes.heatMapMaxHeight, 320);
       expect(AppSpacing.cardPadding, const EdgeInsets.all(AppSpacing.md));
       expect(AppRadius.md, 8);
       expect(AppBorders.strong, 1.5);
@@ -81,6 +83,14 @@ void main() {
           0.5,
         ),
       );
+      expect(
+        lightAppColors.heatMapPositiveHigh,
+        isNot(darkAppColors.heatMapPositiveHigh),
+      );
+      expect(
+        lightAppColors.copyWith(heatMapNeutral: replacement).heatMapNeutral,
+        replacement,
+      );
     });
 
     test('AppTextStyles copyWith and lerp interpolate styles', () {
@@ -94,6 +104,44 @@ void main() {
       expect(copied.priceMedium, lightStyles.priceMedium);
       expect(midpoint.priceLarge, isNotNull);
       expect(lightStyles.priceMedium.fontFeatures, isNotEmpty);
+    });
+  });
+
+  group('HeatMapColorResolver', () {
+    test('maps daily change percent to semantic intensity bands', () {
+      expect(
+        HeatMapColorResolver.resolve(lightAppColors, 0).tone,
+        HeatMapTone.neutral,
+      );
+      expect(
+        HeatMapColorResolver.resolve(lightAppColors, 1).tone,
+        HeatMapTone.positiveMedium,
+      );
+      expect(
+        HeatMapColorResolver.resolve(lightAppColors, -1).tone,
+        HeatMapTone.negativeMedium,
+      );
+      final low = HeatMapColorResolver.resolve(lightAppColors, 0.2);
+      final high = HeatMapColorResolver.resolve(lightAppColors, 2);
+      expect(low.tone, HeatMapTone.positiveLow);
+      expect(high.tone, HeatMapTone.positiveHigh);
+      expect(low.fill, isNot(high.fill));
+      final weakLoss = HeatMapColorResolver.resolve(lightAppColors, -0.2);
+      final strongLoss = HeatMapColorResolver.resolve(lightAppColors, -2);
+      expect(weakLoss.tone, HeatMapTone.negativeLow);
+      expect(strongLoss.tone, HeatMapTone.negativeHigh);
+      expect(weakLoss.fill, isNot(strongLoss.fill));
+    });
+
+    test('light and dark heat map palettes stay distinct', () {
+      expect(
+        HeatMapColorResolver.resolve(lightAppColors, 2).fill,
+        isNot(HeatMapColorResolver.resolve(darkAppColors, 2).fill),
+      );
+      expect(
+        HeatMapColorResolver.resolve(lightAppColors, -2).fill,
+        isNot(HeatMapColorResolver.resolve(darkAppColors, -2).fill),
+      );
     });
   });
 
