@@ -172,6 +172,8 @@ final class _FakeNavigator implements AppNavigator {
   @override
   Future<void> openOrderBook() async {}
   @override
+  Future<void> openAccountFunds() async {}
+  @override
   Future<void> openLicenceInformation() async {}
   @override
   Future<void> openOrders({

@@ -1,3 +1,10 @@
+export 'src/account_funds/api/account_funds_local_api.dart';
+export 'src/account_funds/api/account_funds_local_api_impl.dart';
+export 'src/account_funds/demo/demo_linked_banks.dart';
+export 'src/account_funds/exceptions/account_funds_exception.dart';
+export 'src/account_funds/models/account_funds_storage_dto.dart';
+export 'src/account_funds/models/linked_bank_account_dto.dart';
+export 'src/account_funds/models/local_fund_deposit_dto.dart';
 export 'src/cache/key_value_storage.dart';
 export 'src/connectivity/connectivity_exception.dart';
 export 'src/connectivity/connectivity_service.dart';

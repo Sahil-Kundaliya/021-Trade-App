@@ -149,6 +149,8 @@ final class _Navigator implements AppNavigator {
   @override
   Future<void> openLicenceInformation() async {}
   @override
+  Future<void> openAccountFunds() async {}
+  @override
   Future<void> openOrderBook() async {}
   @override
   Future<void> openOrders({

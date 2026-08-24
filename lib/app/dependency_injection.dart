@@ -1,3 +1,4 @@
+import 'package:account_funds/dependency_injection.dart';
 import 'package:core_data/core_data.dart';
 import 'package:core_data/dependency_injection.dart';
 import 'package:dashboard/dependency_injection.dart';
@@ -22,6 +23,7 @@ void configureDependencies() {
   registerFundDependencies(getIt);
   registerPortfolioDependencies(getIt);
   registerProfileDependencies(getIt);
+  registerAccountFundsDependencies(getIt);
   registerOrderBookDependencies(getIt);
   registerOrdersDependencies(getIt);
   registerWatchlistDependencies(getIt);

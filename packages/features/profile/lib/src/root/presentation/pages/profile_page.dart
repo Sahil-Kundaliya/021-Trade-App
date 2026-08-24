@@ -228,6 +228,12 @@ class _ProfileSections extends StatelessWidget {
           title: 'Trading & App',
           children: [
             ProfileSettingTile(
+              icon: Icons.account_balance_wallet_outlined,
+              title: 'Funds',
+              subtitle: 'Add money to your trading account',
+              onTap: navigator?.openAccountFunds,
+            ),
+            ProfileSettingTile(
               icon: Icons.receipt_long_outlined,
               title: 'Order Book',
               subtitle: 'Open and closed orders',

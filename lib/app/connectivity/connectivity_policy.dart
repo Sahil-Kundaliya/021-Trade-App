@@ -1,8 +1,9 @@
 /// The application-wide offline policy.
 ///
-/// Main trading flows are Internet-required. Profile preferences and Licence
-/// remain local-capable so users can still change device settings and read
-/// regulatory information while offline.
+/// Main trading flows are Internet-required. Profile preferences, Licence,
+/// and Account Funds remain local-capable so users can still change device
+/// settings, read regulatory information, and add demo trading cash while
+/// offline.
 abstract final class ConnectivityPolicy {
   static const Set<InternetRequiredFeature> internetRequired = {
     InternetRequiredFeature.dashboard,

@@ -27,6 +27,12 @@ Future<void> installImmediateTradingApi() async {
     await getIt.unregister<OrderBookLocalApi>();
   }
   getIt.registerSingleton<OrderBookLocalApi>(const _ImmediateOrderBookApi());
+  if (getIt.isRegistered<AccountFundsLocalApi>()) {
+    await getIt.unregister<AccountFundsLocalApi>();
+  }
+  getIt.registerSingleton<AccountFundsLocalApi>(
+    AccountFundsLocalApiImpl.forTests(_MemoryKeyValueStorage()),
+  );
   if (getIt.isRegistered<ConnectivityService>()) {
     await getIt.unregister<ConnectivityService>();
   }
@@ -114,4 +120,21 @@ final class _ImmediateWatchlistApi implements WatchlistLocalApi {
       ),
     ];
   }
+}
+
+final class _MemoryKeyValueStorage implements KeyValueStorage {
+  final Map<String, String> _values = <String, String>{};
+
+  @override
+  Future<String?> getString(String key) async => _values[key];
+
+  @override
+  Future<void> setString(String key, String value) async =>
+      _values[key] = value;
+
+  @override
+  Future<void> remove(String key) async => _values.remove(key);
+
+  @override
+  Future<void> clear() async => _values.clear();
 }

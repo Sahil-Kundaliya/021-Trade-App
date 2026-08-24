@@ -1,3 +1,4 @@
+import 'package:account_funds/account_funds.dart';
 import 'package:core_data/core_data.dart';
 import 'package:fund/fund.dart';
 import 'package:flutter/material.dart';
@@ -80,6 +81,15 @@ void main() {
     await pumpNavigation();
     expect(find.byType(OrderBookScreen), findsNothing);
 
+    app.navigator.openAccountFunds();
+    await pumpNavigation();
+    expect(find.byType(AccountFundsScreen), findsOneWidget);
+    expect(find.text('Add Funds'), findsOneWidget);
+
+    await app.navigator.pop();
+    await pumpNavigation();
+    expect(find.byType(AccountFundsScreen), findsNothing);
+
     app.navigator.openFund(fundId: 'RELIANCE_EQ', exchange: TradeExchange.nse);
     await pumpNavigation();
     expect(find.byType(FundSheet), findsOneWidget);
@@ -111,6 +121,34 @@ void main() {
 
     expect(find.byType(OrderBookScreen), findsOneWidget);
     expect(find.text('No open orders'), findsOneWidget);
+  });
+
+  testWidgets('profile opens Account Funds through the navigation contract', (
+    tester,
+  ) async {
+    final app = TradingApp();
+    await tester.pumpWidget(app);
+    await tester.pumpAndSettle();
+
+    app.navigator.goToProfile();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Funds'));
+    await tester.tap(find.text('Funds'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AccountFundsScreen), findsOneWidget);
+    expect(find.text('Add Funds'), findsOneWidget);
+    expect(find.text('Available Funds'), findsOneWidget);
+    expect(find.text('₹0.00'), findsOneWidget);
+    expect(find.text('HDFC Bank'), findsOneWidget);
+    expect(find.textContaining('4321'), findsOneWidget);
+    expect(find.text('PRIMARY'), findsOneWidget);
+    expect(find.text('Add New Bank Account'), findsOneWidget);
+
+    await app.navigator.pop();
+    await tester.pumpAndSettle();
+    expect(find.byType(AccountFundsScreen), findsNothing);
+    expect(find.text('Profile'), findsExactly(2));
   });
 
   testWidgets('profile opens fictional licence information and returns', (

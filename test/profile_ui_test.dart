@@ -44,6 +44,7 @@ void main() {
       'Two-Factor Authentication',
       'Change Password',
       'Active Sessions',
+      'Funds',
       'Order Book',
       'Order Preferences',
       'Price Display Preferences',

@@ -8,6 +8,8 @@ environment:
 
 dependencies:
   auto_route: ^11.1.0
+  account_funds:
+    path: packages/features/account_funds
   dashboard:
     path: packages/features/dashboard
   fund:

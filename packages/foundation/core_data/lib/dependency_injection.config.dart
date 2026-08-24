@@ -9,6 +9,10 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:core_data/src/account_funds/api/account_funds_local_api.dart'
+    as _i384;
+import 'package:core_data/src/account_funds/api/account_funds_local_api_impl.dart'
+    as _i1026;
 import 'package:core_data/src/cache/flutter_key_value_storage.dart' as _i572;
 import 'package:core_data/src/cache/key_value_storage.dart' as _i767;
 import 'package:core_data/src/connectivity/connectivity_service.dart' as _i208;
@@ -76,6 +80,9 @@ _i174.GetIt configureCoreDataDependencies(
   );
   gh.lazySingleton<_i936.WatchlistLocalApi>(
     () => _i668.WatchlistLocalApiImpl(gh<_i767.KeyValueStorage>()),
+  );
+  gh.lazySingleton<_i384.AccountFundsLocalApi>(
+    () => _i1026.AccountFundsLocalApiImpl(gh<_i767.KeyValueStorage>()),
   );
   gh.lazySingleton<_i464.AppPreferencesLocalApi>(
     () => _i99.AppPreferencesLocalApiImpl(gh<_i767.KeyValueStorage>()),

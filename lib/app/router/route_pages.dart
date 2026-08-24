@@ -1,3 +1,4 @@
+import 'package:account_funds/account_funds.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:core_data/core_data.dart';
 import 'package:core_ui/core_ui.dart';
@@ -134,6 +135,22 @@ class OrdersRoutePage extends StatelessWidget {
       navigator: AppNavigationScope.of(context),
     ),
   );
+}
+
+@RoutePage(name: 'AccountFundsRoute')
+class AccountFundsRoutePage extends StatelessWidget {
+  const AccountFundsRoutePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final privacyMode = context.select<AppPreferencesBloc, bool>(
+      (bloc) => bloc.state.preferences.privacyMode,
+    );
+    return PrivacyModeScope(
+      enabled: privacyMode,
+      child: const AccountFundsScreen(),
+    );
+  }
 }
 
 @RoutePage(name: 'OrderBookRoute')

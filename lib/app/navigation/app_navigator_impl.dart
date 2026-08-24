@@ -33,6 +33,10 @@ final class AppNavigatorImpl implements AppNavigator {
   );
 
   @override
+  Future<void> openAccountFunds() =>
+      _router.push<void>(const AccountFundsRoute());
+
+  @override
   Future<void> openOrderBook() => _router.push<void>(const OrderBookRoute());
 
   @override

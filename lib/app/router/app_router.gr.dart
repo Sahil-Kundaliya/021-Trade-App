@@ -11,6 +11,22 @@
 part of 'app_router.dart';
 
 /// generated route for
+/// [AccountFundsRoutePage]
+class AccountFundsRoute extends PageRouteInfo<void> {
+  const AccountFundsRoute({List<PageRouteInfo>? children})
+    : super(AccountFundsRoute.name, initialChildren: children);
+
+  static const String name = 'AccountFundsRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AccountFundsRoutePage();
+    },
+  );
+}
+
+/// generated route for
 /// [DashboardRoutePage]
 class DashboardRoute extends PageRouteInfo<void> {
   const DashboardRoute({List<PageRouteInfo>? children})

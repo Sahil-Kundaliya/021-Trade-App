@@ -19,6 +19,8 @@ abstract interface class AppNavigator {
 
   Future<void> openOrderBook();
 
+  Future<void> openAccountFunds();
+
   Future<void> openLicenceInformation();
 
   Future<void> openSearch();
