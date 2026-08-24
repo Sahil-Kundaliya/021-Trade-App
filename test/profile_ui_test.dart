@@ -18,7 +18,7 @@ void main() {
 
     expect(find.text('Profile'), findsOneWidget);
     expect(find.text('RS'), findsOneWidget);
-    expect(find.text('Rahul Sharma'), findsOneWidget);
+    expect(find.text('Sahil Kundaliya'), findsOneWidget);
     expect(find.text('Client ID: TRD102458'), findsOneWidget);
     expect(find.text('rahul.sharma@example.com'), findsOneWidget);
     expect(find.text('Verified'), findsOneWidget);
