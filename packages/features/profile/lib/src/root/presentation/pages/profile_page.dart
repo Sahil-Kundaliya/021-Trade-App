@@ -171,60 +171,6 @@ class _ProfileSections extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
         ProfileSection(
-          title: 'Preferences',
-          children: [
-            ProfileSettingTile(
-              icon: Icons.brightness_6_outlined,
-              title: 'Theme',
-              subtitle: 'Change app appearance',
-              value: _themeLabel(themeMode),
-              onTap: () => _showThemePicker(context),
-            ),
-            ProfileToggleTile(
-              icon: Icons.visibility_off_outlined,
-              title: 'Privacy Mode',
-              subtitle: 'Hide sensitive portfolio values',
-              value: privacyMode,
-              onChanged: onPrivacyChanged,
-            ),
-            ProfileToggleTile(
-              icon: Icons.notifications_none_outlined,
-              title: 'Notifications',
-              subtitle: notificationPermissionBlocked
-                  ? 'Permission disabled in system settings'
-                  : 'Local notifications for order updates',
-              value: notificationsEnabled,
-              onChanged: onNotificationsChanged,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        const ProfileSection(
-          title: 'Security',
-          children: [
-            ProfileSettingTile(
-              icon: Icons.fingerprint,
-              title: 'Biometric / App Lock',
-              subtitle: 'Requires device authentication infrastructure',
-            ),
-            ProfileSettingTile(
-              icon: Icons.shield_outlined,
-              title: 'Two-Factor Authentication',
-              subtitle: 'Requires account security infrastructure',
-            ),
-            ProfileSettingTile(
-              icon: Icons.lock_outline,
-              title: 'Change Password',
-            ),
-            ProfileSettingTile(
-              icon: Icons.devices_outlined,
-              title: 'Active Sessions',
-              subtitle: 'Manage devices logged into your account',
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        ProfileSection(
           title: 'Trading & App',
           children: [
             ProfileSettingTile(
@@ -259,6 +205,60 @@ class _ProfileSections extends StatelessWidget {
               title: 'App Information',
               value: 'Version 1.0.0',
               onTap: () => _showAppInformation(context),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        const ProfileSection(
+          title: 'Security',
+          children: [
+            ProfileSettingTile(
+              icon: Icons.fingerprint,
+              title: 'Biometric / App Lock',
+              subtitle: 'Requires device authentication infrastructure',
+            ),
+            ProfileSettingTile(
+              icon: Icons.shield_outlined,
+              title: 'Two-Factor Authentication',
+              subtitle: 'Requires account security infrastructure',
+            ),
+            ProfileSettingTile(
+              icon: Icons.lock_outline,
+              title: 'Change Password',
+            ),
+            ProfileSettingTile(
+              icon: Icons.devices_outlined,
+              title: 'Active Sessions',
+              subtitle: 'Manage devices logged into your account',
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        ProfileSection(
+          title: 'Preferences',
+          children: [
+            ProfileSettingTile(
+              icon: Icons.brightness_6_outlined,
+              title: 'Theme',
+              subtitle: 'Change app appearance',
+              value: _themeLabel(themeMode),
+              onTap: () => _showThemePicker(context),
+            ),
+            ProfileToggleTile(
+              icon: Icons.visibility_off_outlined,
+              title: 'Privacy Mode',
+              subtitle: 'Hide sensitive portfolio values',
+              value: privacyMode,
+              onChanged: onPrivacyChanged,
+            ),
+            ProfileToggleTile(
+              icon: Icons.notifications_none_outlined,
+              title: 'Notifications',
+              subtitle: notificationPermissionBlocked
+                  ? 'Permission disabled in system settings'
+                  : 'Local notifications for order updates',
+              value: notificationsEnabled,
+              onChanged: onNotificationsChanged,
             ),
           ],
         ),
