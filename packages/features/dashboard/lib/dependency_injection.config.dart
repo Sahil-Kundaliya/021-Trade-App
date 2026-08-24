@@ -10,6 +10,12 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:core_data/core_data.dart' as _i607;
+import 'package:dashboard/src/heat_map/data/repositories/heat_map_repository_impl.dart'
+    as _i244;
+import 'package:dashboard/src/heat_map/domain/repositories/heat_map_repository.dart'
+    as _i775;
+import 'package:dashboard/src/heat_map/presentation/bloc/market_heat_map_bloc.dart'
+    as _i264;
 import 'package:dashboard/src/market/data/repositories/market_repository_impl.dart'
     as _i189;
 import 'package:dashboard/src/market/domain/repositories/market_repository.dart'
@@ -29,9 +35,18 @@ _i174.GetIt configureDashboardDependencies(
   gh.lazySingleton<_i126.MarketRepository>(
     () => _i189.MarketRepositoryImpl(gh<_i607.TradingLocalApi>()),
   );
+  gh.lazySingleton<_i775.HeatMapRepository>(
+    () => _i244.HeatMapRepositoryImpl(gh<_i607.TradingLocalApi>()),
+  );
   gh.factory<_i338.MarketBloc>(
     () => _i338.MarketBloc(
       gh<_i126.MarketRepository>(),
+      gh<_i607.LivePriceStreamManager>(),
+    ),
+  );
+  gh.factory<_i264.MarketHeatMapBloc>(
+    () => _i264.MarketHeatMapBloc(
+      gh<_i775.HeatMapRepository>(),
       gh<_i607.LivePriceStreamManager>(),
     ),
   );

@@ -28,6 +28,7 @@ class FundDto {
     required this.volume,
     required this.tickSize,
     required this.lotSize,
+    this.heatmapWeight,
     required this.expiryDate,
     required this.strikePrice,
     required this.optionType,
@@ -90,6 +91,7 @@ class FundDto {
       volume: JsonValueReader.integer(json, 'volume'),
       tickSize: JsonValueReader.number(json, 'tickSize'),
       lotSize: JsonValueReader.integer(json, 'lotSize'),
+      heatmapWeight: JsonValueReader.nullableNumber(json, 'heatmapWeight'),
       expiryDate: JsonValueReader.nullableDate(json, 'expiryDate'),
       strikePrice: JsonValueReader.nullableNumber(json, 'strikePrice'),
       optionType: JsonValueReader.nullableString(json, 'optionType'),
@@ -148,6 +150,7 @@ class FundDto {
   final int volume;
   final double tickSize;
   final int lotSize;
+  final double? heatmapWeight;
   final DateTime? expiryDate;
   final double? strikePrice;
   final String? optionType;
@@ -260,6 +263,7 @@ class FundDto {
     volume: volume ?? this.volume,
     tickSize: tickSize ?? this.tickSize,
     lotSize: lotSize,
+    heatmapWeight: heatmapWeight,
     expiryDate: expiryDate,
     strikePrice: strikePrice,
     optionType: optionType,

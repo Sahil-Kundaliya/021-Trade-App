@@ -55,6 +55,7 @@ class MarketScreener extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           if (selectedCategory == MarketCategory.equity)
             AppDropdown<TradeExchange>(
+              key: const Key('market-screener-exchange'),
               initialValue: selectedExchange,
               items: TradeExchange.values
                   .map(

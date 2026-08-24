@@ -1,6 +1,8 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 
+import '../../../heat_map/presentation/widgets/heat_map_skeleton.dart';
+
 class DashboardSkeleton extends StatelessWidget {
   const DashboardSkeleton({super.key});
 
@@ -21,6 +23,8 @@ class DashboardSkeleton extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
         const _IndexStripSkeleton(),
+        const SizedBox(height: AppSpacing.lg),
+        const AppCard(child: HeatMapSkeleton(shimmer: false)),
         const SizedBox(height: AppSpacing.lg),
         const AppCard(child: _MarketScreenerSkeleton()),
       ],

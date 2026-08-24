@@ -45,6 +45,20 @@ final class AppColors extends ThemeExtension<AppColors> {
     required this.selectionContainer,
     required this.skeletonBase,
     required this.skeletonHighlight,
+    required this.heatMapNeutral,
+    required this.heatMapPositiveLow,
+    required this.heatMapPositiveMedium,
+    required this.heatMapPositiveHigh,
+    required this.heatMapNegativeLow,
+    required this.heatMapNegativeMedium,
+    required this.heatMapNegativeHigh,
+    required this.onHeatMapNeutral,
+    required this.onHeatMapPositiveLow,
+    required this.onHeatMapPositiveMedium,
+    required this.onHeatMapPositiveHigh,
+    required this.onHeatMapNegativeLow,
+    required this.onHeatMapNegativeMedium,
+    required this.onHeatMapNegativeHigh,
   });
 
   final Color primary;
@@ -89,6 +103,20 @@ final class AppColors extends ThemeExtension<AppColors> {
   final Color selectionContainer;
   final Color skeletonBase;
   final Color skeletonHighlight;
+  final Color heatMapNeutral;
+  final Color heatMapPositiveLow;
+  final Color heatMapPositiveMedium;
+  final Color heatMapPositiveHigh;
+  final Color heatMapNegativeLow;
+  final Color heatMapNegativeMedium;
+  final Color heatMapNegativeHigh;
+  final Color onHeatMapNeutral;
+  final Color onHeatMapPositiveLow;
+  final Color onHeatMapPositiveMedium;
+  final Color onHeatMapPositiveHigh;
+  final Color onHeatMapNegativeLow;
+  final Color onHeatMapNegativeMedium;
+  final Color onHeatMapNegativeHigh;
 
   @override
   AppColors copyWith({
@@ -134,6 +162,20 @@ final class AppColors extends ThemeExtension<AppColors> {
     Color? selectionContainer,
     Color? skeletonBase,
     Color? skeletonHighlight,
+    Color? heatMapNeutral,
+    Color? heatMapPositiveLow,
+    Color? heatMapPositiveMedium,
+    Color? heatMapPositiveHigh,
+    Color? heatMapNegativeLow,
+    Color? heatMapNegativeMedium,
+    Color? heatMapNegativeHigh,
+    Color? onHeatMapNeutral,
+    Color? onHeatMapPositiveLow,
+    Color? onHeatMapPositiveMedium,
+    Color? onHeatMapPositiveHigh,
+    Color? onHeatMapNegativeLow,
+    Color? onHeatMapNegativeMedium,
+    Color? onHeatMapNegativeHigh,
   }) {
     return AppColors(
       primary: primary ?? this.primary,
@@ -178,6 +220,26 @@ final class AppColors extends ThemeExtension<AppColors> {
       selectionContainer: selectionContainer ?? this.selectionContainer,
       skeletonBase: skeletonBase ?? this.skeletonBase,
       skeletonHighlight: skeletonHighlight ?? this.skeletonHighlight,
+      heatMapNeutral: heatMapNeutral ?? this.heatMapNeutral,
+      heatMapPositiveLow: heatMapPositiveLow ?? this.heatMapPositiveLow,
+      heatMapPositiveMedium:
+          heatMapPositiveMedium ?? this.heatMapPositiveMedium,
+      heatMapPositiveHigh: heatMapPositiveHigh ?? this.heatMapPositiveHigh,
+      heatMapNegativeLow: heatMapNegativeLow ?? this.heatMapNegativeLow,
+      heatMapNegativeMedium:
+          heatMapNegativeMedium ?? this.heatMapNegativeMedium,
+      heatMapNegativeHigh: heatMapNegativeHigh ?? this.heatMapNegativeHigh,
+      onHeatMapNeutral: onHeatMapNeutral ?? this.onHeatMapNeutral,
+      onHeatMapPositiveLow: onHeatMapPositiveLow ?? this.onHeatMapPositiveLow,
+      onHeatMapPositiveMedium:
+          onHeatMapPositiveMedium ?? this.onHeatMapPositiveMedium,
+      onHeatMapPositiveHigh:
+          onHeatMapPositiveHigh ?? this.onHeatMapPositiveHigh,
+      onHeatMapNegativeLow: onHeatMapNegativeLow ?? this.onHeatMapNegativeLow,
+      onHeatMapNegativeMedium:
+          onHeatMapNegativeMedium ?? this.onHeatMapNegativeMedium,
+      onHeatMapNegativeHigh:
+          onHeatMapNegativeHigh ?? this.onHeatMapNegativeHigh,
     );
   }
 
@@ -259,6 +321,72 @@ final class AppColors extends ThemeExtension<AppColors> {
         other.skeletonHighlight,
         t,
       )!,
+      heatMapNeutral: Color.lerp(heatMapNeutral, other.heatMapNeutral, t)!,
+      heatMapPositiveLow: Color.lerp(
+        heatMapPositiveLow,
+        other.heatMapPositiveLow,
+        t,
+      )!,
+      heatMapPositiveMedium: Color.lerp(
+        heatMapPositiveMedium,
+        other.heatMapPositiveMedium,
+        t,
+      )!,
+      heatMapPositiveHigh: Color.lerp(
+        heatMapPositiveHigh,
+        other.heatMapPositiveHigh,
+        t,
+      )!,
+      heatMapNegativeLow: Color.lerp(
+        heatMapNegativeLow,
+        other.heatMapNegativeLow,
+        t,
+      )!,
+      heatMapNegativeMedium: Color.lerp(
+        heatMapNegativeMedium,
+        other.heatMapNegativeMedium,
+        t,
+      )!,
+      heatMapNegativeHigh: Color.lerp(
+        heatMapNegativeHigh,
+        other.heatMapNegativeHigh,
+        t,
+      )!,
+      onHeatMapNeutral: Color.lerp(
+        onHeatMapNeutral,
+        other.onHeatMapNeutral,
+        t,
+      )!,
+      onHeatMapPositiveLow: Color.lerp(
+        onHeatMapPositiveLow,
+        other.onHeatMapPositiveLow,
+        t,
+      )!,
+      onHeatMapPositiveMedium: Color.lerp(
+        onHeatMapPositiveMedium,
+        other.onHeatMapPositiveMedium,
+        t,
+      )!,
+      onHeatMapPositiveHigh: Color.lerp(
+        onHeatMapPositiveHigh,
+        other.onHeatMapPositiveHigh,
+        t,
+      )!,
+      onHeatMapNegativeLow: Color.lerp(
+        onHeatMapNegativeLow,
+        other.onHeatMapNegativeLow,
+        t,
+      )!,
+      onHeatMapNegativeMedium: Color.lerp(
+        onHeatMapNegativeMedium,
+        other.onHeatMapNegativeMedium,
+        t,
+      )!,
+      onHeatMapNegativeHigh: Color.lerp(
+        onHeatMapNegativeHigh,
+        other.onHeatMapNegativeHigh,
+        t,
+      )!,
     );
   }
 }
@@ -306,6 +434,20 @@ const lightAppColors = AppColors(
   selectionContainer: Color(0xFFE8EDFF),
   skeletonBase: Color(0xFFE4E9F0),
   skeletonHighlight: Color(0xFFF5F7FA),
+  heatMapNeutral: Color(0xFFE6EBF1),
+  heatMapPositiveLow: Color(0xFFD4F0E2),
+  heatMapPositiveMedium: Color(0xFF3EA972),
+  heatMapPositiveHigh: Color(0xFF0B6B3C),
+  heatMapNegativeLow: Color(0xFFF8DCDC),
+  heatMapNegativeMedium: Color(0xFFE05555),
+  heatMapNegativeHigh: Color(0xFFA31B22),
+  onHeatMapNeutral: Color(0xFF111827),
+  onHeatMapPositiveLow: Color(0xFF0D5C38),
+  onHeatMapPositiveMedium: Color(0xFFFFFFFF),
+  onHeatMapPositiveHigh: Color(0xFFFFFFFF),
+  onHeatMapNegativeLow: Color(0xFF8B1E22),
+  onHeatMapNegativeMedium: Color(0xFFFFFFFF),
+  onHeatMapNegativeHigh: Color(0xFFFFFFFF),
 );
 
 const darkAppColors = AppColors(
@@ -351,4 +493,18 @@ const darkAppColors = AppColors(
   selectionContainer: Color(0xFF27376F),
   skeletonBase: Color(0xFF202A35),
   skeletonHighlight: Color(0xFF303C49),
+  heatMapNeutral: Color(0xFF1D2631),
+  heatMapPositiveLow: Color(0xFF12392A),
+  heatMapPositiveMedium: Color(0xFF1A6B45),
+  heatMapPositiveHigh: Color(0xFF2ECC7A),
+  heatMapNegativeLow: Color(0xFF402024),
+  heatMapNegativeMedium: Color(0xFF8E2F35),
+  heatMapNegativeHigh: Color(0xFFF26B6B),
+  onHeatMapNeutral: Color(0xFFF4F7FB),
+  onHeatMapPositiveLow: Color(0xFF8EEBB8),
+  onHeatMapPositiveMedium: Color(0xFFE8FFF2),
+  onHeatMapPositiveHigh: Color(0xFF0B1F14),
+  onHeatMapNegativeLow: Color(0xFFFFB3B3),
+  onHeatMapNegativeMedium: Color(0xFFFFE8E8),
+  onHeatMapNegativeHigh: Color(0xFF2A1012),
 );
