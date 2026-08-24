@@ -53,9 +53,9 @@ void main() {
     );
     expect(find.text('MARKET HEAT MAP'), findsOneWidget);
     expect(find.byKey(const Key('heat-map-exchange-nse')), findsOneWidget);
-    expect(find.text('Decline'), findsOneWidget);
+    expect(find.text('Down'), findsOneWidget);
     expect(find.text('Neutral'), findsOneWidget);
-    expect(find.text('Advance'), findsOneWidget);
+    expect(find.text('Up'), findsOneWidget);
     expect(find.text('-2%'), findsNothing);
     expect(find.text('0%'), findsNothing);
     expect(find.text('+2%'), findsNothing);

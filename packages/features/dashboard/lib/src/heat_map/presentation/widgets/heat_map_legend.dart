@@ -13,11 +13,11 @@ class HeatMapLegend extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _LegendItem(label: 'Decline', color: negative.fill),
+        _LegendItem(label: 'Up', color: positive.fill),
         const SizedBox(width: AppSpacing.md),
         _LegendItem(label: 'Neutral', color: neutral.fill),
         const SizedBox(width: AppSpacing.md),
-        _LegendItem(label: 'Advance', color: positive.fill),
+        _LegendItem(label: 'Down', color: negative.fill),
       ],
     );
   }
