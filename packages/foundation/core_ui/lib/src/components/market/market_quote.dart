@@ -5,6 +5,7 @@ import '../../privacy/sensitive_value_text.dart';
 import '../../theme/extensions/theme_context_extension.dart';
 import '../../theme/tokens/app_spacing.dart';
 import 'market_price_change.dart';
+import 'live_value_flash.dart';
 
 class MarketQuote extends StatelessWidget {
   const MarketQuote({
@@ -15,6 +16,8 @@ class MarketQuote extends StatelessWidget {
     this.alignment = CrossAxisAlignment.end,
     this.priceStyle,
     this.changeStyle,
+    this.liveDirection = LiveValueDirection.flat,
+    this.liveUpdateId,
     super.key,
   });
 
@@ -25,24 +28,36 @@ class MarketQuote extends StatelessWidget {
   final CrossAxisAlignment alignment;
   final TextStyle? priceStyle;
   final TextStyle? changeStyle;
+  final LiveValueDirection liveDirection;
+  final int? liveUpdateId;
 
   @override
   Widget build(BuildContext context) {
+    final resolvedPriceStyle =
+        priceStyle ??
+        context.appTextStyles.priceSmall.copyWith(
+          color: context.appColors.textPrimary,
+        );
+    final normalPriceColor =
+        resolvedPriceStyle.color ??
+        DefaultTextStyle.of(context).style.color ??
+        context.appColors.textPrimary;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: alignment,
       children: [
-        SensitiveValueText(
-          FinancialFormatter.price(ltp),
-          type: SensitiveValueType.currency,
-          isMasked: false,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style:
-              priceStyle ??
-              context.appTextStyles.priceSmall.copyWith(
-                color: context.appColors.textPrimary,
-              ),
+        LiveValueFlash(
+          direction: liveDirection,
+          updateId: liveUpdateId,
+          normalColor: normalPriceColor,
+          builder: (color) => SensitiveValueText(
+            FinancialFormatter.price(ltp),
+            type: SensitiveValueType.currency,
+            isMasked: false,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: resolvedPriceStyle.copyWith(color: color),
+          ),
         ),
         const SizedBox(height: AppSpacing.xs),
         MarketPriceChange(

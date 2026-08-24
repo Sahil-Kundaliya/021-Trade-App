@@ -7,6 +7,7 @@ export 'src/components/dropdowns/app_dropdown.dart';
 export 'src/components/inputs/app_search_field.dart';
 export 'src/components/inputs/app_text_field.dart';
 export 'src/components/market/market_index_chip.dart';
+export 'src/components/market/live_value_flash.dart';
 export 'src/components/market/market_index_view_data.dart';
 export 'src/components/market/market_indices_strip.dart';
 export 'src/components/market/market_price_change.dart';

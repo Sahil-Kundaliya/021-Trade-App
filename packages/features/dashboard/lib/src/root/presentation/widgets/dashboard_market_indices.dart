@@ -98,5 +98,14 @@ MarketIndexViewData _view(MarketIndexDto index, LivePriceTick? tick) {
     ltp: value,
     change: change,
     changePercent: percent,
+    liveDirection: _liveDirection(tick),
+    liveUpdateId: tick?.sequence,
   );
 }
+
+LiveValueDirection _liveDirection(LivePriceTick? tick) =>
+    switch (tick?.direction) {
+      LivePriceDirection.up => LiveValueDirection.up,
+      LivePriceDirection.down => LiveValueDirection.down,
+      LivePriceDirection.flat || null => LiveValueDirection.flat,
+    };

@@ -402,10 +402,16 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Add to Watchlist'));
     await tester.pumpAndSettle();
-    expect(find.text('Default'), findsOneWidget);
-    await tester.tap(find.text('Add'));
-    await tester.pumpAndSettle();
+    expect(find.text('Default'), findsNothing);
+    expect(find.text('Add'), findsNothing);
     expect(find.text('Added to Default'), findsOneWidget);
+    expect(
+      find.ancestor(
+        of: find.text('Added to Default'),
+        matching: find.byType(FundSheet),
+      ),
+      findsOneWidget,
+    );
     expect(find.byTooltip('Remove from Watchlist'), findsOneWidget);
     expect(find.byIcon(Icons.bookmark), findsOneWidget);
 
@@ -418,6 +424,14 @@ void main() {
     expect(find.byIcon(Icons.bookmark), findsOneWidget);
     await tester.tap(find.byTooltip('Remove from Watchlist'));
     await tester.pumpAndSettle();
+    expect(find.text('Removed from Default'), findsOneWidget);
+    expect(
+      find.ancestor(
+        of: find.text('Removed from Default'),
+        matching: find.byType(FundSheet),
+      ),
+      findsOneWidget,
+    );
     expect(find.byTooltip('Add to Watchlist'), findsOneWidget);
     expect(find.byIcon(Icons.bookmark), findsNothing);
   });

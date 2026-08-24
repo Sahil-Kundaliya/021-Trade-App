@@ -8,6 +8,11 @@ import '../bloc/market_heat_map_state.dart';
 
 enum HeatMapTileDensity { large, medium, small }
 
+extension HeatMapTileDensityPresentation on HeatMapTileDensity {
+  bool get showsLtp => this != HeatMapTileDensity.small;
+  bool get showsChange => this == HeatMapTileDensity.large;
+}
+
 class HeatMapTile extends StatelessWidget {
   const HeatMapTile({
     required this.fund,
@@ -27,10 +32,10 @@ class HeatMapTile extends StatelessWidget {
   static void resetDebugBuildCounts() => debugBuildCounts.clear();
 
   static HeatMapTileDensity densityFor(Size size) {
-    if (size.width >= 108 && size.height >= 72) {
+    if (size.width >= 96 && size.height >= 64) {
       return HeatMapTileDensity.large;
     }
-    if (size.width >= 72 && size.height >= 52) {
+    if (size.width >= 56 && size.height >= 36) {
       return HeatMapTileDensity.medium;
     }
     return HeatMapTileDensity.small;
@@ -97,7 +102,7 @@ class _HeatMapTileSurface extends StatelessWidget {
             onTap: onTap,
             borderRadius: AppRadius.xsBorderRadius,
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xs),
+              padding: const EdgeInsets.fromLTRB(5, 5, 2, 2),
               child: Align(
                 alignment: Alignment.topLeft,
                 child: FittedBox(
@@ -186,18 +191,23 @@ class _HeatMapTileBody extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: symbolStyle,
         ),
-        if (density == HeatMapTileDensity.large) ...[
+        if (density.showsLtp) ...[
           const SizedBox(height: AppSpacing.xxs),
-          SensitiveValueText(
-            FinancialFormatter.price(live.ltp),
-            type: SensitiveValueType.currency,
-            isMasked: false,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: styles.financialSmall.copyWith(color: onFill),
+          LiveValueFlash(
+            direction: live.liveDirection,
+            updateId: live.liveUpdateId,
+            normalColor: onFill,
+            builder: (color) => SensitiveValueText(
+              FinancialFormatter.price(live.ltp),
+              type: SensitiveValueType.currency,
+              isMasked: false,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: styles.financialSmall.copyWith(color: color),
+            ),
           ),
         ],
-        if (density != HeatMapTileDensity.small) ...[
+        if (density.showsChange) ...[
           const SizedBox(height: AppSpacing.xxs),
           _HeatMapChange(live: live, onFill: onFill),
         ],

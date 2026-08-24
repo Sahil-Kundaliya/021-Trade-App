@@ -1,4 +1,5 @@
 import 'package:core_ui/core_ui.dart';
+import 'package:core_data/core_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -60,7 +61,11 @@ class _HeaderQuote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocSelector<OrderPlacementBloc, OrderPlacementState, MarketQuoteViewData?>(
+    return BlocSelector<
+      OrderPlacementBloc,
+      OrderPlacementState,
+      MarketQuoteViewData?
+    >(
       selector: (state) {
         final instrument = state.instrument;
         if (instrument == null) return null;
@@ -68,6 +73,8 @@ class _HeaderQuote extends StatelessWidget {
           ltp: instrument.ltp,
           change: instrument.change,
           changePercent: instrument.changePercent,
+          liveDirection: _liveDirection(state.liveTick),
+          liveUpdateId: state.liveTick?.sequence,
         );
       },
       builder: (context, quote) {
@@ -76,6 +83,8 @@ class _HeaderQuote extends StatelessWidget {
           ltp: quote.ltp,
           change: quote.change,
           changePercent: quote.changePercent,
+          liveDirection: quote.liveDirection,
+          liveUpdateId: quote.liveUpdateId,
           priceStyle: context.appTextStyles.priceMedium,
           changeStyle: context.appTextStyles.percentageMedium,
         );
@@ -83,3 +92,10 @@ class _HeaderQuote extends StatelessWidget {
     );
   }
 }
+
+LiveValueDirection _liveDirection(LivePriceTick? tick) =>
+    switch (tick?.direction) {
+      LivePriceDirection.up => LiveValueDirection.up,
+      LivePriceDirection.down => LiveValueDirection.down,
+      LivePriceDirection.flat || null => LiveValueDirection.flat,
+    };

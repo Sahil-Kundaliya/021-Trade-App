@@ -1,4 +1,6 @@
 import 'package:core_ui/core_ui.dart';
+import 'package:core_data/core_data.dart'
+    show LivePriceDirection, LivePriceTick;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -70,9 +72,7 @@ class OrderSummary extends StatelessWidget {
             builder: (context, data) => Row(
               children: [
                 Expanded(
-                  child: Text(
-                    data.$1 ? 'Estimated Value' : 'Order Value',
-                  ),
+                  child: Text(data.$1 ? 'Estimated Value' : 'Order Value'),
                 ),
                 SensitiveValueText(
                   FinancialFormatter.price(data.$2),
@@ -86,6 +86,7 @@ class OrderSummary extends StatelessWidget {
       ),
     );
   }
+
   static String _title(String value) =>
       '${value[0].toUpperCase()}${value.substring(1)}';
   static String _orderType(String value) => switch (value) {
@@ -112,18 +113,46 @@ class _LiveSummaryRow extends StatelessWidget {
             ),
           ),
         ),
-        BlocSelector<OrderPlacementBloc, OrderPlacementState, double>(
-          selector: (state) => state.instrument?.ltp ?? 0,
-          builder: (context, ltp) => SensitiveValueText(
-            FinancialFormatter.price(ltp),
-            type: SensitiveValueType.currency,
-            style: context.appTextStyles.tableValue,
+        BlocSelector<
+          OrderPlacementBloc,
+          OrderPlacementState,
+          MarketQuoteViewData
+        >(
+          selector: (state) {
+            final tick = state.liveTick;
+            return MarketQuoteViewData(
+              ltp: state.instrument?.ltp ?? 0,
+              change: 0,
+              changePercent: 0,
+              liveDirection: _liveDirection(tick),
+              liveUpdateId: tick?.sequence,
+            );
+          },
+          builder: (context, quote) => LiveValueFlash(
+            direction: quote.liveDirection,
+            updateId: quote.liveUpdateId,
+            normalColor:
+                context.appTextStyles.tableValue.color ??
+                DefaultTextStyle.of(context).style.color ??
+                context.appColors.textPrimary,
+            builder: (color) => SensitiveValueText(
+              FinancialFormatter.price(quote.ltp),
+              type: SensitiveValueType.currency,
+              style: context.appTextStyles.tableValue.copyWith(color: color),
+            ),
           ),
         ),
       ],
     ),
   );
 }
+
+LiveValueDirection _liveDirection(LivePriceTick? tick) =>
+    switch (tick?.direction) {
+      LivePriceDirection.up => LiveValueDirection.up,
+      LivePriceDirection.down => LiveValueDirection.down,
+      LivePriceDirection.flat || null => LiveValueDirection.flat,
+    };
 
 const _sensitiveLabels = <String>{
   'Lots',

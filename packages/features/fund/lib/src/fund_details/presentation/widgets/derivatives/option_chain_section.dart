@@ -35,7 +35,15 @@ class FutureContractDetails extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 _kv(context, 'Underlying', fund.underlyingSymbol ?? '—'),
-                _kv(context, 'Spot', FundFormat.money(spot), sensitive: true),
+                _kv(
+                  context,
+                  'Spot',
+                  FundFormat.money(spot),
+                  sensitive: true,
+                  animateLive: true,
+                  liveDirection: _liveDirection(chain.underlyingTick),
+                  liveUpdateId: chain.underlyingTick?.sequence,
+                ),
                 _kv(context, 'Expiry', FundFormat.date(fund.expiryDate)),
                 _kv(context, 'Lot Size', FundFormat.integer(fund.lotSize)),
                 _kv(
@@ -118,6 +126,9 @@ class OptionContractDetails extends StatelessWidget {
                   'Spot',
                   FundFormat.money(chain.underlyingLtp),
                   sensitive: true,
+                  animateLive: true,
+                  liveDirection: _liveDirection(chain.underlyingTick),
+                  liveUpdateId: chain.underlyingTick?.sequence,
                 ),
                 _kv(context, 'Type', side == OptionSide.call ? 'CALL' : 'PUT'),
                 _kv(
@@ -474,16 +485,37 @@ class _OptionChainRowView extends StatelessWidget {
       flex: flex,
       child: InkWell(
         onTap: () => onOpenFund(contract.fundId, exchange),
-        child: BlocSelector<OptionChainBloc, OptionChainState, double>(
-          selector: (state) =>
-              state.livePrices[contract.marketKey]?.ltp ?? contract.ltp,
-          builder: (context, ltp) => SensitiveValueText(
-            FundFormat.money(ltp),
-            type: SensitiveValueType.currency,
-            textAlign: align,
-            style: context.appTextStyles.tableCell,
-          ),
-        ),
+        child:
+            BlocSelector<
+              OptionChainBloc,
+              OptionChainState,
+              MarketQuoteViewData
+            >(
+              selector: (state) {
+                final tick = state.livePrices[contract.marketKey];
+                return MarketQuoteViewData(
+                  ltp: tick?.ltp ?? contract.ltp,
+                  change: tick?.change ?? contract.change,
+                  changePercent: tick?.changePercent ?? contract.changePercent,
+                  liveDirection: _liveDirection(tick),
+                  liveUpdateId: tick?.sequence,
+                );
+              },
+              builder: (context, quote) => LiveValueFlash(
+                direction: quote.liveDirection,
+                updateId: quote.liveUpdateId,
+                normalColor:
+                    context.appTextStyles.tableCell.color ??
+                    DefaultTextStyle.of(context).style.color ??
+                    context.appColors.textPrimary,
+                builder: (color) => SensitiveValueText(
+                  FundFormat.money(quote.ltp),
+                  type: SensitiveValueType.currency,
+                  textAlign: align,
+                  style: context.appTextStyles.tableCell.copyWith(color: color),
+                ),
+              ),
+            ),
       ),
     );
   }
@@ -567,17 +599,38 @@ class _OptionChainRowView extends StatelessWidget {
   }
 }
 
+LiveValueDirection _liveDirection(LivePriceTick? tick) =>
+    switch (tick?.direction) {
+      LivePriceDirection.up => LiveValueDirection.up,
+      LivePriceDirection.down => LiveValueDirection.down,
+      LivePriceDirection.flat || null => LiveValueDirection.flat,
+    };
+
 class _OptionChainSpot extends StatelessWidget {
   const _OptionChainSpot();
 
   @override
   Widget build(BuildContext context) {
-    return BlocSelector<OptionChainBloc, OptionChainState, double?>(
-      selector: (state) => state.underlyingLtp,
-      builder: (context, spot) => SensitiveValueText(
-        'Spot ${FundFormat.money(spot)}',
-        type: SensitiveValueType.currency,
-        style: context.appTextStyles.financialCaption,
+    return BlocSelector<OptionChainBloc, OptionChainState, MarketQuoteViewData>(
+      selector: (state) => MarketQuoteViewData(
+        ltp: state.underlyingLtp ?? 0,
+        change: 0,
+        changePercent: 0,
+        liveDirection: _liveDirection(state.underlyingTick),
+        liveUpdateId: state.underlyingTick?.sequence,
+      ),
+      builder: (context, quote) => LiveValueFlash(
+        direction: quote.liveDirection,
+        updateId: quote.liveUpdateId,
+        normalColor:
+            context.appTextStyles.financialCaption.color ??
+            DefaultTextStyle.of(context).style.color ??
+            context.appColors.textPrimary,
+        builder: (color) => SensitiveValueText(
+          'Spot ${FundFormat.money(quote.ltp)}',
+          type: SensitiveValueType.currency,
+          style: context.appTextStyles.financialCaption.copyWith(color: color),
+        ),
       ),
     );
   }
@@ -611,19 +664,40 @@ Widget _kv(
   String label,
   String value, {
   bool sensitive = false,
+  bool animateLive = false,
+  LiveValueDirection liveDirection = LiveValueDirection.flat,
+  int? liveUpdateId,
 }) => Padding(
   padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
   child: Row(
     children: [
       Expanded(child: Text(label, style: context.appTextStyles.bodySecondary)),
       sensitive
-          ? SensitiveValueText(
-              value,
-              type: value.contains('%')
-                  ? SensitiveValueType.percentage
-                  : SensitiveValueType.currency,
-              style: context.appTextStyles.tableCell,
-            )
+          ? animateLive
+                ? LiveValueFlash(
+                    direction: liveDirection,
+                    updateId: liveUpdateId,
+                    normalColor:
+                        context.appTextStyles.tableCell.color ??
+                        DefaultTextStyle.of(context).style.color ??
+                        context.appColors.textPrimary,
+                    builder: (color) => SensitiveValueText(
+                      value,
+                      type: value.contains('%')
+                          ? SensitiveValueType.percentage
+                          : SensitiveValueType.currency,
+                      style: context.appTextStyles.tableCell.copyWith(
+                        color: color,
+                      ),
+                    ),
+                  )
+                : SensitiveValueText(
+                    value,
+                    type: value.contains('%')
+                        ? SensitiveValueType.percentage
+                        : SensitiveValueType.currency,
+                    style: context.appTextStyles.tableCell,
+                  )
           : Text(value, style: context.appTextStyles.tableCell),
     ],
   ),

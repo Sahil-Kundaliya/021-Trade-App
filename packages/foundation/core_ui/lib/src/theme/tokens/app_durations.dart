@@ -7,6 +7,7 @@ abstract final class AppMotion {
   static const Duration short = Duration(milliseconds: 160);
   static const Duration standard = Duration(milliseconds: 200);
   static const Duration medium = Duration(milliseconds: 240);
+  static const Duration liveValuePulse = Duration(milliseconds: 200);
   static const Duration long = Duration(milliseconds: 320);
   static const Duration slow = Duration(milliseconds: 400);
   static const Duration shimmer = Duration(milliseconds: 1200);
@@ -17,6 +18,7 @@ abstract final class AppMotionCurves {
   static const Curve enter = Curves.easeOutCubic;
   static const Curve exit = Curves.easeInCubic;
   static const Curve emphasized = Curves.easeOutCubic;
+  static const Curve livePrice = Curves.easeOutCubic;
 }
 
 /// Backwards-compatible names while callers migrate to semantic motion roles.

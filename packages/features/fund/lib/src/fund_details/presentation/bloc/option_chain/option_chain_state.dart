@@ -54,6 +54,7 @@ class OptionChainState {
     this.liveUnavailable = false,
     this.errorMessage,
     this.livePrices = const {},
+    this.underlyingTick,
   });
 
   final OptionChainStatus status;
@@ -70,6 +71,7 @@ class OptionChainState {
   final bool liveUnavailable;
   final String? errorMessage;
   final Map<String, LivePriceTick> livePrices;
+  final LivePriceTick? underlyingTick;
 
   bool get hasContracts => rows.isNotEmpty;
   double? get underlyingLtp =>
@@ -91,6 +93,7 @@ class OptionChainState {
     String? errorMessage,
     bool clearError = false,
     Map<String, LivePriceTick>? livePrices,
+    LivePriceTick? underlyingTick,
   }) => OptionChainState(
     status: status ?? this.status,
     underlyingSymbol: underlyingSymbol ?? this.underlyingSymbol,
@@ -106,5 +109,6 @@ class OptionChainState {
     liveUnavailable: liveUnavailable ?? this.liveUnavailable,
     errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     livePrices: livePrices ?? this.livePrices,
+    underlyingTick: underlyingTick ?? this.underlyingTick,
   );
 }

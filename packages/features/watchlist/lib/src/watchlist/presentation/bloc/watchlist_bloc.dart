@@ -64,13 +64,23 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
       final selected = watchlists.any((item) => item.id == defaultWatchlistId)
           ? defaultWatchlistId
           : watchlists.first.id;
+      final visible = _resolve(watchlists, selected, funds);
+      final livePrices = Map<String, LivePriceTick>.fromEntries(
+        visible.map((fund) {
+          final tick = _livePrices?.latestFor(fund.marketKey);
+          return tick == null
+              ? null
+              : MapEntry<String, LivePriceTick>(fund.marketKey, tick);
+        }).whereType<MapEntry<String, LivePriceTick>>(),
+      );
       emit(
         WatchlistState(
           status: WatchlistStatus.loaded,
           watchlists: watchlists,
           selectedWatchlistId: selected,
           allFunds: funds,
-          visibleFunds: _resolve(watchlists, selected, funds),
+          visibleFunds: visible,
+          livePrices: livePrices,
         ),
       );
       _watch(state.visibleFunds);
@@ -445,24 +455,6 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
   void _watch(List<WatchlistFund> funds) {
     final manager = _livePrices;
     if (manager == null) return;
-    final cached = funds
-        .map((fund) => manager.latestFor(fund.marketKey))
-        .whereType<LivePriceTick>()
-        .toList(growable: false);
-    if (cached.isNotEmpty) {
-      final sequence = cached
-          .map((tick) => tick.sequence)
-          .reduce((a, b) => a > b ? a : b);
-      add(
-        WatchlistLivePricesReceived(
-          LivePriceBatch(
-            sequence: sequence,
-            timestamp: cached.last.timestamp,
-            updates: cached,
-          ),
-        ),
-      );
-    }
     final seeds = funds.map(
       (fund) => LiveInstrumentSeed.fromPrices(
         marketKey: fund.marketKey,

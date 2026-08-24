@@ -71,6 +71,14 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
           return cached == null ? holding : holding.withLivePrice(cached);
         })
         .toList(growable: false);
+    final livePrices = Map<String, LivePriceTick>.fromEntries(
+      loaded.map((holding) {
+        final tick = _livePrices.latestFor(holding.marketKey);
+        return tick == null
+            ? null
+            : MapEntry<String, LivePriceTick>(holding.marketKey, tick);
+      }).whereType<MapEntry<String, LivePriceTick>>(),
+    );
     final categories = PortfolioCategory.values
         .where(
           (category) => holdings.any((holding) => holding.category == category),
@@ -99,6 +107,7 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
         summary: _summary(sorted),
         availableCategories: categories,
         selectedCategory: selected,
+        livePrices: Map<String, LivePriceTick>.unmodifiable(livePrices),
         clearError: true,
       ),
     );
@@ -196,6 +205,14 @@ class HoldingsBloc extends Bloc<HoldingsEvent, HoldingsState> {
       state.copyWith(
         holdings: _sorted(holdings, state.sort),
         summary: _summary(holdings),
+        livePrices: LivePriceTick.merge(
+          state.livePrices,
+          event.batch.updates.where(
+            (tick) => state.holdings.any(
+              (holding) => holding.marketKey == tick.instrumentId,
+            ),
+          ),
+        ),
       ),
     );
   }

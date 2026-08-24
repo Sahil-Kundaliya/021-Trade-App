@@ -86,18 +86,27 @@ class OptionChainBloc extends Bloc<OptionChainEvent, OptionChainState> {
       event.batch.updates,
     );
     var underlyingLtp = state.underlyingLtpMinor;
+    var underlyingTick = state.underlyingTick;
     var spotChanged = false;
     for (final tick in event.batch.updates) {
       if (_underlyingSeed != null &&
-          tick.instrumentId == _underlyingSeed!.instrumentId &&
-          underlyingLtp != tick.ltpMinor) {
-        underlyingLtp = tick.ltpMinor;
-        spotChanged = true;
+          tick.instrumentId == _underlyingSeed!.instrumentId) {
+        underlyingTick = tick;
+        if (underlyingLtp != tick.ltpMinor) {
+          underlyingLtp = tick.ltpMinor;
+          spotChanged = true;
+        }
       }
     }
     if (!spotChanged && identical(livePrices, state.livePrices)) return;
     if (spotChanged) {
-      emit(_rebuild(spotMinor: underlyingLtp, livePrices: livePrices));
+      emit(
+        _rebuild(
+          spotMinor: underlyingLtp,
+          livePrices: livePrices,
+          underlyingTick: underlyingTick,
+        ),
+      );
       return;
     }
     emit(state.copyWith(livePrices: livePrices));
@@ -151,6 +160,7 @@ class OptionChainBloc extends Bloc<OptionChainEvent, OptionChainState> {
     List<DateTime>? availableExpiries,
     FutureOverview? nearestFuture,
     Map<String, LivePriceTick>? livePrices,
+    LivePriceTick? underlyingTick,
   }) {
     final selectedExpiry = expiry ?? state.selectedExpiry;
     final spot = spotMinor ?? state.underlyingLtpMinor;
@@ -181,6 +191,7 @@ class OptionChainBloc extends Bloc<OptionChainEvent, OptionChainState> {
       ),
       nearestFuture: nearestFuture ?? state.nearestFuture,
       livePrices: livePrices ?? state.livePrices,
+      underlyingTick: underlyingTick ?? state.underlyingTick,
       liveUnavailable: false,
       clearError: true,
     );

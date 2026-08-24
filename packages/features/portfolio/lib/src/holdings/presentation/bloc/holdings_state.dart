@@ -14,6 +14,7 @@ class HoldingsState {
     this.errorMessage,
     this.availableCategories = const [],
     this.selectedCategory,
+    this.livePrices = const {},
   });
 
   final HoldingsStatus status;
@@ -23,6 +24,7 @@ class HoldingsState {
   final String? errorMessage;
   final List<PortfolioCategory> availableCategories;
   final PortfolioCategory? selectedCategory;
+  final Map<String, LivePriceTick> livePrices;
   List<Holding> get visibleHoldings => selectedCategory == null
       ? const []
       : holdings
@@ -39,6 +41,7 @@ class HoldingsState {
     List<PortfolioCategory>? availableCategories,
     PortfolioCategory? selectedCategory,
     bool clearSelectedCategory = false,
+    Map<String, LivePriceTick>? livePrices,
   }) => HoldingsState(
     status: status ?? this.status,
     holdings: holdings ?? this.holdings,
@@ -49,5 +52,6 @@ class HoldingsState {
     selectedCategory: clearSelectedCategory
         ? null
         : selectedCategory ?? this.selectedCategory,
+    livePrices: livePrices ?? this.livePrices,
   );
 }

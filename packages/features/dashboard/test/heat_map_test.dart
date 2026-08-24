@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show Size;
 
 import 'package:core_data/core_data.dart';
 import 'package:dashboard/src/heat_map/domain/entities/heat_map_fund.dart';
@@ -8,6 +9,7 @@ import 'package:dashboard/src/heat_map/domain/repositories/heat_map_repository.d
 import 'package:dashboard/src/heat_map/presentation/bloc/market_heat_map_bloc.dart';
 import 'package:dashboard/src/heat_map/presentation/bloc/market_heat_map_event.dart';
 import 'package:dashboard/src/heat_map/presentation/bloc/market_heat_map_state.dart';
+import 'package:dashboard/src/heat_map/presentation/widgets/heat_map_tile.dart';
 import 'package:dashboard/src/market/domain/entities/market_category.dart';
 import 'package:dashboard/src/market/domain/entities/market_instrument.dart';
 import 'package:dashboard/src/market/domain/repositories/market_repository.dart';
@@ -18,6 +20,21 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('HeatMapTile density', () {
+    test('prioritizes LTP before change details as tiles get smaller', () {
+      final large = HeatMapTile.densityFor(const Size(96, 64));
+      final medium = HeatMapTile.densityFor(const Size(56, 36));
+      final small = HeatMapTile.densityFor(const Size(55, 35));
+
+      expect(large.showsLtp, isTrue);
+      expect(large.showsChange, isTrue);
+      expect(medium.showsLtp, isTrue);
+      expect(medium.showsChange, isFalse);
+      expect(small.showsLtp, isFalse);
+      expect(small.showsChange, isFalse);
+    });
+  });
 
   group('SquarifiedTreemap', () {
     test('tile area follows weight and stays inside bounds', () {

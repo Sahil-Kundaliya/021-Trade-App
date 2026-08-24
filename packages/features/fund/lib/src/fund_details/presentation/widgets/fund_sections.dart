@@ -215,6 +215,8 @@ class _FundLiveQuote extends StatelessWidget {
           ltp: tick?.ltp ?? fund.ltp,
           change: tick?.change ?? fund.change,
           changePercent: tick?.changePercent ?? fund.changePercent,
+          liveDirection: _liveDirection(tick),
+          liveUpdateId: tick?.sequence,
         );
       },
       builder: (context, quote) {
@@ -223,11 +225,20 @@ class _FundLiveQuote extends StatelessWidget {
           ltp: quote.ltp,
           change: quote.change,
           changePercent: quote.changePercent,
+          liveDirection: quote.liveDirection,
+          liveUpdateId: quote.liveUpdateId,
         );
       },
     );
   }
 }
+
+LiveValueDirection _liveDirection(LivePriceTick? tick) =>
+    switch (tick?.direction) {
+      LivePriceDirection.up => LiveValueDirection.up,
+      LivePriceDirection.down => LiveValueDirection.down,
+      LivePriceDirection.flat || null => LiveValueDirection.flat,
+    };
 
 class _SmallTagChip extends StatelessWidget {
   const _SmallTagChip({required this.label});

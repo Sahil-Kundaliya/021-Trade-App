@@ -2,6 +2,7 @@ import '../../domain/entities/order_draft.dart';
 import '../../domain/entities/order_instrument.dart';
 import '../../domain/entities/placed_order.dart';
 import '../../domain/enums/order_enums.dart';
+import 'package:core_data/core_data.dart' show LivePriceTick;
 
 enum OrderPlacementStatus {
   initial,
@@ -34,6 +35,7 @@ class OrderPlacementState {
     this.requiredFunds = 0,
     this.isAddingFunds = false,
     this.addFundsError,
+    this.liveTick,
   });
 
   final OrderPlacementStatus status;
@@ -54,6 +56,7 @@ class OrderPlacementState {
   final double requiredFunds;
   final bool isAddingFunds;
   final String? addFundsError;
+  final LivePriceTick? liveTick;
 
   bool get hasInstrument => instrument != null;
   bool get isPlacingOrder => status == OrderPlacementStatus.placing;
@@ -106,6 +109,8 @@ class OrderPlacementState {
     bool? isAddingFunds,
     String? addFundsError,
     bool clearAddFundsError = false,
+    LivePriceTick? liveTick,
+    bool clearLiveTick = false,
   }) => OrderPlacementState(
     status: status ?? this.status,
     instrument: instrument ?? this.instrument,
@@ -131,5 +136,6 @@ class OrderPlacementState {
     addFundsError: clearAddFundsError
         ? null
         : (addFundsError ?? this.addFundsError),
+    liveTick: clearLiveTick ? null : (liveTick ?? this.liveTick),
   );
 }

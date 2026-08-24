@@ -1,4 +1,6 @@
 import 'package:core_ui/core_ui.dart';
+import 'package:core_data/core_data.dart'
+    show LivePriceDirection, LivePriceTick;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -214,9 +216,19 @@ class _MarketPrice extends StatelessWidget {
   @override
   Widget build(
     BuildContext context,
-  ) => BlocSelector<OrderPlacementBloc, OrderPlacementState, double>(
-    selector: (state) => state.instrument?.ltp ?? 0,
-    builder: (context, ltp) => Container(
+  ) => BlocSelector<OrderPlacementBloc, OrderPlacementState, MarketQuoteViewData>(
+    selector: (state) {
+      final instrument = state.instrument;
+      final tick = state.liveTick;
+      return MarketQuoteViewData(
+        ltp: instrument?.ltp ?? 0,
+        change: instrument?.change ?? 0,
+        changePercent: instrument?.changePercent ?? 0,
+        liveDirection: _liveDirection(tick),
+        liveUpdateId: tick?.sequence,
+      );
+    },
+    builder: (context, quote) => Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: context.appColors.infoContainer,
@@ -226,9 +238,17 @@ class _MarketPrice extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Price · Market Price', style: context.textTheme.labelLarge),
-          SensitiveValueText(
-            'Current LTP ${FinancialFormatter.price(ltp)}',
-            maskedValue: 'Current LTP ${PrivacyMask.currency}',
+          LiveValueFlash(
+            direction: quote.liveDirection,
+            updateId: quote.liveUpdateId,
+            normalColor:
+                DefaultTextStyle.of(context).style.color ??
+                context.appColors.textPrimary,
+            builder: (color) => SensitiveValueText(
+              'Current LTP ${FinancialFormatter.price(quote.ltp)}',
+              maskedValue: 'Current LTP ${PrivacyMask.currency}',
+              style: TextStyle(color: color),
+            ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
@@ -240,6 +260,13 @@ class _MarketPrice extends StatelessWidget {
     ),
   );
 }
+
+LiveValueDirection _liveDirection(LivePriceTick? tick) =>
+    switch (tick?.direction) {
+      LivePriceDirection.up => LiveValueDirection.up,
+      LivePriceDirection.down => LiveValueDirection.down,
+      LivePriceDirection.flat || null => LiveValueDirection.flat,
+    };
 
 class _AvailableQuantity extends StatelessWidget {
   const _AvailableQuantity({

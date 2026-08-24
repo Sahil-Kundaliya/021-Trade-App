@@ -35,19 +35,22 @@ class FundSheet extends StatelessWidget {
               top: Radius.circular(AppRadius.xl),
             ),
           ),
-          child: SafeArea(
-            top: false,
-            child: FundBlocScope(
-              fundId: fundId,
-              exchange: exchange,
-              child: FundContent(
-                scrollController: scrollController,
-                showDragHandle: true,
-                onBuy: () => _openOrders(TradeSide.buy),
-                onSell: () => _openOrders(TradeSide.sell),
-                onOpenFund: (id, nextExchange) => navigator.openFund(
-                  fundId: id,
-                  exchange: nextExchange,
+          child: ScaffoldMessenger(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: SafeArea(
+                top: false,
+                child: FundBlocScope(
+                  fundId: fundId,
+                  exchange: exchange,
+                  child: FundContent(
+                    scrollController: scrollController,
+                    showDragHandle: true,
+                    onBuy: () => _openOrders(TradeSide.buy),
+                    onSell: () => _openOrders(TradeSide.sell),
+                    onOpenFund: (id, nextExchange) =>
+                        navigator.openFund(fundId: id, exchange: nextExchange),
+                  ),
                 ),
               ),
             ),

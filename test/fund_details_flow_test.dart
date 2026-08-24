@@ -169,6 +169,35 @@ void main() {
     },
   );
 
+  test('bloc adds directly when only one watchlist is available', () async {
+    final funds = _FakeFundRepository(reliance);
+    final watchlists = _FakeFundWatchlistRepository(
+      items: [
+        AvailableWatchlist(
+          id: 'watchlist_default',
+          name: 'Default',
+          fundIds: [],
+        ),
+      ],
+    );
+    final bloc = FundDetailsBloc(funds, watchlists);
+    bloc.add(const FundDetailsStarted(fundId: 'RELIANCE_EQ'));
+    await bloc.stream.firstWhere(
+      (state) => state.status == FundDetailsStatus.loaded,
+    );
+
+    bloc.add(const FundAddToWatchlistOpened());
+    await bloc.stream.firstWhere(
+      (state) => state.message == 'Added to Default',
+    );
+
+    expect(watchlists.addCalls, 1);
+    expect(watchlists.addedWatchlistId, 'watchlist_default');
+    expect(bloc.state.isWatchlistPickerOpen, isFalse);
+    expect(bloc.state.isFundInWatchlist, isTrue);
+    await bloc.close();
+  });
+
   test(
     'bloc removes persisted membership and updates bookmark state',
     () async {
@@ -298,18 +327,28 @@ final class _FakeFundRepository implements FundRepository {
 }
 
 final class _FakeFundWatchlistRepository implements FundWatchlistRepository {
+  _FakeFundWatchlistRepository({List<AvailableWatchlist>? items})
+    : items =
+          items ??
+          <AvailableWatchlist>[
+            AvailableWatchlist(
+              id: 'watchlist_default',
+              name: 'Default',
+              fundIds: ['RELIANCE_EQ'],
+            ),
+            AvailableWatchlist(
+              id: 'secondary',
+              name: 'Watchlist 2',
+              fundIds: [],
+            ),
+          ];
+
   int readCalls = 0;
   int addCalls = 0;
   int removeCalls = 0;
+  String? addedWatchlistId;
   String? removedWatchlistId;
-  final items = <AvailableWatchlist>[
-    AvailableWatchlist(
-      id: 'watchlist_default',
-      name: 'Default',
-      fundIds: const ['RELIANCE_EQ'],
-    ),
-    AvailableWatchlist(id: 'secondary', name: 'Watchlist 2', fundIds: const []),
-  ];
+  final List<AvailableWatchlist> items;
   @override
   Future<List<AvailableWatchlist>> getAvailableWatchlists() async {
     readCalls++;
@@ -322,6 +361,7 @@ final class _FakeFundWatchlistRepository implements FundWatchlistRepository {
     required String fundId,
   }) async {
     addCalls++;
+    addedWatchlistId = watchlistId;
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:core_ui/core_ui.dart';
+import 'package:core_data/core_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -15,22 +16,46 @@ class HoldingTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocSelector<HoldingsBloc, HoldingsState, Holding>(
+    return BlocSelector<HoldingsBloc, HoldingsState, _HoldingLiveViewData>(
       selector: (state) {
         for (final item in state.holdings) {
-          if (item.marketKey == holding.marketKey) return item;
+          if (item.marketKey == holding.marketKey) {
+            return _HoldingLiveViewData(
+              holding: item,
+              tick: state.livePrices[item.marketKey],
+            );
+          }
         }
-        return holding;
+        return _HoldingLiveViewData(holding: holding);
       },
-      builder: (context, live) => _HoldingBody(holding: live, onTap: onTap),
+      builder: (context, live) =>
+          _HoldingBody(holding: live.holding, tick: live.tick, onTap: onTap),
     );
   }
 }
 
-class _HoldingBody extends StatelessWidget {
-  const _HoldingBody({required this.holding, this.onTap});
+@immutable
+class _HoldingLiveViewData {
+  const _HoldingLiveViewData({required this.holding, this.tick});
 
   final Holding holding;
+  final LivePriceTick? tick;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _HoldingLiveViewData &&
+      identical(other.holding, holding) &&
+      other.tick == tick;
+
+  @override
+  int get hashCode => Object.hash(identityHashCode(holding), tick);
+}
+
+class _HoldingBody extends StatelessWidget {
+  const _HoldingBody({required this.holding, this.tick, this.onTap});
+
+  final Holding holding;
+  final LivePriceTick? tick;
   final VoidCallback? onTap;
 
   @override
@@ -55,11 +80,13 @@ class _HoldingBody extends StatelessWidget {
                 if (constraints.maxWidth >= 700) {
                   return _WideHoldingLayout(
                     holding: holding,
+                    tick: tick,
                     pnlColor: pnlColor,
                   );
                 }
                 return _CompactHoldingLayout(
                   holding: holding,
+                  tick: tick,
                   pnlColor: pnlColor,
                 );
               },
@@ -72,9 +99,14 @@ class _HoldingBody extends StatelessWidget {
 }
 
 class _CompactHoldingLayout extends StatelessWidget {
-  const _CompactHoldingLayout({required this.holding, required this.pnlColor});
+  const _CompactHoldingLayout({
+    required this.holding,
+    required this.tick,
+    required this.pnlColor,
+  });
 
   final Holding holding;
+  final LivePriceTick? tick;
   final Color pnlColor;
 
   @override
@@ -113,7 +145,9 @@ class _CompactHoldingLayout extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: _LtpMetric(holding: holding)),
+            Expanded(
+              child: _LtpMetric(holding: holding, tick: tick),
+            ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _ValueMetric(
@@ -131,9 +165,14 @@ class _CompactHoldingLayout extends StatelessWidget {
 }
 
 class _WideHoldingLayout extends StatelessWidget {
-  const _WideHoldingLayout({required this.holding, required this.pnlColor});
+  const _WideHoldingLayout({
+    required this.holding,
+    required this.tick,
+    required this.pnlColor,
+  });
 
   final Holding holding;
+  final LivePriceTick? tick;
   final Color pnlColor;
 
   @override
@@ -153,7 +192,10 @@ class _WideHoldingLayout extends StatelessWidget {
             value: PortfolioNumberFormat.currency(holding.averageCost),
           ),
         ),
-        Expanded(flex: 2, child: _LtpMetric(holding: holding)),
+        Expanded(
+          flex: 2,
+          child: _LtpMetric(holding: holding, tick: tick),
+        ),
         Expanded(
           flex: 2,
           child: _ValueMetric(
@@ -282,9 +324,10 @@ class _InlineMetric extends StatelessWidget {
 }
 
 class _LtpMetric extends StatelessWidget {
-  const _LtpMetric({required this.holding});
+  const _LtpMetric({required this.holding, required this.tick});
 
   final Holding holding;
+  final LivePriceTick? tick;
 
   @override
   Widget build(BuildContext context) {
@@ -309,6 +352,12 @@ class _LtpMetric extends StatelessWidget {
           change: change,
           changePercent: changePercent,
           alignment: CrossAxisAlignment.start,
+          liveDirection: switch (tick?.direction) {
+            LivePriceDirection.up => LiveValueDirection.up,
+            LivePriceDirection.down => LiveValueDirection.down,
+            LivePriceDirection.flat || null => LiveValueDirection.flat,
+          },
+          liveUpdateId: tick?.sequence,
         ),
       ],
     );

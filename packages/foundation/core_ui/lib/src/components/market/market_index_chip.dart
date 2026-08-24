@@ -9,6 +9,7 @@ import 'market_index_view_data.dart';
 import '../../privacy/sensitive_value_text.dart';
 import 'market_price_change.dart';
 import 'market_price_display_scope.dart';
+import 'live_value_flash.dart';
 
 class MarketIndexChip extends StatelessWidget {
   const MarketIndexChip({required this.item, this.onTap, super.key});
@@ -22,6 +23,9 @@ class MarketIndexChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final price = FinancialFormatter.price(item.ltp, symbol: false);
+    final priceStyle = context.appTextStyles.financialSmall.copyWith(
+      color: context.appColors.textPrimary,
+    );
     final changeLabel = switch (MarketPriceDisplayScope.of(context)) {
       MarketPriceDisplayMode.absoluteAndPercent =>
         FinancialFormatter.changeGroup(item.change, item.changePercent),
@@ -62,14 +66,17 @@ class MarketIndexChip extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  SensitiveValueText(
-                    price,
-                    type: SensitiveValueType.number,
-                    isMasked: false,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.appTextStyles.financialSmall.copyWith(
-                      color: context.appColors.textPrimary,
+                  LiveValueFlash(
+                    direction: item.liveDirection,
+                    updateId: item.liveUpdateId,
+                    normalColor: priceStyle.color!,
+                    builder: (color) => SensitiveValueText(
+                      price,
+                      type: SensitiveValueType.number,
+                      isMasked: false,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: priceStyle.copyWith(color: color),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),

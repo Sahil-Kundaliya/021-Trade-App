@@ -106,7 +106,9 @@ class OrderPlacementBloc
       final exchange = loaded.availableExchanges.contains(event.exchange)
           ? event.exchange
           : loaded.defaultExchange;
-      final instrument = loaded.forExchange(exchange);
+      var instrument = loaded.forExchange(exchange);
+      final cached = _livePrices?.latestFor(instrument.marketKey);
+      if (cached != null) instrument = instrument.withLivePrice(cached);
       _watch(instrument);
       _positionSubscription ??= _repository.positionChanges.listen(
         (_) => add(const OrderPositionAvailabilityChanged()),
@@ -144,10 +146,16 @@ class OrderPlacementBloc
   ) {
     if (state.instrument?.availableExchanges.contains(event.exchange) ??
         false) {
-      final instrument = state.instrument!.forExchange(event.exchange);
+      var instrument = state.instrument!.forExchange(event.exchange);
+      final cached = _livePrices?.latestFor(instrument.marketKey);
+      if (cached != null) instrument = instrument.withLivePrice(cached);
       _edit(
         emit,
-        state.copyWith(exchange: event.exchange, instrument: instrument),
+        state.copyWith(
+          exchange: event.exchange,
+          instrument: instrument,
+          clearLiveTick: true,
+        ),
       );
       _watch(instrument);
       add(const OrderPositionAvailabilityChanged());
@@ -456,18 +464,6 @@ class OrderPlacementBloc
   void _watch(OrderInstrument instrument) {
     final manager = _livePrices;
     if (manager == null) return;
-    final cached = manager.latestFor(instrument.marketKey);
-    if (cached != null) {
-      add(
-        OrderLivePricesReceived(
-          LivePriceBatch(
-            sequence: cached.sequence,
-            timestamp: cached.timestamp,
-            updates: <LivePriceTick>[cached],
-          ),
-        ),
-      );
-    }
     final seed = LiveInstrumentSeed.fromPrices(
       marketKey: instrument.marketKey,
       fundId: instrument.id,
@@ -506,6 +502,7 @@ class OrderPlacementBloc
         emit(
           state.copyWith(
             instrument: updated,
+            liveTick: tick,
             requiredFunds:
                 state.status == OrderPlacementStatus.failed &&
                     state.side == OrderSide.buy

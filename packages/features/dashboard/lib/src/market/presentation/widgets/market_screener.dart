@@ -446,13 +446,24 @@ class _LiveMarketQuote extends StatelessWidget {
           ltp: tick?.ltp ?? item.ltp,
           change: tick?.change ?? item.change,
           changePercent: tick?.changePercent ?? item.changePercent,
+          liveDirection: _liveDirection(tick),
+          liveUpdateId: tick?.sequence,
         );
       },
       builder: (context, quote) => MarketQuote(
         ltp: quote.ltp,
         change: quote.change,
         changePercent: quote.changePercent,
+        liveDirection: quote.liveDirection,
+        liveUpdateId: quote.liveUpdateId,
       ),
     );
   }
 }
+
+LiveValueDirection _liveDirection(LivePriceTick? tick) =>
+    switch (tick?.direction) {
+      LivePriceDirection.up => LiveValueDirection.up,
+      LivePriceDirection.down => LiveValueDirection.down,
+      LivePriceDirection.flat || null => LiveValueDirection.flat,
+    };

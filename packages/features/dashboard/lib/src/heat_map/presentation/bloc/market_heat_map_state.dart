@@ -12,11 +12,15 @@ final class HeatMapTileLiveViewData {
     required this.ltp,
     required this.change,
     required this.changePercent,
+    this.liveDirection = LiveValueDirection.flat,
+    this.liveUpdateId,
   });
 
   final double ltp;
   final double change;
   final double changePercent;
+  final LiveValueDirection liveDirection;
+  final int? liveUpdateId;
 
   int get displaySign => FinancialFormatter.displaySign(change, changePercent);
 
@@ -25,10 +29,13 @@ final class HeatMapTileLiveViewData {
       other is HeatMapTileLiveViewData &&
       other.ltp == ltp &&
       other.change == change &&
-      other.changePercent == changePercent;
+      other.changePercent == changePercent &&
+      other.liveDirection == liveDirection &&
+      other.liveUpdateId == liveUpdateId;
 
   @override
-  int get hashCode => Object.hash(ltp, change, changePercent);
+  int get hashCode =>
+      Object.hash(ltp, change, changePercent, liveDirection, liveUpdateId);
 }
 
 class MarketHeatMapState {
@@ -61,6 +68,12 @@ class MarketHeatMapState {
       ltp: FinancialFormatter.normalize(ltp),
       change: FinancialFormatter.normalize(change),
       changePercent: FinancialFormatter.normalize(changePercent),
+      liveDirection: switch (tick?.direction) {
+        LivePriceDirection.up => LiveValueDirection.up,
+        LivePriceDirection.down => LiveValueDirection.down,
+        LivePriceDirection.flat || null => LiveValueDirection.flat,
+      },
+      liveUpdateId: tick?.sequence,
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:core_ui/core_ui.dart';
+import 'package:core_data/core_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -151,16 +152,27 @@ class _WatchlistLiveQuote extends StatelessWidget {
           ltp: tick?.ltp ?? stock.ltp,
           change: tick?.change ?? stock.change,
           changePercent: tick?.changePercent ?? stock.changePercent,
+          liveDirection: _liveDirection(tick),
+          liveUpdateId: tick?.sequence,
         );
       },
       builder: (context, quote) => MarketQuote(
         ltp: quote.ltp,
         change: quote.change,
         changePercent: quote.changePercent,
+        liveDirection: quote.liveDirection,
+        liveUpdateId: quote.liveUpdateId,
       ),
     );
   }
 }
+
+LiveValueDirection _liveDirection(LivePriceTick? tick) =>
+    switch (tick?.direction) {
+      LivePriceDirection.up => LiveValueDirection.up,
+      LivePriceDirection.down => LiveValueDirection.down,
+      LivePriceDirection.flat || null => LiveValueDirection.flat,
+    };
 
 class _StockTag extends StatelessWidget {
   const _StockTag({required this.label});

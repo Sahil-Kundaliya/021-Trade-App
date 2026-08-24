@@ -82,7 +82,11 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
         _fundRepository.getFundById(event.fundId, exchange: event.exchange),
         _watchlistRepository.getAvailableWatchlists(),
       ]);
-      final fund = results[0] as FundDetails;
+      final loadedFund = results[0] as FundDetails;
+      final cached = _livePrices?.latestFor(loadedFund.marketKey);
+      final fund = cached == null
+          ? loadedFund
+          : loadedFund.withLivePrice(cached);
       final orders = await _orderStore?.getOrders() ?? const <OrderDto>[];
       final watchlists = results[1] as List<AvailableWatchlist>;
       final selectedWatchlistId = watchlists
@@ -139,6 +143,17 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
     final firstId = state.availableWatchlists.isEmpty
         ? null
         : state.availableWatchlists.first.id;
+    if (state.availableWatchlists.length == 1) {
+      emit(
+        state.copyWith(
+          isWatchlistPickerOpen: false,
+          selectedWatchlistId: firstId,
+          clearMessage: true,
+        ),
+      );
+      add(const FundAddToWatchlistRequested());
+      return;
+    }
     emit(
       state.copyWith(
         isWatchlistPickerOpen: true,
@@ -264,18 +279,6 @@ class FundDetailsBloc extends Bloc<FundDetailsEvent, FundDetailsState> {
   void _watch(FundDetails fund) {
     final manager = _livePrices;
     if (manager == null) return;
-    final cached = manager.latestFor(fund.marketKey);
-    if (cached != null) {
-      add(
-        FundLivePricesReceived(
-          LivePriceBatch(
-            sequence: cached.sequence,
-            timestamp: cached.timestamp,
-            updates: <LivePriceTick>[cached],
-          ),
-        ),
-      );
-    }
     final seed = LiveInstrumentSeed.fromPrices(
       marketKey: fund.marketKey,
       fundId: fund.id,
