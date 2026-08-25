@@ -21,13 +21,10 @@ flutter run
 
 That is all. Market data, wallet, orders, holdings, and watchlists are stored locally on the device.
 
-Optional:
+## APK & Demo
 
-```bash
-flutter run -d chrome     # web
-flutter run -d macos      # desktop
-flutter test              # tests
-```
+- **Download APK:** [Install the latest Android build](https://drive.google.com/file/d/1Kg5U3wnjkfFpkhGEKWOys7y8pZdrmp4D/view?usp=sharing)
+- **Watch walkthrough:** [View the app explanation video](https://drive.google.com/file/d/1WYYi6jXwR9lKFPFJwBtkC0_5vBflK9vH/view?usp=sharing)
 
 ---
 
